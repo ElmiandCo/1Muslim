@@ -33,18 +33,32 @@ export default function ProfileImmersiveStage({request}:{request:ProfileSearchRe
     if(!payload.reply?.trim())throw Error("HudHud did not return an answer.");
     ai=payload;
    }catch(caught){aiError=caught instanceof Error?caught.message:"HudHud is temporarily unavailable."}
+   if(controller.signal.aborted)return;
+   if(ai){
+    const assistant:HudHudLine={
+     role:"assistant",content:ai.reply!.trim(),
+     presentation:ai.presentation,verses:ai.verses,images:ai.images,matches:ai.matches
+    };
+    const next=[...historyRef.current,{role:"user",content:q} as HudHudLine,assistant].slice(-36);
+    historyRef.current=next;setLines(next);setBusy(false);
+    // Do not make someone wait for external website retrieval to read or hear
+    // the answer. Append the independent first hit when it is available.
+    if(ai.presentation?.kind!=="verse"&&ai.presentation?.kind!=="image")
+     void webPromise.then(webResult=>{
+      if(!webResult||controller.signal.aborted)return;
+      const updated=historyRef.current.map((line,index)=>index===next.length-1&&line.role==="assistant"&&line.content===assistant.content
+       ?{...line,webResult}:line);
+      historyRef.current=updated;setLines(updated);
+     }).catch(()=>{});
+    return;
+   }
    const webResult=await webPromise;
    if(controller.signal.aborted)return;
-   if(!ai&&!webResult){setError(aiError||"Unable to search. Please try again.");setBusy(false);return}
-   const assistant:HudHudLine={
-    role:"assistant",
-    content:ai?.reply?.trim()||"Here is the top independent website result for your search.",
-    presentation:ai?.presentation,verses:ai?.verses,images:ai?.images,matches:ai?.matches,
-    webResult:ai?.presentation?.kind==="verse"||ai?.presentation?.kind==="image"?undefined:webResult
-   };
+   if(!webResult){setError(aiError||"Unable to search. Please try again.");setBusy(false);return}
+   const assistant:HudHudLine={role:"assistant",content:"Here is the top independent website result for your search.",webResult};
    const next=[...historyRef.current,{role:"user",content:q} as HudHudLine,assistant].slice(-36);
    historyRef.current=next;setLines(next);setBusy(false);
-   if(!ai&&webResult)setError("HudHud's answer is unavailable, but this web result is ready.");
+   setError("HudHud's answer is unavailable, but this web result is ready.");
   })();
   return()=>controller.abort();
  },[request]);
