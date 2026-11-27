@@ -93,3 +93,11 @@
  .gscInlineProfile .scEmbeddedProfile .profileEditorNav .profileTabs button{min-width:auto!important}
 }
 @media(prefers-reduced-motion:reduce){.gscBackdrop,.gscSheet{animation:none!important}.gscTile{transition:none!important}}
+
+/* Hide navigation from the nested *real* profile editor; sheet header is authoritative. */
+.gscInlineProfile .scEmbeddedProfile .profileSocialTop{display:none!important}
+.gscInlineProfile .scEmbeddedProfile .profileSocialHub>[hidden]{display:none!important}
+.gscInlineProfile .scEmbeddedProfile .profileQiblaFooter,
+.gscInlineProfile .scEmbeddedProfile .profileSearchHome{display:none!important}
+.gscInlineProfile .scEmbeddedProfile .profileShell:before{display:none!important}
+.gscInlineProfile .scEmbeddedProfile .profileEditorToolbar .profileEditorSave{cursor:pointer!important}
