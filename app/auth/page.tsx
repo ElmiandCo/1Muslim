@@ -130,7 +130,7 @@ export default function AuthPage() {
   // Preserve the legacy guided Shahada route when explicitly requested.
   const authParams=typeof window!=="undefined"?new URLSearchParams(window.location.search):null;
   const guidedShahada=authParams?.has("shahada")||authParams?.has("method");
-  if(entryReady&&!guidedShahada){
+  if(!guidedShahada){
     return <main style={{minHeight:"100dvh",background:"#fff"}} aria-label="Opening 1Muslim secure sign in"/>;
   }
   const embedded=typeof window!=="undefined"&&new URLSearchParams(window.location.search).has("embedded");
