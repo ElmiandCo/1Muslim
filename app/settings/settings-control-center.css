@@ -71,3 +71,31 @@
 @keyframes scSlideIn{from{transform:translateX(-104%)}to{transform:translateX(0)}}
 @media(max-width:780px){.scAiGrid{grid-template-columns:1fr}.scAiHeader{flex-wrap:wrap}.scBar{gap:6px}.scReturn{padding:10px 12px}}
 @media(prefers-reduced-motion:reduce){.scOverlay,.scSlideDrawer{animation:none!important}.scMenuItem{transition:none!important}}
+
+/* Day/night parity: the shell uses the existing global .light preference. */
+:root:not(.light) .settingsPage .scOpenMenu,
+:root:not(.light) .settingsPage .scReturn{background:#172428;color:#e5edeb;border-color:#34484a}
+:root:not(.light) .scSlideDrawer{background:#101a1e;color:#e9eeed}
+:root:not(.light) .scPanelTop{background:#172428;color:#f7f8f4;border-color:#304448}
+:root:not(.light) .scDismiss{background:#263438;color:#f4f7f4;border-color:#3b5052}
+:root:not(.light) .scProfileCard{background:#1a292c;border-color:#36484a}
+:root:not(.light) .scIdentity,:root:not(.light) .scMenuItem{color:#edf2ee}
+:root:not(.light) .scIdentity small,:root:not(.light) .scMenuItem small,
+:root:not(.light) .scNavHeading,:root:not(.light) .scPanelNote{color:#a4b5af}
+:root:not(.light) .scProfileActions a{background:#213536;color:#dfede6;border-color:#385250}
+:root:not(.light) .scProfileActions a:last-child{background:#d7e6dc;color:#16372d}
+:root:not(.light) .scItemMark{background:#223438;color:#c2d3c9;border-color:#344b4d}
+:root:not(.light) .scMenuItem:hover,:root:not(.light) .scMenuItem:active{background:#27393b}
+:root:not(.light) .scAiShell{background:linear-gradient(160deg,#142326,#18272a);color:#eef3ef;border-color:#34494a}
+:root:not(.light) .scAiHeader p,:root:not(.light) .scAiSection p,:root:not(.light) .scAiPrivacy{color:#b1c2bb}
+:root:not(.light) .scAiSection{background:#1e3032;border-color:#3a5050}
+:root:not(.light) .scAiSection h3,:root:not(.light) .scAiHistoryItem a{color:#e7f0e9}
+:root:not(.light) .scAiNotice{background:#1d3433;border-color:#3a5550;color:#c0d5c9}
+:root:not(.light) .scAiSearch{background:#122323;color:#ecf4ef;border-color:#405954}
+:root:not(.light) .scAiHistoryItem{background:#172829;border-color:#3a5050}
+:root:not(.light) .scAiHistoryItem small{color:#b8c8bf}
+:root:not(.light) .scAiHistoryItem button{background:#3d292b;border-color:#704346;color:#ffd6d6}
+:root:not(.light) .scAiActions button,:root:not(.light) .scAiActions a{background:#254039;color:#dcece1;border-color:#3a6250}
+:root:not(.light) .scAiActions .scDanger{background:#3d292b;color:#ffdada;border-color:#704346}
+:root:not(.light) .scAiPrivacy{border-color:#405350}
+@media(max-width:420px){.scProfileActions{gap:6px}.scMenuItem{min-height:58px}.settingsPage .settingsShell{padding-inline:14px}}
