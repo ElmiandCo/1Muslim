@@ -13,7 +13,7 @@ import AdmissionJourney from "../components/AdmissionJourney";
 
 const safeNext = () => {
   const p = new URLSearchParams(window.location.search).get("next");
-  if (!p?.startsWith("/") || p.startsWith("//") || p.startsWith("/\\\\") || p.includes("://")) return "/profile";
+  if (!p?.startsWith("/") || p.startsWith("//") || p.startsWith("/\\\\") || p.includes("://")) return "/search";
   const match = p.match(/^\/profile\/([0-9a-f-]{36})(?:[?#].*)?$/i);
   return match ? `/profile?member=${encodeURIComponent(match[1])}` : p;
 };
