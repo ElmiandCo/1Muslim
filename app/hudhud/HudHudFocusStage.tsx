@@ -70,6 +70,11 @@ export default function HudHudFocusStage({lines,sessionId,busy,speakingAt,speech
   window.addEventListener("1muslim:hudhud-show-history",open);
   return()=>window.removeEventListener("1muslim:hudhud-show-history",open);
  },[lines.length]);
+ useEffect(()=>{
+  const onEscape=(event:KeyboardEvent)=>{if(event.key==="Escape"){setImageInfoOpen(false);setHistoryOpen(false)}};
+  window.addEventListener("keydown",onEscape);
+  return()=>window.removeEventListener("keydown",onEscape);
+ },[]);
  const reveal=()=>{if(!latest||busy)return;setVisible(true);setIdle(false);setRevealCount(n=>n+1)};
  const onTouchStart=(event:TouchEvent<HTMLElement>)=>{
   if(event.touches.length!==1){touch.current=null;return}
@@ -78,6 +83,7 @@ export default function HudHudFocusStage({lines,sessionId,busy,speakingAt,speech
  };
  const onTouchEnd=(event:TouchEvent<HTMLElement>)=>{
   const start=touch.current;touch.current=null;
+  if(imageInfoOpen)return;
   if(!start||event.changedTouches.length!==1)return;
   const t=event.changedTouches[0],dx=t.clientX-start.x,dy=t.clientY-start.y;
   if(Math.abs(dx)>65||Math.abs(dy)<75)return;
