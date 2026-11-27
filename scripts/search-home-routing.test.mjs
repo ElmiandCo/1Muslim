@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
+import {prayerBrandProgress,shiftPrayerDate} from "../app/lib/prayer-brand-progress.ts";
 import test from "node:test";
 import {passwordWarning} from "../app/lib/auth-password-policy.ts";
 import {hasShahada,SHAHADA_ARABIC,SHAHADA_ENGLISH} from "../app/lib/shahada-recognition.ts";
@@ -436,4 +437,61 @@ test("HudHud speech is AI-generated with a hard microphone playback barrier",()=
  assert.doesNotMatch(member,/speechSynthesis/);
  assert.doesNotMatch(hudhud,/speechSynthesis/);
  assert.doesNotMatch(window,/SpeechSynthesisUtterance/);
+});
+
+
+test("signed-in Search Home has a large, calm and noninteractive prayer-progress wordmark",()=>{
+ const member=read("app/search/SearchMemberHome.tsx");
+ const wordmark=read("app/search/SearchPrayerWordmark.tsx");
+ const css=read("app/search/search-member-home.css");
+ assert.match(member,/SearchPrayerWordmark memberId=\{member\?\.id\}/);
+ assert.match(member,/smhHeaderIdentity/);
+ assert.match(member,/smhHeaderMember/);
+ assert.match(member,/className="smhName"/);
+ assert.match(member,/className="smhSearchForm"/);
+ assert.match(member,/ProfileImmersiveStage request=\{request\}/);
+ assert.match(wordmark,/prayerBrandProgress\(schedule,previous,tomorrow,now\)/);
+ assert.match(wordmark,/fetchPrayerSchedule\(place,method,controller\.signal\)/);
+ assert.match(wordmark,/fetchPrayerScheduleOnDate/);
+ assert.match(wordmark,/ADHAN_SETTINGS_EVENT/);
+ assert.match(wordmark,/1muslim:location-updated/);
+ assert.match(wordmark,/role=\{progress\?"progressbar":"img"\}/);
+ assert.doesNotMatch(wordmark,/onClick=|<button|router\.push/);
+ assert.doesNotMatch(wordmark,/navigator\.geolocation|getCurrentPosition/);
+ assert.match(css,/smhPrayerWordmark/);
+ assert.match(css,/clip-path:inset/);
+ assert.match(css,/prefers-reduced-motion:reduce/);
+ assert.match(css,/\.smhPage\.smhNight \.smhPrayerBase/);
+});
+
+test("prayer wordmark advances strictly between verified prayer boundaries",()=>{
+ const times={Fajr:"05:00",Sunrise:"06:00",Dhuhr:"12:00",Asr:"15:00",Maghrib:"18:00",Isha:"20:00"};
+ const schedule=(date,timezone="UTC")=>({date,timezone,times});
+ const today=schedule("2026-11-27");
+ const next=schedule("2026-11-28");
+ const prev=schedule("2026-11-26");
+ assert.equal(shiftPrayerDate(today.date,1),"2026-11-28");
+ assert.equal(shiftPrayerDate(today.date,-1),"2026-11-26");
+ const midday=prayerBrandProgress(today,prev,next,new Date("2026-11-27T13:30:00Z"));
+ assert.equal(midday?.from,"Dhuhr");
+ assert.equal(midday?.to,"Asr");
+ assert.ok(Math.abs((midday?.ratio??0)-.5)<.0001);
+ assert.equal(prayerBrandProgress(today,prev,next,new Date("2026-11-27T15:00:00Z"))?.ratio,0);
+ const night=prayerBrandProgress(today,prev,next,new Date("2026-11-27T21:00:00Z"));
+ assert.equal(night?.from,"Isha");
+ assert.equal(night?.to,"Fajr");
+ assert.ok(Math.abs((night?.ratio??0)-(1/9))<.0001);
+ const dawn=prayerBrandProgress(next,today,null,new Date("2026-11-28T03:00:00Z"));
+ assert.equal(dawn?.from,"Isha");
+ assert.equal(dawn?.to,"Fajr");
+ assert.ok(Math.abs((dawn?.ratio??0)-(7/9))<.0001);
+ assert.equal(prayerBrandProgress(today,null,next,new Date("2026-11-27T03:00:00Z")),null);
+ assert.equal(prayerBrandProgress(today,prev,null,new Date("2026-11-27T22:00:00Z")),null);
+ assert.equal(prayerBrandProgress(today,prev,next,new Date("2026-11-28T00:01:00Z")),null);
+ const chicago=prayerBrandProgress(schedule("2026-11-27","America/Chicago"),
+  schedule("2026-11-26","America/Chicago"),
+  schedule("2026-11-28","America/Chicago"),new Date("2026-11-28T04:00:00Z"));
+ assert.equal(chicago?.from,"Isha");
+ assert.equal(chicago?.to,"Fajr");
+ assert.ok(Math.abs((chicago?.ratio??0)-(2/9))<.0001);
 });
