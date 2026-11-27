@@ -162,3 +162,10 @@ html[data-one-chrome-theme="night"] .profileHudFocusRegion .hudFocusCard{color:#
 html[data-one-chrome-theme="night"] .profileHudFocusRegion .hudNarratedReply{color:#e5eee7}
 html[data-one-chrome-theme="night"] .profileHudFocusRegion .hudTopWebsite{border-top-color:#33483b!important;color:#e1f3e8!important}
 html[data-one-chrome-theme="night"] .profileHudFocusRegion .hudTopWebsiteCopy>strong{color:#a6e6c3}
+
+/* HudHud stays a small command sparkle; only the member avatar is shown
+   in the search bar's profile slot. */
+.profileSearchHome .profileSearchHud{background:transparent!important;color:#437c69}
+.profileSearchHome .profileSearchHud svg{display:block;width:22px;height:22px;transition:transform .25s ease}
+.profileSearchHome .profileSearchHud:active svg{transform:scale(.87)}
+@media(prefers-reduced-motion:reduce){.profileSearchHome .profileSearchHud svg{transition:none!important}}
