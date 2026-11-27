@@ -252,6 +252,13 @@ export default function SearchHub() {
     }finally{setSignoutBusy(false);}
   };
   const homeMode=!query.trim();
+  useEffect(()=>{
+    // Keep the browser safe-area/toolbar color consistent with the visible
+    // white Search Home or explicitly selected Results day/night appearance.
+    window.dispatchEvent(new CustomEvent("1muslim:route-appearance",{
+      detail:{route:"/search",night:!homeMode&&resultsNight}
+    }));
+  },[homeMode,resultsNight]);
   const showAuth=authMode!==null;
   return <main ref={magneticRoot} className={"dsPage "+(homeMode?"dsHomeMode dsIntro"+(introStage==="pending"?"Pending":introStage==="playing"?"Playing":"Done"):"dsResultsMode "+(resultsNight?"dsResultsNight":"dsResultsDay"))+(showAuth?" dsInlineAuthOpen":"")+(authLeaving?" dsInlineAuthLeaving":"")}>
     <nav className="dsHomeUtilities" aria-label="Account shortcuts">
