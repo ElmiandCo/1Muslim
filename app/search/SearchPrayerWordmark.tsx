@@ -56,7 +56,7 @@ export default function SearchPrayerWordmark({initialLocation,memberId,compact=f
    .eq("user_id",memberId).maybeSingle().then(({data})=>{
     if(active&&data&&["2","3","4","5"].includes(String(data.method)))
      setMethod(data.method as AdhanMethod);
-   }).catch(()=>{});
+   },()=>{});
   return()=>{active=false};
  },[memberId]);
 
