@@ -1,3 +1,4 @@
+import {readFileSync} from "node:fs";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { canStartAdminVoice } from "../app/api/admin/hudhud-voice/authorization.ts";
@@ -38,4 +39,18 @@ test("HudHud only recommends site results for site-content discovery",()=>{
 test("asking for a verse interpretation is not silently reduced to only its citation",()=>{
  assert.deepEqual(selectHudHudPresentation("Explain Quran 2:255 and its meaning"),{kind:"text"});
  assert.deepEqual(selectHudHudPresentation("What is the context of Surah 112 verse 1?"),{kind:"text"});
+});
+
+test("HudHud account memory uses separate RLS-isolated AI chat storage, not legacy CRM",()=>{
+ const sql=readFileSync(new URL("../supabase/migrations/20261127090000_hudhud_opt_in_conversation_memory.sql",import.meta.url),"utf8");
+ const route=readFileSync(new URL("../app/api/hudhud/memory/route.ts",import.meta.url),"utf8");
+ assert.match(sql,/create table if not exists public\.hudhud_ai_chat_sessions/);
+ assert.match(sql,/alter table public\.hudhud_ai_chat_sessions enable row level security/);
+ assert.match(sql,/auth\.uid\(\)/);
+ assert.match(sql,/p\.enabled/);
+ assert.doesNotMatch(sql,/create table if not exists public\.hudhud_conversations\s*\(/);
+ assert.match(route,/"hudhud_ai_chat_sessions"/);
+ assert.doesNotMatch(route,/\.from\("hudhud_conversations"\)/);
+ assert.match(route,/body\.action==="preference"/);
+ assert.match(route,/body\.action==="clear"/);
 });
