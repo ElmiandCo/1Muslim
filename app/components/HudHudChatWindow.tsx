@@ -17,7 +17,7 @@ type SpeechRecognizer = {
  onresult:((event:SpeechResult)=>void)|null;
  onerror:((event:{error?:string})=>void)|null;
  onend:(()=>void)|null;
- start:()=>void; stop:()=>void;
+ start:()=>void; stop:()=>void; abort?:()=>void;
 };
 type SpeechConstructor = new()=>SpeechRecognizer;
 
@@ -57,12 +57,18 @@ export default function HudHudChatWindow({
  const [listening,setListening]=useState(false);
  const [voiceError,setVoiceError]=useState("");
  const [copiedId,setCopiedId]=useState<number|null>(null);
+ const endDictation=()=>{
+  const rec=recognizer.current;
+  recognizer.current=null;
+  if(rec){rec.onresult=null;rec.onerror=null;rec.onend=null;try{if(rec.abort)rec.abort();else rec.stop()}catch{}}
+  setListening(false);
+ };
 
  useEffect(()=>{
   const previousOverflow=document.body.style.overflow;
   const previousFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;
   document.body.style.overflow="hidden";
-  return()=>{document.body.style.overflow=previousOverflow;recognizer.current?.stop();voiceEpoch.current++;voicePlayer.current?.stop();previousFocus?.focus({preventScroll:true});};
+  return()=>{document.body.style.overflow=previousOverflow;endDictation();voiceEpoch.current++;voicePlayer.current?.stop();previousFocus?.focus({preventScroll:true});};
  },[]);
 
  useEffect(()=>{
@@ -88,7 +94,7 @@ export default function HudHudChatWindow({
  const newChat=()=>{voiceEpoch.current++;voicePlayer.current?.stop();voiceBusy.current=false;onNewChat();onSettingsChange(false);setMenuOpen(false);compose.current?.focus();};
  const readAloud=(text:string)=>{
   // Only speak generated voice, and never run dictation at the same time.
-  recognizer.current?.stop();
+  endDictation();
   const epoch=++voiceEpoch.current;
   voiceBusy.current=true;
   const player=voicePlayer.current||(voicePlayer.current=createHudHudAiVoicePlayer());
