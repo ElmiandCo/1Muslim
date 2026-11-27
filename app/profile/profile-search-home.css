@@ -84,3 +84,81 @@
 .profileCommandPage:has(.profileSearchHome.hasOpenPanel) .profileSocialHub{background:#fff}
 .profileCommandPage:has(.profileSearchHome.hasOpenPanel) .profileEditorToolbar,
 .profileCommandPage:has(.profileSearchHome.hasOpenPanel) .profileEditorNav{background:#fff!important}
+
+/* Signed-in Search Home: wordmark settles at upper-left; the search pill
+   glides into a full-width command bar with the member avatar at its right. */
+.profileSearchHome .profileSearchUtilities{align-items:center;justify-content:space-between;gap:18px;padding-top:calc(12px + env(safe-area-inset-top,0px))}
+.profileSearchHome .profileSearchUtilities .profileSearchBrand{
+  display:flex;flex:0 1 auto;justify-content:flex-start;align-items:baseline;min-width:0;
+  margin:0!important;font-size:clamp(19px,3.2vw,31px)!important;
+  letter-spacing:-.065em;white-space:nowrap;line-height:1.12;
+}
+.profileSearchUtilityActions{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.profileSearchHome .profileSearchCentered{max-width:1100px;padding-top:clamp(16px,3vh,35px);transition:transform .56s cubic-bezier(.2,.8,.2,1)}
+.profileSearchHome .profileSearchEntry{max-width:100%;width:100%;justify-content:flex-start;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.profileSearchHome .profileSearchField{width:100%;min-height:59px;gap:8px;padding:6px 8px 6px 12px;flex:1}
+.profileSearchHome .profileSearchSubmit{display:grid;place-items:center;flex:0 0 37px;width:37px;height:40px;padding:0;border:0;background:transparent;color:#6e8083;border-radius:50%}
+.profileSearchHome .profileSearchSubmit:hover{background:#f1f5f2}
+.profileSearchHome .profileSearchField input{font-size:clamp(16px,1.7vw,19px);letter-spacing:-.018em}
+.profileSearchHome .profileSearchHud{height:39px;width:39px;flex:0 0 39px}
+.profileSearchHome .profileSearchHud.isListening{box-shadow:0 0 0 3px #70d1a669;animation:psHudPulse 1.7s ease-in-out infinite}
+.profileSearchHome .profileSearchAvatarControl{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;
+ border:0!important;border-radius:50%;padding:2px;background:#eaf0ec;overflow:hidden;box-shadow:none}
+.profileSearchHome .profileSearchAvatarControl img{display:block;width:100%;height:100%;object-fit:cover;border-radius:50%}
+.profileSearchHome .profileSearchAvatarControl:focus-visible,.profileSearchHome .profileSearchHud:focus-visible{outline:2px solid #267951;outline-offset:3px}
+.profileSearchMicStatus,.profileSearchMicError{align-self:flex-start;padding:7px 4px 0;font-size:12px;font-weight:600;color:#197858;line-height:1.4}
+.profileSearchMicError{color:#a14d3f}
+/* The same HudHud one-response-at-a-time canvas occupies the whitespace
+   between the command bar and the user's posts without creating a new page. */
+.profileHudFocusRegion{position:relative;display:flex;flex-direction:column;width:min(1140px,100%);height:clamp(320px,48dvh,640px);
+ min-height:320px;margin:12px auto clamp(7px,2vh,24px);overflow:hidden;isolation:isolate;background:transparent}
+.profileHudFocusRegion>.hudFocusSurface{width:100%;min-height:0;flex:1;padding:clamp(8px,2vw,30px);overflow:hidden}
+.profileHudFocusRegion .hudFocusCard{width:min(870px,100%);border:0!important;border-radius:0!important;box-shadow:none!important;
+ padding:clamp(12px,3.7vw,36px) clamp(14px,3.8vw,36px)!important;background:transparent!important}
+.profileHudFocusRegion .hudFocusCard::before{display:none!important;content:none!important}
+.profileHudFocusRegion .hudFocusContent{font-size:clamp(16px,2.3vw,20px)}
+.profileHudFocusRegion .hudFocusImageButton>img{max-height:clamp(190px,35dvh,450px);max-width:100%;object-fit:contain;background:#f6f8f6}
+.profileHudEmpty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:11px;pointer-events:none;
+ color:#9eaaa5;text-align:center;opacity:.86}
+.profileHudEmpty>span{font-size:clamp(27px,5.1vw,40px);line-height:1.2;font-weight:470;letter-spacing:-.04em}
+.profileHudEmpty>small{font-size:12px;letter-spacing:.02em}
+.profileHudError{position:absolute;z-index:6;bottom:6px;left:50%;transform:translateX(-50%);max-width:calc(100% - 36px);
+ background:#fff8f6;color:#9e524c;font-size:12px;line-height:1.45;border-radius:10px;padding:9px 12px;margin:0;
+ box-shadow:0 4px 18px #acafa119}
+.profileSearchHome .profileSearchPersonal{margin-top:clamp(8px,1.5vh,24px)}
+.profileSearchHome .profileSearchFullRail{padding-top:clamp(20px,3.5vh,50px)}
+.profileSearchHome.isArriving .profileSearchUtilities .profileSearchBrand{animation:psLogoDock .8s cubic-bezier(.18,.8,.2,1) both}
+.profileSearchHome.isArriving .profileSearchField{animation:psSearchDock .72s cubic-bezier(.18,.8,.2,1) both}
+@keyframes psLogoDock{from{transform:translate(15vw,34px) scale(1.65);opacity:.4}to{transform:none;opacity:1}}
+@keyframes psSearchDock{from{transform:translateX(8%);opacity:.4}to{transform:none;opacity:1}}
+@keyframes psHudPulse{50%{box-shadow:0 0 0 7px #70d1a623}}
+@media(max-width:680px){
+ .profileSearchHome .profileSearchUtilities{padding:calc(8px + env(safe-area-inset-top,0px)) 12px 0;gap:4px}
+ .profileSearchHome .profileSearchUtilities .profileSearchBrand{font-size:clamp(17px,4.5vw,22px)!important}
+ .profileSearchUtilityActions{gap:5px}
+ .profileSearchHome .profileSearchUtilityActions .profileSearchOrb{width:36px;height:36px;min-width:36px;box-shadow:none}
+ .profileSearchHome .profileSearchUtilityActions .profileSearchOrb svg{width:19px;height:19px}
+ .profileSearchHome .profileSearchCentered{padding:14px 12px 0}
+ .profileSearchHome .profileSearchField{min-height:54px;padding:4px 6px;gap:4px}
+ .profileSearchHome .profileSearchSubmit{width:32px;flex-basis:32px}
+ .profileSearchHome .profileSearchField input{font-size:16px}
+ .profileSearchHome .profileSearchHud{flex-basis:36px;width:36px;height:36px}
+ .profileSearchHome .profileSearchAvatarControl{width:37px;height:37px;flex-basis:37px}
+ .profileHudFocusRegion{height:clamp(320px,45dvh,540px);min-height:300px;margin-top:8px}
+ .profileHudFocusRegion .hudFocusCard{padding:10px 8px 18px!important}
+ .profileHudFocusRegion>.hudFocusSurface{padding:7px 11px}
+ .profileHudEmpty>span{font-size:clamp(27px,8.3vw,40px)}
+}
+@media(max-height:650px) and (max-width:680px){.profileHudFocusRegion{min-height:265px;height:42dvh}}
+@media(prefers-reduced-motion:reduce){.profileSearchHome.isArriving .profileSearchBrand,.profileSearchHome.isArriving .profileSearchField,.profileSearchHome .profileSearchHud.isListening{animation:none!important}}
+/* Respect day/night modes without recoloring the Qur'an itself or the browser UI. */
+html[data-one-chrome-theme="night"] .profileSearchHome{background:#11171a!important;color:#e6f0ea}
+html[data-one-chrome-theme="night"] .profileSearchHome .profileSearchBrand{color:#f4f6f3!important}
+html[data-one-chrome-theme="night"] .profileSearchHome .profileSearchField{background:#1b2428;border-color:#33433d;box-shadow:none}
+html[data-one-chrome-theme="night"] .profileSearchHome .profileSearchField input{color:#f5f8f6}
+html[data-one-chrome-theme="night"] .profileSearchHome .profileSearchHud{background:transparent}
+html[data-one-chrome-theme="night"] .profileSearchHome .profileSearchSubmit{color:#cddbd4}
+html[data-one-chrome-theme="night"] .profileHudFocusRegion .hudFocusCard{color:#e5eee7}
+html[data-one-chrome-theme="night"] .profileHudFocusRegion .hudNarratedReply{color:#e5eee7}
+html[data-one-chrome-theme="night"] .profileHudFocusRegion .hudTopWebsite{border-top-color:#33483b!important;color:#e1f3e8!important}
+html[data-one-chrome-theme="night"] .profileHudFocusRegion .hudTopWebsiteCopy>strong{color:#a6e6c3}
