@@ -8,7 +8,12 @@ type Item={title:string;url:string;description:string;source:string;kind:Kind;sc
 type SearchData={query:string;results:Item[];total:number;provider:string;partial?:boolean};
 type ImageItem={title:string;pageUrl:string;imageUrl:string;thumbnailUrl:string;source:string;width?:number;height?:number};
 type ImageData={query:string;results:ImageItem[];total:number;provider:string};
-type SummaryData={summary:string;sources:Array<{number:number;title:string;url:string}>};
+type SummaryData={
+ summary:string;
+ quranContext?:{lead:string;citations:Array<{ref:string;title:string;url:string}>}|null;
+ sources:Array<{number:number;title:string;url:string}>;
+ notice?:string;
+};
 const titles:Record<GlobalSearchMode,string>={
   All:"Search the world",Web:"Web results",Images:"Images",Videos:"Videos",News:"Latest news","AI Overview":"HudHud AI Overview"
 };
@@ -104,17 +109,24 @@ export default function WebSearchPanel({query,mode="All"}:{query:string;mode?:Gl
         <div className={styles.overviewHeading}>
           <span className={styles.aiSpark} aria-hidden="true">✦</span>
           <h2>HudHud AI Overview</h2>
-          <span className={styles.aiCaption}>Based on web sources</span>
+          <span className={styles.aiCaption}>{summary?.quranContext?"Qur’an and web sources":"Based on web sources"}</span>
         </div>
         {summaryBusy&&<div className={styles.overviewLoading} role="status"><span>Reading sources and preparing an overview…</span><i/><i/><i/></div>}
         {summary&&<div className={styles.overviewBody}>
-          {overviewThumbnail&&<div className={styles.overviewImage}><img src={overviewThumbnail} alt="" loading="lazy" referrerPolicy="no-referrer"/></div>}
-          <div className={overviewExpanded?styles.overviewTextExpanded:styles.overviewTextPreview}><p>{summary.summary}</p></div>
-          {(overviewExpanded||summary.summary.length<=200)&&<div className={styles.citations} aria-label="Sources for this AI overview">
+          {summary.quranContext&&<div className={styles.quranContext} aria-label="Qur’an perspective">
+            <p>{summary.quranContext.lead}</p>
+            <div className={styles.quranReferences} aria-label="Qur’an references">
+              {summary.quranContext.citations.map(item=><a key={item.ref} href={item.url} target="_blank" rel="noopener noreferrer">{item.title} ↗</a>)}
+            </div>
+          </div>}
+          {!summary.quranContext&&overviewThumbnail&&<div className={styles.overviewImage}><img src={overviewThumbnail} alt="" loading="lazy" referrerPolicy="no-referrer"/></div>}
+          {summary.summary&&<div className={overviewExpanded?styles.overviewTextExpanded:styles.overviewTextPreview}><p>{summary.summary}</p></div>}
+          {summary.notice&&<p className={styles.overviewNote}>{summary.notice}</p>}
+          {!!summary.sources.length&&(overviewExpanded||summary.summary.length<=200)&&<div className={styles.citations} aria-label="Web sources for this AI overview">
             {summary.sources.map(item=><a href={item.url} key={item.number} target="_blank" rel="noopener noreferrer">[{item.number}] {item.title}</a>)}
           </div>}
           {summary.summary.length>200&&<button type="button" className={styles.showMore} onClick={()=>setOverviewExpanded(open=>!open)} aria-expanded={overviewExpanded}>{overviewExpanded?"Show less":"Show more"} <span aria-hidden="true">{overviewExpanded?"⌃":"⌄"}</span></button>}
-          <small className={styles.overviewNote}>AI may make mistakes. Check the linked sources.</small>
+          <small className={styles.overviewNote}>Qur’an references are identified separately from AI-generated web information. Verify important details using the linked sources.</small>
         </div>}
         {!summaryBusy&&summaryError&&<div className={styles.overviewUnavailable}>
           <p>HudHud AI Overview isn’t available for this search.</p>
