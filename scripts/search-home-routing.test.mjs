@@ -81,21 +81,33 @@ test("Home tab opens Search and Profile remains a distinct destination",()=>{
 });
 
 
-test("signed-in Search Home is centered and preserves the real search implementation",()=>{
+test("Search Home retains real search and replaces creators and shortcut pills with two swipable card rows",()=>{
   const page=read("app/search/page.tsx");
   const css=read("app/search/search.css");
+  const rail=read("app/search/SearchFeatureRails.tsx");
+  const railCss=read("app/search/search-feature-rails.css");
+  const profile=read("app/profile/page.tsx");
   assert.match(page,/const homeMode=!query\.trim\(\)/);
   assert.match(page,/<h1 className="dsHomeBrand" aria-hidden=\{!homeMode\}/);
   assert.match(page,/className="dsSearchForm" role="search"/);
-  assert.match(page,/creators\.slice\(0,4\)/);
-  assert.match(page,/\/api\/discover\/creators/);
+  assert.match(page,/<SearchFeatureRails\/>/);
+  assert.match(page,/dsHomeFeatureBreathingSpace/);
+  assert.doesNotMatch(page,/Discover your Ummah|People to explore|dsExploreGrid|\/api\/discover\/creators/);
   assert.match(page,/\/api\/discover\/search/);
   assert.match(page,/className="dsCategoryBar"/);
   assert.match(css,/\.dsHomeMode \.dsCategoryBar\{display:none\}/);
   assert.match(page,/!homeMode&&!loading&&!error&&result/);
   assert.match(page,/!homeMode&&loading/);
   assert.match(css,/\.dsHomeMode \.dsSearchForm/);
-  assert.match(css,/\.dsHomeMode \.dsCreatorList/);
+  assert.match(rail,/const rows: Destination\[\]\[\]/);
+  assert.match(rail,/rows\.map\(\(items,index\)=>/);
+  assert.match(rail,/href:"\/profile\?compass=1"/);
+  assert.match(profile,/get\("compass"\)==="1"/);
+  assert.match(railCss,/scroll-snap-type:x mandatory/);
+  assert.match(railCss,/overflow-x:auto/);
+  assert.match(railCss,/border:0/);
+  assert.match(railCss,/\.dsHomeFeatureBreathingSpace\{height:205px/);
+  assert.match(railCss,/@media\(prefers-reduced-motion:reduce\)/);
 });
 test("HudHud docks before activation and keeps the existing conversation endpoint",()=>{
   const page=read("app/search/page.tsx");
