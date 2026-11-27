@@ -186,12 +186,24 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
    const Voice=w.SpeechRecognition||w.webkitSpeechRecognition;
    if(Voice){
     const recognizer=new Voice();s.recognition=recognizer;
+    let previousText="",currentText="";
+    let nudgeSent=false,nudgeTimer:ReturnType<typeof setTimeout>|null=null;
     recognizer.lang=language==="ar"?"ar-SA":"en-US";recognizer.continuous=true;recognizer.interimResults=true;
     recognizer.onresult=event=>{
      if(!active.current||session.current!==s)return;
      const parts=[];for(let i=0;i<event.results.length;i++)parts.push(event.results[i][0]?.transcript||"");
-     const value=parts.join(" ").trim().slice(0,500);
+     currentText=parts.join(" ").trim();
+     const value=[previousText,currentText].filter(Boolean).join(" ").slice(-850);
      if(value){setSpoken(true);setTranscript(value)}
+     if(nudgeTimer)clearTimeout(nudgeTimer);
+     // A single fast, friendly response after a genuine pause, never a
+     // repetitive loop and never reciting the declaration into the mic.
+     if(value&&!nudgeSent&&Date.now()-startedAt.current>4000){
+      nudgeTimer=setTimeout(()=>{
+       if(active.current&&!done.current){nudgeSent=true;guide("I'm here. You can say the full Shahada whenever you're ready.")}
+      },1700);
+      reminders.current.push(nudgeTimer);
+     }
      if(hasShahada(value)&&!done.current){
       done.current=true;setState("recognized");setMessage("Shahada recognized");
       stop(true);
@@ -203,6 +215,7 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
      }
     };
     recognizer.onend=()=>{
+     if(currentText){previousText=[previousText,currentText].filter(Boolean).join(" ").slice(-850);currentText="";}
      if(!active.current||session.current!==s||done.current)return;
      setTimeout(()=>{if(active.current&&session.current===s)try{recognizer.start()}catch{}},180);
     };
