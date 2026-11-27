@@ -4,6 +4,9 @@ import "./search-results.css";
 import "./search-magnetic.css";
 import "./search-feature-rails.css";
 import SearchFeatureRails from "./SearchFeatureRails";
+import SearchAuthFlow,{type SearchAuthMode} from "../components/SearchAuthFlow";
+import dynamic from "next/dynamic";
+const ShahadaOnboardingExperience=dynamic(()=>import("../components/ShahadaOnboardingExperience"),{ssr:false,loading:()=>null});
 import Link from "next/link";
 import WebSearchPanel,{type GlobalSearchMode} from "../components/WebSearchPanel";
 import { useSearchMagneticMotion } from "./useSearchMagneticMotion";
@@ -85,6 +88,27 @@ export default function SearchHub() {
   const [hudhudDocked,setHudhudDocked]=useState(false);
   const [signoutConfirm,setSignoutConfirm]=useState(false);
   const [signoutBusy,setSignoutBusy]=useState(false);
+  const [authMode,setAuthMode]=useState<SearchAuthMode|null>(null);
+  const [authLeaving,setAuthLeaving]=useState(false);
+  const [authReturn,setAuthReturn]=useState("/search");
+  useEffect(()=>{
+    const params=new URLSearchParams(window.location.search);
+    const mode=params.get("auth");
+    if(["signin","signup","shahada","recover"].includes(mode||""))setAuthMode(mode as SearchAuthMode);
+    const next=params.get("next")||"/search";
+    if(next.startsWith("/")&&!next.startsWith("//")&&!next.startsWith("/\\")&&!next.includes("://"))setAuthReturn(next);
+  },[]);
+  const openAuth=(mode:SearchAuthMode)=>{
+    setQuery("");setSubmitted("");setTab("All");setAuthLeaving(false);setAuthMode(mode);
+    try{window.history.replaceState({}, "", "/search?auth="+mode);}catch{}
+  };
+  const closeAuth=()=>{
+    setAuthLeaving(true);
+    window.setTimeout(()=>{
+      setAuthMode(null);setAuthLeaving(false);
+      try{window.history.replaceState({}, "", "/search");}catch{}
+    },220);
+  };
   const [resultsNight,setResultsNight]=useState(true);
   // First-visit reveal happens at the wordmark's FINAL layout position.
   // It never shows a second, floating copy of the brand or blocks repeat searches.
@@ -119,6 +143,12 @@ export default function SearchHub() {
     });
     return()=>{active=false;subscription.unsubscribe()};
   },[]);
+  useEffect(()=>{
+    if(account==="member"&&authMode==="signin"){
+      setAuthMode(null);
+      if(authReturn!=="/search")router.replace(authReturn);
+    }
+  },[account,authMode,authReturn,router]);
   useEffect(()=>{try{const saved=localStorage.getItem("1muslim:search-results-theme");if(saved==="day"||saved==="night")setResultsNight(saved==="night");}catch{}},[]);
   const toggleResultsTheme=()=>setResultsNight(old=>{try{localStorage.setItem("1muslim:search-results-theme",old?"day":"night");}catch{}return !old;});
 
@@ -198,13 +228,14 @@ export default function SearchHub() {
     }finally{setSignoutBusy(false);}
   };
   const homeMode=!query.trim();
-  return <main ref={magneticRoot} className={"dsPage "+(homeMode?"dsHomeMode dsIntro"+(introStage==="pending"?"Pending":introStage==="playing"?"Playing":"Done"):"dsResultsMode "+(resultsNight?"dsResultsNight":"dsResultsDay"))}>
+  const showAuth=authMode!==null;
+  return <main ref={magneticRoot} className={"dsPage "+(homeMode?"dsHomeMode dsIntro"+(introStage==="pending"?"Pending":introStage==="playing"?"Playing":"Done"):"dsResultsMode "+(resultsNight?"dsResultsNight":"dsResultsDay"))+(showAuth?" dsInlineAuthOpen":"")+(authLeaving?" dsInlineAuthLeaving":"")}>
     <nav className="dsHomeUtilities" aria-label="Account shortcuts">
       {!homeMode&&<Link href="/search" className="dsResultsBrand" aria-label="One Muslim Live — return to search home" onClick={e=>{e.preventDefault();clear()}}><span>One Muslim</span><span className="dsHomeBrandLive" aria-hidden="true">.live</span></Link>}
       {!homeMode&&<button type="button" className="dsUtilityButton dsResultsThemeToggle" onClick={toggleResultsTheme} aria-label={resultsNight?"Switch search results to light mode":"Switch search results to dark mode"} title={resultsNight?"Light appearance":"Dark appearance"} aria-pressed={resultsNight}><span aria-hidden="true">{resultsNight?"☼":"◐"}</span></button>}
       {account==="guest"?<div className="dsGuestAccount" aria-label="Account access">
-        <Link href="/auth?next=%2Fsearch&login=1" className="dsGuestSignIn" aria-label="Sign in" title="Sign in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.4 20c.4-4 2.7-6 6.6-6s6.2 2 6.6 6"/></svg></Link>
-        <Link href="/auth?next=%2Fsearch&mode=signup" className="dsGuestJoin"><span className="dsGuestJoinFull">Join 1Muslim</span><span className="dsGuestJoinCompact">Join</span></Link>
+        <Link href="/auth?next=%2Fsearch&login=1" onClick={e=>{e.preventDefault();openAuth("signin")}} className="dsGuestSignIn" aria-label="Sign in" title="Sign in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.4 20c.4-4 2.7-6 6.6-6s6.2 2 6.6 6"/></svg></Link>
+        <Link href="/auth?next=%2Fsearch&mode=signup" onClick={e=>{e.preventDefault();openAuth("signup")}} className="dsGuestJoin"><span className="dsGuestJoinFull">Join 1Muslim</span><span className="dsGuestJoinCompact">Join</span></Link>
       </div>:account==="member"?<>
       <Link href="/settings" aria-label="Settings" title="Settings" className="dsUtilityButton">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M10 2h4l.6 2.4 1.6.9 2.4-.7 2 3.5-1.8 1.7v1.9l1.8 1.7-2 3.5-2.4-.7-1.6.9L14 20h-4l-.6-2.4-1.6-.9-2.4.7-2-3.5 1.8-1.7v-1.9L3.4 8.6l2-3.5 2.4.7 1.6-.9L10 2Z"/></svg>
@@ -220,10 +251,10 @@ export default function SearchHub() {
     <header className={"dsHeader"+(compactHeader?" dsHeaderCompact":"")}>
       <h1 className="dsHomeBrand" aria-hidden={!homeMode}><span>One Muslim</span><span className="dsHomeBrandLive" aria-hidden="true">.live</span></h1>
       <div className="dsHeaderRow">
-        <Link href="/search" className="dsBack" aria-label="Back to search home" onClick={e=>{e.preventDefault();clear()}}>‹</Link>
-        <form className="dsSearchForm" role="search" onSubmit={e=>{e.preventDefault();commit(query);}}>
+        <Link href="/search" className="dsBack" aria-label="Back to search home" onClick={e=>{e.preventDefault();showAuth?closeAuth():clear()}}>‹</Link>
+        <form className="dsSearchForm" role="search" aria-hidden={showAuth} onSubmit={e=>{e.preventDefault();if(!showAuth)commit(query);}}>
           <span aria-hidden="true">⌕</span>
-          <input ref={searchField} type="search" autoComplete="off" aria-label="Search all of 1Muslim" placeholder="Search the world, Qur’an, creators, videos…" value={query}
+          <input ref={searchField} type="search" autoComplete="off" aria-label="Search all of 1Muslim" placeholder="Search 1Muslim with HudHud" value={query}
             onChange={e=>setQuery(e.target.value)} />
           {query&&<button className="dsClear" type="button" aria-label="Clear search" onClick={clear}>×</button>}
           <button type="button" className={"dsHudDock"+(hudhudDocked?" isDocked":"")} aria-label={hudhudDocked?"Ask HudHud AI search assistant":"HudHud is getting ready"} title="Ask HudHud" aria-hidden={!homeMode} tabIndex={homeMode?0:-1} disabled={!homeMode||!hudhudDocked} onClick={()=>void openHudHud()}>
@@ -231,6 +262,8 @@ export default function SearchHub() {
           </button>
         </form>
         <button className="dsSearchSubmit" type="button" onClick={()=>commit(query)}>Search</button>
+        {showAuth&&authMode!=="shahada"&&<SearchAuthFlow mode={authMode!} setMode={next=>{setAuthMode(next);try{window.history.replaceState({}, "", "/search?auth="+next)}catch{}}} onClose={closeAuth} onSignedIn={()=>{setAccount("member");closeAuth()}} returnTo={authReturn}/>}
+        {showAuth&&authMode==="shahada"&&<div className="dsShahadaInlineHeading"><img src="/assets/hudhud-logo.PNG" alt="" /><span>HudHud Shahada</span><button type="button" onClick={closeAuth} aria-label="Return to search">✕</button></div>}
       </div>
       <div className="dsCategoryBar">
         <nav className="dsTabs" aria-label="Discover categories">
@@ -244,7 +277,10 @@ export default function SearchHub() {
       </div>
     </header>
 
-    {showSuggestions&&<section className="dsSuggestions" aria-label="Search suggestions">
+    {showAuth&&authMode==="shahada"&&<section className="dsAuthShahada" aria-label="Shahada verification">
+      {account==="member"?<ShahadaOnboardingExperience embedded onComplete={()=>{setAccount("member");closeAuth()}}/>:account==="checking"?<p role="status">Preparing your secure Shahada session…</p>:<div className="dsAuthShahadaWait"><strong>Confirm your email to begin</strong><p>Once your account is verified, sign in here and HudHud will guide your Shahada.</p><button type="button" onClick={()=>openAuth("signin")}>Sign in</button></div>}
+    </section>}
+    {!showAuth&&showSuggestions&&<section className="dsSuggestions" aria-label="Search suggestions">
       <span className="dsSectionKicker">SUGGESTED MATCHES</span>
       {suggestions.map(text=><button key={text} type="button" onClick={()=>commit(text)}><span className="dsSuggestIcon">⌕</span><span>{text}</span><b aria-hidden="true">↗</b></button>)}
       <button className="dsSuggestSearchAll" type="button" onClick={()=>commit(query)}>Search the web and 1Muslim for “{query}” <span aria-hidden="true">→</span></button>
@@ -252,7 +288,7 @@ export default function SearchHub() {
 
 
 
-    <div className="dsContent">
+    {!showAuth&&<div className="dsContent">
       {!homeMode&&submitted.trim().length>=2&&showGlobal&&<WebSearchPanel query={submitted} mode={tab as GlobalSearchMode}/>}
       {homeMode&&<div className="dsHomeIntro">
         {recent.length>0&&<section className="dsRecent" aria-labelledby="dsRecentTitle">
@@ -280,7 +316,7 @@ export default function SearchHub() {
           <button type="button" onClick={()=>void openHudHud()}>Ask HudHud →</button></section>}
       </>}
       {homeMode&&<SearchFeatureRails/>}
-    </div>
+    </div>}
 
 
     {account==="member"&&signoutConfirm&&<div className="dsSignoutBackdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setSignoutConfirm(false)}}>
