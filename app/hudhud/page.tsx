@@ -325,11 +325,11 @@ export default function HudHudPage(){
  },[busy,exhausted,focused,speaking,speechPending,draft,stopVoice]);
  useEffect(()=>{
   if(!autoListening||micPaused||micAccess!=="granted"||!pageVisible||
-     busy||speaking||speechPending||exhausted||focused||exiting||
+     listening||busy||speaking||speechPending||exhausted||focused||exiting||
      menuOpen||settingsOpen||draft.trim()||recognizer.current)return;
   const timer=setTimeout(()=>startVoice("auto"),350);
   return()=>clearTimeout(timer);
- },[autoListening,micPaused,micAccess,pageVisible,busy,speaking,speechPending,
+ },[autoListening,micPaused,micAccess,pageVisible,listening,busy,speaking,speechPending,
     exhausted,focused,exiting,menuOpen,settingsOpen,draft,startVoice]);
  const close=()=>{
   setMicPaused(true);stopVoice(true);window.speechSynthesis?.cancel();setSpeaking(false);setSpeakingAt(null);setSpeechPending(false);setExiting(true);
