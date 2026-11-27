@@ -8,7 +8,9 @@ export type ProfileSearchRequest={token:number;query:string;mode:"search"|"hudhu
 type HudHudPayload={reply?:string;presentation?:HudHudLine["presentation"];verses?:HudHudLine["verses"];images?:HudHudLine["images"];matches?:HudHudLine["matches"];error?:string};
 
 /** The profile Home and full HudHud screen render the SAME response stage. */
-export default function ProfileImmersiveStage({request}:{request:ProfileSearchRequest|null}){
+export default function ProfileImmersiveStage({request,onReply,onSettled,persist=true,showEmpty=true}:{request:ProfileSearchRequest|null;onReply?:(answer:string)=>void;onSettled?:()=>void;persist?:boolean;showEmpty?:boolean}){
+ const onReplyRef=useRef(onReply);onReplyRef.current=onReply;
+ const onSettledRef=useRef(onSettled);onSettledRef.current=onSettled;
  const [lines,setLines]=useState<HudHudLine[]>([]);
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState("");
@@ -40,7 +42,7 @@ export default function ProfileImmersiveStage({request}:{request:ProfileSearchRe
      presentation:ai.presentation,verses:ai.verses,images:ai.images,matches:ai.matches
     };
     const next=[...historyRef.current,{role:"user",content:q} as HudHudLine,assistant].slice(-36);
-    historyRef.current=next;setLines(next);setBusy(false);
+    historyRef.current=next;setLines(next);setBusy(false);onReplyRef.current?.(assistant.content);onSettledRef.current?.();
     // Do not make someone wait for external website retrieval to read or hear
     // the answer. Append the independent first hit when it is available.
     if(ai.presentation?.kind!=="verse"&&ai.presentation?.kind!=="image")
@@ -54,17 +56,17 @@ export default function ProfileImmersiveStage({request}:{request:ProfileSearchRe
    }
    const webResult=await webPromise;
    if(controller.signal.aborted)return;
-   if(!webResult){setError(aiError||"Unable to search. Please try again.");setBusy(false);return}
+   if(!webResult){setError(aiError||"Unable to search. Please try again.");setBusy(false);onSettledRef.current?.();return}
    const assistant:HudHudLine={role:"assistant",content:"Here is the top independent website result for your search.",webResult};
    const next=[...historyRef.current,{role:"user",content:q} as HudHudLine,assistant].slice(-36);
-   historyRef.current=next;setLines(next);setBusy(false);
+   historyRef.current=next;setLines(next);setBusy(false);onReplyRef.current?.(assistant.content);onSettledRef.current?.();
    setError("HudHud's answer is unavailable, but this web result is ready.");
   })();
   return()=>controller.abort();
  },[request]);
  return <section className="profileHudFocusRegion" aria-label="HudHud immersive response stage">
-   {!request&&!lines.length&&<div className="profileHudEmpty" aria-hidden="true"><span>Ask anything.</span><small>One question. One clear view.</small></div>}
-   <HudHudFocusStage lines={lines} sessionId="profile-search" busy={busy} speakingAt={null} speechChar={0} persist/>
+   {showEmpty&&!request&&!lines.length&&<div className="profileHudEmpty" aria-hidden="true"><span>Ask anything.</span><small>One question. One clear view.</small></div>}
+   <HudHudFocusStage lines={lines} sessionId="profile-search" busy={busy} speakingAt={null} speechChar={0} persist={persist}/>
    {error&&<p className="profileHudError" role="alert">{error}</p>}
  </section>;
 }
