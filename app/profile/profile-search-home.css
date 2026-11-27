@@ -77,3 +77,10 @@
 @keyframes psPanelOpen{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @media(max-width:680px){.profileSearchUtilities{padding:calc(12px + env(safe-area-inset-top,0px)) 16px 0;gap:9px}.profileSearchOrb{width:43px;height:43px;min-width:43px}.profileSearchCentered{padding:clamp(28px,5vh,60px) 13px 0}.profileSearchBrand{font-size:clamp(36px,10vw,58px)}.profileSearchEntry{gap:9px}.profileSearchField{padding-left:13px;min-height:55px;gap:7px}.profileSearchField input{font-size:14px}.profileSearchHud{width:39px;height:39px;flex-basis:39px}.profileSearchAvatarChange{width:47px;height:47px;flex-basis:47px}.profileSearchPersonal{margin-top:25px;padding:0 12px}.profileSearchStoryRail .profileCinematicItem{flex-basis:103px!important;width:103px!important}.profileSearchFullRail{padding:clamp(22px,4vh,46px) 10px 0}}
 @media(prefers-reduced-motion:reduce){.profileSearchHome *, .profileSearchHome *:before{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Keep the Search Profile white and lightweight while retaining legacy tools behind its panel. */
+.profileCommandPage:has(.profileSearchHome:not(.hasOpenPanel))>.profileQiblaFooter{display:none}
+.profileCommandPage:has(.profileSearchHome:not(.hasOpenPanel)){padding-bottom:0!important}
+.profileCommandPage:has(.profileSearchHome.hasOpenPanel) .profileSocialHub{background:#fff}
+.profileCommandPage:has(.profileSearchHome.hasOpenPanel) .profileEditorToolbar,
+.profileCommandPage:has(.profileSearchHome.hasOpenPanel) .profileEditorNav{background:#fff!important}
