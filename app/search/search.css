@@ -681,3 +681,8 @@
  .dsAuthShahada .onboardingPage.onEmbedded .onboardingCard{max-height:64dvh!important;padding:12px!important;border-radius:16px!important}
 }
 @media(prefers-reduced-motion:reduce){.dsAuthShahada{animation:none!important}.dsPage.dsInlineAuthOpen .dsSearchForm{transition:none!important;transform:none!important}.dsPage.dsInlineAuthLeaving .dsInlineAuth{transition:none!important}}
+
+/* No square tap flash or rectangular native focus outline on the pill search. */
+.dsHomeMode .dsSearchForm,.dsHomeMode .dsSearchForm *{-webkit-tap-highlight-color:transparent}
+.dsHomeMode .dsSearchForm input:focus{outline:0!important;box-shadow:none!important}
+.dsHomeMode .dsSearchForm:focus-within{border-color:#e1e2df;box-shadow:0 10px 34px rgba(25,33,32,.08),0 1px 3px rgba(20,22,19,.02)}

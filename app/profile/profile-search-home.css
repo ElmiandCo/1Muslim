@@ -1,0 +1,86 @@
+/* Personalized Search Home: reuse the actual One Muslim wordmark and Explore rail. */
+.profileCommandPage:has(.profileSearchHome){background:#fff!important;color:#283238!important;min-height:100dvh;overflow-x:clip}
+.profileSearchHome{--ps-ink:#303a42;--ps-muted:#849198;position:relative;isolation:isolate;display:flex;flex-direction:column;min-height:min(100dvh,1040px);width:100%;max-width:none;margin:0 auto;padding:0 0 calc(20px + env(safe-area-inset-bottom));background:#fff;color:var(--ps-ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden}
+.profileSearchHome *{box-sizing:border-box}
+.profileSearchHome button,.profileSearchHome input{font:inherit}
+.profileSearchHome button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.profileSearchHome button:focus-visible,.profileSearchHome a:focus-visible,.profileSearchHome input:focus-visible{outline:2px solid #caa86b;outline-offset:3px}
+.profileSearchUtilities{display:flex;justify-content:flex-end;gap:11px;align-items:center;width:100%;padding:calc(20px + env(safe-area-inset-top,0px)) clamp(16px,4vw,58px) 0}
+.profileSearchOrb{border:0;display:grid;place-items:center;width:45px;height:45px;min-width:45px;border-radius:50%;background:#fff;box-shadow:0 4px 18px #182a2a13,0 1px 3px #1420200a;color:#5c686e;transition:transform .18s ease,box-shadow .18s ease}
+.profileSearchOrb svg{width:21px;height:21px}
+.profileSearchOrb img{width:100%;height:100%;object-fit:cover;border-radius:50%;padding:3px}
+.profileSearchOrb:active{transform:scale(.94)}
+.profileSearchCentered{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;max-width:980px;margin:0 auto;padding:clamp(18px,3vh,42px) 18px 0}
+.profileSearchBrand{display:flex;justify-content:center;align-items:baseline;color:#292e32!important;text-decoration:none!important;white-space:nowrap;font-weight:720;letter-spacing:-.065em;font-size:clamp(37px,7vw,72px);line-height:1.03;margin:0 0 clamp(20px,3vh,36px)}
+.profileSearchLive{color:#a58c5c;font-size:.42em;font-weight:700;letter-spacing:-.04em;animation:psLive 26s ease-in-out infinite}
+@keyframes psLive{0%,100%{color:#a58c5c;opacity:.9}40%{color:#478579;opacity:1}70%{color:#99875e;opacity:.88}}
+.profileSearchEntry{display:flex;align-items:center;justify-content:center;gap:13px;width:min(770px,100%)}
+.profileSearchField{display:flex;align-items:center;gap:12px;min-width:0;flex:1;padding:7px 8px 7px 20px;min-height:58px;border:1px solid #e7e8e7;border-radius:999px;background:#fff;box-shadow:0 9px 31px #172b2a12;transition:border-color .2s ease,box-shadow .2s ease}
+.profileSearchField:focus-within{border-color:#d9d1c2;box-shadow:0 10px 31px #172b2a12}
+.profileSearchField>svg{flex:0 0 23px;color:#80898e}
+.profileSearchField input{display:block;width:100%;min-width:0;flex:1;border:0!important;outline:none!important;box-shadow:none!important;min-height:40px;font-size:15px;color:#233039;background:transparent!important;border-radius:0;-webkit-appearance:none}
+.profileSearchField input::-webkit-search-cancel-button{display:none}
+.profileSearchField input::placeholder{color:#9ea5a9}
+.profileSearchHud{display:grid;place-items:center;width:43px;height:43px;flex:0 0 43px;border-radius:50%;border:0;background:#fff;padding:2px;transition:transform .18s}
+.profileSearchHud img{width:100%;height:100%;object-fit:contain;border-radius:50%}
+.profileSearchHud:active{transform:scale(.92)}
+.profileSearchAvatarChange{width:52px;height:52px;flex:0 0 52px;display:block;position:relative;border-radius:50%;background:#eee;box-shadow:0 3px 13px #171f271c;border:2px solid #f9f9f9;overflow:hidden}
+.profileSearchAvatarChange img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%}
+.profileSearchPreviousAvatar{z-index:2;animation:psAvatarOut .65s ease both}
+.profileSearchHome.isArriving .profileSearchCurrentAvatar{animation:psAvatarIn .66s ease both}
+.profileSearchHome.isArriving:before{content:"";position:absolute;inset:0;background:#18242a;z-index:5;pointer-events:none;animation:psDim .65s ease-out both}
+@keyframes psDim{0%{opacity:0}25%{opacity:.14}100%{opacity:0}}
+@keyframes psAvatarOut{0%,25%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.87)}}
+@keyframes psAvatarIn{0%,25%{opacity:0;transform:scale(.83)}100%{opacity:1;transform:scale(1)}}
+.profileSearchPersonal{width:100%;max-width:none;margin:clamp(18px,4vh,43px) 0 0;padding:0 clamp(13px,3vw,42px)}
+.profileSearchStoryHeading{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 4px;margin-bottom:7px;font-size:13px;color:#657176;font-weight:740}
+.profileSearchAdd{display:grid;place-items:center;width:43px;height:43px;border:1px solid #e7e8e8;border-radius:50%;color:#536268;font-size:25px!important;background:#fff;box-shadow:0 3px 12px #2433330d}
+.profileSearchStoryRail{width:100%;max-width:none;min-width:0}
+.profileSearchStoryRail .profileCinematicPosts{margin:0!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important}
+.profileSearchStoryRail .profileCinematicHeading{display:none!important}
+.profileSearchStoryRail .profileCinematicGrid{display:flex!important;flex-wrap:nowrap!important;justify-content:flex-start!important;align-items:flex-start!important;gap:clamp(12px,2.2vw,25px)!important;overflow-x:auto!important;overflow-y:hidden!important;scroll-snap-type:x proximity!important;scroll-behavior:smooth;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-inline:contain;padding:8px 5px 19px!important;max-width:100%;width:100%}
+.profileSearchStoryRail .profileCinematicGrid::-webkit-scrollbar{display:none}
+.profileSearchStoryRail .profileCinematicItem{position:relative!important;flex:0 0 clamp(98px,13vw,130px)!important;width:clamp(98px,13vw,130px)!important;max-width:none!important;min-width:0!important;scroll-snap-align:center;border:0!important;background:none!important;box-shadow:none!important}
+.profileSearchStoryRail .profileCinematicTile{width:100%!important;display:block!important;aspect-ratio:1!important;border-radius:50%!important;border:2px solid #e7e0d1!important;padding:3px!important;overflow:hidden!important;background:#fff!important;box-shadow:0 4px 16px #20302711!important;transition:transform .18s ease!important}
+.profileSearchStoryRail .profileCinematicTile:active{transform:scale(.95)}
+.profileSearchStoryRail .profileCinematicVisual{width:100%!important;height:100%!important;aspect-ratio:1!important;border-radius:50%!important;overflow:hidden!important}
+.profileSearchStoryRail .profileCinematicVisual img,.profileSearchStoryRail .profileCinematicVisual video{width:100%!important;height:100%!important;object-fit:cover!important;display:block}
+.profileSearchStoryRail .profileCinematicText{display:flex!important;flex-direction:column;justify-content:center;align-items:center;width:100%;height:100%;padding:9px!important;border-radius:50%!important;background:#f0efeb!important;text-align:center}
+.profileSearchStoryRail .profileCinematicText span{display:none}
+.profileSearchStoryRail .profileCinematicText p{color:#5e6a6f!important;margin:0!important;font-size:10px!important;line-height:1.35!important;display:-webkit-box!important;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.profileSearchStoryRail .profileCinematicDelete{display:none!important}
+.profileSearchStoryRail .profileCinematicPlay{top:50%!important;left:50%!important;transform:translate(-50%,-50%)}
+.profileSearchStoryRail .profileCinematicEmpty{font-size:13px;color:#879296;text-align:left;padding:18px 5px}
+.profileSearchIdentity{max-width:850px;margin:6px auto 0;text-align:center}
+.profileSearchDrag{display:flex;align-items:center;flex-direction:column;gap:4px;margin:0 auto;min-width:90px;padding:4px 12px 6px;border:0;background:transparent;color:#879196;font-size:11px;touch-action:pan-y}
+.profileSearchDrag>span{width:42px;height:4px;border-radius:999px;background:#e5e5e4}
+.profileSearchDrag small{font-size:11px}
+.profileSearchIdentityDetails{display:grid;grid-template-rows:0fr;opacity:0;overflow:hidden;max-height:0;transform:translateY(-8px);transition:opacity .25s,transform .25s,max-height .3s}
+.profileSearchIdentityDetails.isOpen{display:block;opacity:1;transform:none;max-height:550px;overflow:visible;padding:9px 4px 18px}
+.profileSearchIdentityDetails h2{font-size:clamp(22px,3.4vw,34px);line-height:1.2;font-weight:720;letter-spacing:-.045em;margin:0 0 5px;color:#313b42}
+.profileSearchVerified{font-size:14px!important;display:inline-grid;place-items:center;vertical-align:middle;margin-left:9px;width:21px;height:21px;border-radius:50%;background:#b59b6c;color:#fff}
+.profileSearchHandle,.profileSearchLocation{font-size:12px;color:#8c9799;margin:3px 0}
+.profileSearchBio{font-size:14px;color:#58676e;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere;margin:9px auto;max-width:600px}
+.profileSearchStats{display:flex;justify-content:center;gap:26px;align-items:center;padding:12px 0;color:#788489;font-size:12px}
+.profileSearchStats strong{color:#39444a}
+.profileSearchActions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:5px 0 0}
+.profileSearchActions button,.profileSearchReturn{background:#fff;color:#46545b;border:1px solid #e7e8e8;border-radius:999px;min-height:43px;padding:10px 18px;box-shadow:0 4px 15px #1f292b0c;font-size:12px;font-weight:700;transition:transform .18s}
+.profileSearchActions button:active,.profileSearchReturn:active{transform:scale(.97)}
+.profileSearchFullRail{width:100%;max-width:none;padding:clamp(25px,6vh,90px) clamp(13px,3vw,42px) 0;margin-top:auto}
+.profileSearchFullRail .dsExploreFeatureSection{width:100%;max-width:none!important}
+.profileSearchReturn{margin:26px auto 0;display:block}
+.profileSearchHome.hasOpenPanel{min-height:0;padding-bottom:8px}
+.profileSearchHome.hasOpenPanel .profileSearchCentered{padding-top:10px}
+.profileSearchHome.hasOpenPanel .profileSearchBrand{font-size:clamp(25px,4vw,40px);margin-bottom:12px}
+.profileSearchHome.hasOpenPanel .profileSearchEntry{max-width:640px}
+.profileCommandPage>.profileSocialHub{width:100%;animation:psPanelOpen .26s cubic-bezier(.2,.7,.3,1) both}
+@keyframes psPanelOpen{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media(max-width:680px){.profileSearchUtilities{padding:calc(12px + env(safe-area-inset-top,0px)) 16px 0;gap:9px}.profileSearchOrb{width:43px;height:43px;min-width:43px}.profileSearchCentered{padding:clamp(28px,5vh,60px) 13px 0}.profileSearchBrand{font-size:clamp(36px,10vw,58px)}.profileSearchEntry{gap:9px}.profileSearchField{padding-left:13px;min-height:55px;gap:7px}.profileSearchField input{font-size:14px}.profileSearchHud{width:39px;height:39px;flex-basis:39px}.profileSearchAvatarChange{width:47px;height:47px;flex-basis:47px}.profileSearchPersonal{margin-top:25px;padding:0 12px}.profileSearchStoryRail .profileCinematicItem{flex-basis:103px!important;width:103px!important}.profileSearchFullRail{padding:clamp(22px,4vh,46px) 10px 0}}
+@media(prefers-reduced-motion:reduce){.profileSearchHome *, .profileSearchHome *:before{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Keep the Search Profile white and lightweight while retaining legacy tools behind its panel. */
+.profileCommandPage:has(.profileSearchHome:not(.hasOpenPanel))>.profileQiblaFooter{display:none}
+.profileCommandPage:has(.profileSearchHome:not(.hasOpenPanel)){padding-bottom:0!important}
+.profileCommandPage:has(.profileSearchHome.hasOpenPanel) .profileSocialHub{background:#fff}
+.profileCommandPage:has(.profileSearchHome.hasOpenPanel) .profileEditorToolbar,
+.profileCommandPage:has(.profileSearchHome.hasOpenPanel) .profileEditorNav{background:#fff!important}

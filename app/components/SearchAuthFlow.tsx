@@ -57,7 +57,7 @@ export default function SearchAuthFlow({mode,setMode,onClose,onSignedIn,returnTo
   setMessage("");setPass("");setConfirm("");setReveal(false);setAttemptFailed(false);
   setStep("identity");setMode(next);
  };
- const finish=()=>{setBusy(false);setMessage("");onSignedIn();if(returnTo!=="/search"&&returnTo.startsWith("/")&&!returnTo.startsWith("//"))window.location.assign(returnTo);};
+ const finish=()=>{setBusy(false);setMessage("");try{sessionStorage.setItem("1muslim:profile-arrival","1")}catch{};onSignedIn();};
  async function signin(event:FormEvent){
   event.preventDefault();if(busy)return;setBusy(true);setMessage("");
   try{
