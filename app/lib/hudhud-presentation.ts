@@ -29,12 +29,12 @@ export function selectHudHudPresentation(message:string):HudHudPresentation{
  const imageQuery=imageQueryFromHudHud(text);
  if(imageQuery)return {kind:"image",query:imageQuery};
  // A natural-language request for divine guidance should cite an exact,
- // independently verified ayah rather than relying on a fabricated quotation.
+ // independently verified ayah (2:272) rather than an invented quotation.
  const asksForVerse=/(?:where|which|what|show|give|find|read|verse|ayah|qur['’]?an|koran)/i.test(text);
  if(asksForVerse&&/\b(?:allah|god|he)\b/i.test(text)
    &&/\bguid(?:e|es|ance|ing)\b/i.test(text)
    &&/\b(?:whom|who|whoever|whomever)\b[^.!?]{0,35}\bwills?\b/i.test(text))
-  return {kind:"verse",verseKey:"28:56"};
+  return {kind:"verse",verseKey:"2:272"};
  const ref=verseReference(text);
  const detailedQuestion=/\b(explain|why|meaning|how|context|tafsir|interpret|commentary|lessons?|support|hadith|about)\b/i.test(text);
  if(ref&&!detailedQuestion&&(QURAN.test(text)||VERSE.test(text)||/^\d{1,3}:\d{1,3}$/.test(text)))return {kind:"verse",verseKey:ref};
