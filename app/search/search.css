@@ -633,3 +633,51 @@
     animation:none!important;transform:none!important;filter:none!important;opacity:1!important;clip-path:none!important;
   }
 }
+
+/* Search-native identity: the old pill slides out; the same space becomes sign-in.
+   Keep the brand exactly where it is — no modal, scroll jump or new backdrop. */
+.dsPage.dsInlineAuthOpen .dsHeaderRow{position:relative;display:flex;flex-direction:column;align-items:stretch;width:min(780px,calc(100% - 28px));min-height:120px;padding:0;margin:0 auto;gap:0}
+.dsPage.dsInlineAuthOpen .dsSearchForm{
+ position:absolute!important;left:0;right:0;top:0;width:100%;height:62px;
+ opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-13px) scale(.985);
+ transition:opacity .25s ease,transform .32s cubic-bezier(.2,.76,.2,1),visibility .3s;
+}
+.dsPage.dsInlineAuthOpen .dsSearchSubmit,.dsPage.dsInlineAuthOpen .dsBack,.dsPage.dsInlineAuthOpen .dsCategoryBar,.dsPage.dsInlineAuthOpen .dsGuestAccount{display:none!important}
+.dsPage.dsInlineAuthOpen .dsHomeBrand{margin-bottom:21px}
+.dsPage.dsInlineAuthOpen .dsInlineAuth{width:100%;max-width:700px}
+.dsPage.dsInlineAuthLeaving .dsInlineAuth{opacity:0;transform:translateY(-8px);transition:opacity .22s ease,transform .22s ease}
+.dsPage.dsInlineAuthOpen .dsShahadaInlineHeading{width:min(650px,100%);margin:0 auto;display:flex;align-items:center;gap:10px;padding:0 10px 12px;font-weight:720;color:#283831;font-size:15px}
+.dsPage.dsInlineAuthOpen .dsShahadaInlineHeading img{width:37px;height:37px;object-fit:contain}
+.dsPage.dsInlineAuthOpen .dsShahadaInlineHeading button{margin-left:auto;width:34px;height:34px;border:1px solid #e0e6e2;border-radius:50%;background:#fff;color:#566961;font-size:12px}
+.dsAuthShahada{width:min(720px,calc(100% - 24px));margin:0 auto 24px;animation:dsAuthShahadaCome .35s ease-out both;min-height:160px}
+.dsAuthShahadaWait{display:grid;gap:12px;place-items:center;padding:22px;text-align:center}
+.dsAuthShahadaWait p{font-size:12px;color:#697b72}
+.dsAuthShahadaWait button{border:1px solid #dce5df;border-radius:999px;padding:12px 20px;background:#21443a;color:#fff}
+/* Reuse the authenticated recorder, but integrate its canvas as a section in
+   our Search Home instead of its old full-screen dark onboarding page. */
+.dsAuthShahada .onboardingPage.onEmbedded{
+ position:relative!important;inset:auto!important;top:auto!important;left:auto!important;
+ display:block!important;width:100%!important;height:auto!important;min-height:0!important;
+ max-height:none!important;overflow:visible!important;padding:0!important;margin:0!important;
+ background:transparent!important;color:#283831!important;
+}
+.dsAuthShahada .onboardingPage.onEmbedded .onboardingCard{
+ position:relative!important;margin:0 auto!important;width:100%!important;max-width:690px!important;
+ height:auto!important;max-height:min(67dvh,760px)!important;min-height:0!important;
+ overflow-y:auto!important;overflow-x:hidden!important;
+ background:#fff!important;border:1px solid #e7ebe8!important;
+ border-radius:23px!important;box-shadow:0 16px 55px rgba(16,35,27,.07)!important;
+ color:#243a31!important;padding:clamp(15px,3vw,26px)!important;
+}
+.dsAuthShahada .onboardingPage.onEmbedded .onboardingCard>h1,
+.dsAuthShahada .onboardingPage.onEmbedded .onboardingCard>.eyebrow,
+.dsAuthShahada .onboardingPage.onEmbedded .onboardingCard>.lead{color:#253b32!important}
+.dsAuthShahada .onboardingPage.onEmbedded .onboardingCard .voiceCard{max-width:580px}
+@keyframes dsAuthShahadaCome{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){
+ .dsPage.dsInlineAuthOpen .dsHomeBrand{margin:clamp(35px,7vh,85px) auto 19px;font-size:clamp(33px,8vw,48px)}
+ .dsPage.dsInlineAuthOpen .dsHeaderRow{width:calc(100% - 24px)}
+ .dsAuthShahada{width:calc(100% - 20px)}
+ .dsAuthShahada .onboardingPage.onEmbedded .onboardingCard{max-height:64dvh!important;padding:12px!important;border-radius:16px!important}
+}
+@media(prefers-reduced-motion:reduce){.dsAuthShahada{animation:none!important}.dsPage.dsInlineAuthOpen .dsSearchForm{transition:none!important;transform:none!important}.dsPage.dsInlineAuthLeaving .dsInlineAuth{transition:none!important}}
