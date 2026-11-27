@@ -4,6 +4,7 @@ import Link from "next/link";
 import {useEffect, useRef, useState} from "react";
 import type {ChangeEvent, FormEvent, KeyboardEvent, ReactNode} from "react";
 import styles from "./HudHudChatWindow.module.css";
+import {createHudHudAiVoicePlayer} from "../lib/hudhud-ai-voice-player";
 
 export type HudHudMessage = {
  id:number; role:"user"|"hudhud"; text:string; image?:string; avatar?:boolean;
@@ -49,6 +50,9 @@ export default function HudHudChatWindow({
  const scroll=useRef<HTMLDivElement>(null);
  const compose=useRef<HTMLTextAreaElement>(null);
  const recognizer=useRef<SpeechRecognizer|null>(null);
+ const voicePlayer=useRef<ReturnType<typeof createHudHudAiVoicePlayer>|null>(null);
+ const voiceBusy=useRef(false);
+ const voiceEpoch=useRef(0);
  const [menuOpen,setMenuOpen]=useState(false);
  const [listening,setListening]=useState(false);
  const [voiceError,setVoiceError]=useState("");
@@ -58,7 +62,7 @@ export default function HudHudChatWindow({
   const previousOverflow=document.body.style.overflow;
   const previousFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;
   document.body.style.overflow="hidden";
-  return()=>{document.body.style.overflow=previousOverflow;recognizer.current?.stop();previousFocus?.focus({preventScroll:true});};
+  return()=>{document.body.style.overflow=previousOverflow;recognizer.current?.stop();voiceEpoch.current++;voicePlayer.current?.stop();previousFocus?.focus({preventScroll:true});};
  },[]);
 
  useEffect(()=>{
@@ -81,13 +85,18 @@ export default function HudHudChatWindow({
   onDraftChange(prompt);onSettingsChange(false);setMenuOpen(false);
   compose.current?.focus();
  };
- const newChat=()=>{onNewChat();onSettingsChange(false);setMenuOpen(false);compose.current?.focus();};
+ const newChat=()=>{voiceEpoch.current++;voicePlayer.current?.stop();voiceBusy.current=false;onNewChat();onSettingsChange(false);setMenuOpen(false);compose.current?.focus();};
  const readAloud=(text:string)=>{
-  if(!("speechSynthesis" in window))return;
-  window.speechSynthesis.cancel();
-  const utterance=new SpeechSynthesisUtterance(text);
-  utterance.lang="en-US";utterance.rate=.95;
-  window.speechSynthesis.speak(utterance);
+  // Only speak generated voice, and never run dictation at the same time.
+  recognizer.current?.stop();
+  const epoch=++voiceEpoch.current;
+  voiceBusy.current=true;
+  const player=voicePlayer.current||(voicePlayer.current=createHudHudAiVoicePlayer());
+  void player.play(text).then(played=>{
+   if(epoch!==voiceEpoch.current)return;
+   voiceBusy.current=false;
+   if(!played)setVoiceError("HudHud's AI voice is temporarily unavailable. Please read the answer.");
+  });
  };
  const copy=(message:HudHudMessage)=>{
   if(!navigator.clipboard?.writeText)return;
@@ -97,6 +106,7 @@ export default function HudHudChatWindow({
  };
  const toggleDictation=()=>{
   setVoiceError("");
+  if(voiceBusy.current){setVoiceError("Wait for HudHud to finish speaking before using your microphone.");return;}
   if(listening){recognizer.current?.stop();return;}
   const browser=window as Window & {SpeechRecognition?:SpeechConstructor;webkitSpeechRecognition?:SpeechConstructor};
   const Ctor=browser.SpeechRecognition||browser.webkitSpeechRecognition;
@@ -169,7 +179,7 @@ export default function HudHudChatWindow({
          {message.image&&<img className={styles.messageImage} src={message.image} alt="Image attached for local preview"/>}
          {message.avatar&&<Link href="/profile" onClick={onClose} className={styles.resultLink}>Open your profile →</Link>}
          {message.links&&message.links.length>0&&<div className={styles.linkList}>{message.links.map(link=><Link key={link.href} href={link.href} onClick={onClose} className={styles.resultLink}>{link.title} ↗</Link>)}</div>}
-         {message.role==="hudhud"&&<div className={styles.messageActions}><button type="button" aria-label="Copy HudHud response" onClick={()=>copy(message)}>{copiedId===message.id?"✓ Copied":"▢ Copy"}</button><button type="button" aria-label="Read HudHud response aloud" onClick={()=>readAloud(message.text)}>◖ Listen</button></div>}
+         {message.role==="hudhud"&&<div className={styles.messageActions}><button type="button" aria-label="Copy HudHud response" onClick={()=>copy(message)}>{copiedId===message.id?"✓ Copied":"▢ Copy"}</button><button type="button" aria-label="Play HudHud AI-generated voice" onClick={()=>readAloud(message.text)}>◖ Listen</button></div>}
         </div>
        </article>)}
        {sending&&<div className={styles.thinking} role="status"><img src="/assets/hudhud-logo.PNG" width={28} height={28} alt=""/><span>HudHud is thinking</span><i/><i/><i/></div>}
