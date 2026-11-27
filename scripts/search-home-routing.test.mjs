@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import test from "node:test";
+import {passwordWarning} from "../app/lib/auth-password-policy.ts";
 
 const read = path => readFileSync(new URL("../" + path, import.meta.url), "utf8");
 
@@ -176,4 +177,60 @@ test("results header reuses the animated One Muslim.live brand at the top left",
   assert.match(resultCss,/\.dsResultsMode \.dsHomeUtilities \.dsResultsBrand/);
   assert.match(resultCss,/\.dsResultsNight \.dsHomeUtilities \.dsResultsBrand/);
   assert.match(resultCss,/@media\(max-width:370px\)/);
+});
+
+test("Search Home account entry morphs in place and preserves public search",()=>{
+ const page=read("app/search/page.tsx");
+ const flow=read("app/components/SearchAuthFlow.tsx");
+ const styles=read("app/search/search.css");
+ const flowCss=read("app/components/search-auth-flow.css");
+ assert.match(page,/import SearchAuthFlow/);
+ assert.match(page,/openAuth\("signin"\)/);
+ assert.match(page,/openAuth\("signup"\)/);
+ assert.match(page,/showAuth&&authMode!=="shahada"&&<SearchAuthFlow/);
+ assert.match(page,/placeholder="Search 1Muslim with HudHud"/);
+ assert.match(page,/<WebSearchPanel query=\{submitted\}/);
+ assert.match(page,/account==="member"/);
+ assert.match(styles,/\.dsPage\.dsInlineAuthOpen \.dsSearchForm/);
+ assert.match(flowCss,/\.dsInlineAuthFields/);
+ assert.doesNotMatch(flow,/position:fixed|backdrop-filter/);
+});
+test("HudHud Shahada uses the original verified recording and account completion",()=>{
+ const page=read("app/search/page.tsx");
+ const onboard=read("app/onboarding/page.tsx");
+ const callback=read("app/auth/callback/route.ts");
+ const auth=read("app/auth/page.tsx");
+ assert.match(page,/<OnboardingPage embedded onComplete=/);
+ assert.match(onboard,/export default function OnboardingPage\(\{embedded=false,onComplete\}/);
+ assert.match(onboard,/shahada-safe-vault/);
+ assert.match(onboard,/award_profile_badge/);
+ assert.match(onboard,/shahada_verified_at:/);
+ assert.match(onboard,/onComplete\?\.\(\)/);
+ assert.match(callback,/\/search\?auth=shahada/);
+ assert.match(auth,/search\.searchParams\.set\("auth",requestedSignup\?"signup":"signin"\)/);
+ assert.doesNotMatch(auth,/<SeamlessEntry /);
+});
+test("Password policy blocks trivial passwords and user identity leakage",()=>{
+ assert.match(passwordWarning("12345678","Sam Yusuf","sam@test.com"),/at least 12/);
+ assert.match(passwordWarning("Password123!","Sam Yusuf","sam@test.com"),/predictable/);
+ assert.match(passwordWarning("Abcdef!456Sam","Sam Yusuf","sam@test.com"),/name or email/);
+ assert.equal(passwordWarning("Violet!Road73_Mountain","Sam Yusuf","sam@test.com"),"");
+ const flow=read("app/components/SearchAuthFlow.tsx");
+ assert.match(flow,/pass!==confirm/);
+ assert.match(flow,/idStatus==="taken"/);
+ assert.match(flow,/callback\.searchParams\.set\("next","\/search\?auth=shahada"\)/);
+});
+test("1Muslim ID authentication does not reveal email and is distributed rate limited",()=>{
+ const handler=read("app/api/auth/id-access/route.ts");
+ const flow=read("app/components/SearchAuthFlow.tsx");
+ const reset=read("app/auth/reset-password/page.tsx");
+ assert.match(handler,/createHmac/);
+ assert.match(handler,/claim_search_api_quota/);
+ assert.match(handler,/auth\.signInWithPassword/);
+ assert.match(handler,/auth\.admin\.getUserById/);
+ assert.match(handler,/action==="recover"/);
+ assert.doesNotMatch(handler,/return reply\(\{email:/);
+ assert.match(flow,/action:"signin"/);
+ assert.match(flow,/action:"recover"/);
+ assert.match(reset,/auth\.updateUser\(\{password\}\)/);
 });
