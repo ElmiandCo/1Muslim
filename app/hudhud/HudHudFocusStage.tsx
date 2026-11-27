@@ -9,7 +9,7 @@ export type HudHudImage={title:string;imageUrl:string;thumbnailUrl:string;pageUr
 export type HudHudMatch={id:string;kind:string;title:string;href:string;image?:string;description?:string};
 export type HudHudWebResult={title:string;url:string;source:string;description?:string;thumbnailUrl?:string};
 export type HudHudLine={role:"user"|"assistant";content:string;matches?:HudHudMatch[];presentation?:HudHudPresentation;verses?:{key:string;arabic:string;english:string;translation:string;source?:string}[];images?:HudHudImage[];webResult?:HudHudWebResult};
-type Props={lines:HudHudLine[];sessionId:string;busy:boolean;speakingAt:{sessionId:string;index:number}|null;speechChar:number};
+type Props={lines:HudHudLine[];sessionId:string;busy:boolean;speakingAt:{sessionId:string;index:number}|null;speechChar:number;persist?:boolean};
 
 function Narration({text,spokenChars}:{text:string;spokenChars?:number}){
  const clean=text.trim();
@@ -47,7 +47,7 @@ function Answer({line,index,sessionId,speakingAt,speechChar,onImageOpen}:{line:H
 }
 
 /** One visual response at a time; keep the complete chat in pull-down history. */
-export default function HudHudFocusStage({lines,sessionId,busy,speakingAt,speechChar}:Props){
+export default function HudHudFocusStage({lines,sessionId,busy,speakingAt,speechChar,persist=false}:Props){
  const latestIndex=lines.reduce((last,line,index)=>line.role==="assistant"?index:last,-1);
  const latest=latestIndex>=0?lines[latestIndex]:null;
  const answerKey=sessionId+":"+(latestIndex<0?"none":latestIndex+":"+latest?.content.slice(0,80));
@@ -76,10 +76,10 @@ export default function HudHudFocusStage({lines,sessionId,busy,speakingAt,speech
   if(!busy)asked.current=false;
  },[answerKey,busy,latest]);
  useEffect(()=>{
-  if(!visible||idle||historyOpen||busy||speakingAt?.sessionId===sessionId&&speakingAt?.index===latestIndex)return;
+  if(persist||!visible||idle||historyOpen||busy||speakingAt?.sessionId===sessionId&&speakingAt?.index===latestIndex)return;
   const timer=window.setTimeout(()=>setIdle(true),20_000);
   return()=>window.clearTimeout(timer);
- },[visible,idle,historyOpen,busy,sessionId,latestIndex,answerKey,speakingAt,activity]);
+ },[persist,visible,idle,historyOpen,busy,sessionId,latestIndex,answerKey,speakingAt,activity]);
  useEffect(()=>{
   const open=()=>{if(lines.length)setHistoryOpen(true)};
   window.addEventListener("1muslim:hudhud-show-history",open);
