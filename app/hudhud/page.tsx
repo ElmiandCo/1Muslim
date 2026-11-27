@@ -63,7 +63,7 @@ export default function HudHudPage(){
  const safeReturn=(s:string)=>s.startsWith("/")&&!s.startsWith("//")&&!s.includes("://")&&!s.startsWith("/hudhud")?s:"/search";
  const current=sessions.find(x=>x.id===activeId)||sessions[0];
  const lines=current.lines;
- const exhausted=!unlocked&&remaining===0;
+ const exhausted=remaining===0;
 
  const stopVoice=useCallback((abort=false)=>{
   const rec=recognizer.current;
