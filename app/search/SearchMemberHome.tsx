@@ -6,12 +6,14 @@ import {normalizeSpokenHudHudQuestion} from "../lib/hudhud-speech";
 import {createHudHudAiVoicePlayer} from "../lib/hudhud-ai-voice-player";
 import AnimatedMuslimBrand from "../components/AnimatedMuslimBrand";
 import SearchFeatureRails from "./SearchFeatureRails";
+import SearchPrayerWordmark from "./SearchPrayerWordmark";
 import ProfileImmersiveStage,{type ProfileSearchRequest} from "../profile/ProfileImmersiveStage";
 import "./search-member-home.css";
 
 type Member={
  id:string;display_name:string|null;first_name:string|null;last_name:string|null;
  username:string|null;hide_1muslim_id:boolean|null;gender:string|null;
+ city:string|null;state:string|null;country:string|null;
  avatar_gender:string|null;avatar_url:string|null;avatar_config:Record<string,unknown>|null;
 };
 type SpeechEvent={results:ArrayLike<{isFinal:boolean;0:{transcript:string}}>} ;
@@ -90,7 +92,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
   void createClient().auth.getUser().then(async ({data:{user}})=>{
    if(!user||!live)return;
    const {data}=await createClient().from("profiles")
-    .select("id,display_name,first_name,last_name,username,hide_1muslim_id,gender,avatar_gender,avatar_url,avatar_config")
+    .select("id,display_name,first_name,last_name,username,hide_1muslim_id,gender,avatar_gender,avatar_url,avatar_config,city,state,country")
     .eq("id",user.id).maybeSingle();
    if(!live)return;
    setMember((data||{id:user.id,display_name:String(user.user_metadata?.display_name||user.user_metadata?.full_name||"Member")}) as Member);
@@ -295,7 +297,13 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  const displayName=nameOf(member);
  return <main className={"smhPage dsPage dsHomeMode"+(night?" smhNight":"")+(arriving?" smhArriving":"")} aria-label="Your One Muslim Search Home">
   <header className="smhHeader">
-   <Link className="smhLogo" href="/search" aria-label="One Muslim.Live home"><AnimatedMuslimBrand/><span className="smhLogoLive">.Live</span></Link>
+   <div className="smhHeaderIdentity">
+    <Link className="smhLogo" href="/search" aria-label="1Muslim.Live home"><AnimatedMuslimBrand/><span className="smhLogoLive">.Live</span></Link>
+    <div className="smhHeaderMember">
+     <button type="button" aria-label="Edit your display name" title="Tap to change your name" onClick={()=>{stopRecognition();setNameDraft(displayName);setNameEditor(true);setNameError("")}} className="smhName">{displayedName||"\u00a0"}</button>
+     <span className={"smhWithHudHud"+(showHudLabel?" smhWithVisible":"")}>with HudHud</span>
+    </div>
+   </div>
    <nav aria-label="Account shortcuts" className="smhUtilities">
     <Link className="smhOrb smhPlus" href="/create" aria-label="Open Creator Studio to add a post" title="Create">+</Link>
     <button className="smhOrb" aria-label="Settings" title="Settings" type="button" onClick={()=>window.dispatchEvent(new CustomEvent("1muslim:open-settings",{detail:{section:"home"}}))}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M10 2h4l.6 2.4 1.6.9 2.4-.7 2 3.5-1.8 1.7v1.9l1.8 1.7-2 3.5-2.4-.7-1.6.9L14 20h-4l-.6-2.4-1.6-.9-2.4.7-2-3.5 1.8-1.7v-1.9L3.4 8.6l2-3.5 2.4.7 1.6-.9L10 2Z"/></svg></button>
@@ -303,9 +311,8 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
    </nav>
   </header>
   <section className="smhWelcome">
-    <div className="smhIdentity">
-     <button type="button" aria-label="Edit your display name" title="Tap to change your name" onClick={()=>{stopRecognition();setNameDraft(displayName);setNameEditor(true);setNameError("")}} className="smhName">{displayedName||"\u00a0"}</button>
-     <span className={"smhWithHudHud"+(showHudLabel?" smhWithVisible":"")}>with HudHud</span>
+    <div className="smhPrayerHero" aria-label="1Muslim.Live prayer-light identity">
+     <SearchPrayerWordmark memberId={member?.id} initialLocation={member?{city:member.city,state:member.state,country:member.country}:undefined} compact={Boolean(request)}/>
     </div>
     <form className="smhSearchForm" onSubmit={submit} role="search" aria-label="Search with HudHud">
       <span className="smhAvatar" aria-label="Your profile avatar"><img src={avatar(member)} alt=""/></span>
