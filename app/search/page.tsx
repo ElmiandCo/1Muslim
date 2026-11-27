@@ -2,6 +2,8 @@
 import "./search.css";
 import "./search-results.css";
 import "./search-magnetic.css";
+import "./search-feature-rails.css";
+import SearchFeatureRails from "./SearchFeatureRails";
 import Link from "next/link";
 import WebSearchPanel,{type GlobalSearchMode} from "../components/WebSearchPanel";
 import { useSearchMagneticMotion } from "./useSearchMagneticMotion";
@@ -11,7 +13,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DiscoverKind, DiscoverItem, DiscoverResponse } from "../lib/discover-search";
 
 type Tab = GlobalSearchMode | DiscoverKind;
-type SuggestedCreator = { id:string; handle:string; displayName:string; avatarUrl:string|null; postCount:number; href:string };
 const CATEGORIES: DiscoverKind[] = ["Videos","Posts","People","Movies & Series","Qur’an","Comments","Lessons","Prayer","Live","Qibla"];
 const TABS: Tab[] = ["All","AI Overview","Web","Images","Videos","News", ...CATEGORIES.filter(c=>c!=="Videos")];
 const ICON: Record<DiscoverKind,string> = {
@@ -19,14 +20,6 @@ const ICON: Record<DiscoverKind,string> = {
   "Comments":"◌","Lessons":"✦","Prayer":"☾","Live":"●","Qibla":"✧"
 };
 const historyKey = "1muslim:discover:recent-searches";
-const explore: Array<{label:string;href:string;icon:string;details:string}> = [
-  {label:"Ummah Posts",href:"/posts",icon:"▤",details:"What your Ummah is sharing"},
-  {label:"DeepWatch",href:"/deepwatch",icon:"▶",details:"Films, shows and series"},
-  {label:"LIVE",href:"/streaming",icon:"●",details:"Join the conversation"},
-  {label:"Qur’an",href:"/quran-library",icon:"۞",details:"Explore all 114 chapters"},
-  {label:"Prayer Journey",href:"/widget-tools/prayer",icon:"☾",details:"Prayer times and learning"},
-  {label:"Qibla",href:"/qibla/newsroom",icon:"✧",details:"Stories and editorials"}
-];
 function short(s:string,n=130){return s.length>n?s.slice(0,n).trimEnd()+"…":s}
 function ResultCard({item,small=false}:{item:DiscoverItem;small?:boolean}) {
   const isPeople=item.kind==="People";
@@ -83,8 +76,6 @@ export default function SearchHub() {
   const [submitted,setSubmitted]=useState("");
   const [tab,setTab]=useState<Tab>("All");
   const [recent,setRecent]=useState<string[]>([]);
-  const [creators,setCreators]=useState<SuggestedCreator[]>([]);
-  const [creatorsLoading,setCreatorsLoading]=useState(true);
   const [result,setResult]=useState<DiscoverResponse|null>(null);
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState("");
@@ -143,14 +134,6 @@ export default function SearchHub() {
     catch{}
     const initial=new URLSearchParams(window.location.search).get("q")||"";
     if(initial){setQuery(initial.slice(0,90));setSubmitted(initial.slice(0,90));}
-  },[]);
-  useEffect(()=>{
-    const controller=new AbortController();
-    void fetch("/api/discover/creators",{signal:controller.signal,cache:"no-store"})
-      .then(async response=>{if(!response.ok)throw Error("Unable to load creators");return response.json();})
-      .then(data=>{if(!controller.signal.aborted)setCreators(Array.isArray(data.recommended)?data.recommended.slice(0,7):[]);})
-      .catch(()=>{}).finally(()=>{if(!controller.signal.aborted)setCreatorsLoading(false);});
-    return()=>controller.abort();
   },[]);
   useEffect(()=>{
     const onScroll=()=>setCompactHeader(window.scrollY>140);
@@ -220,7 +203,7 @@ export default function SearchHub() {
       {!homeMode&&<Link href="/search" className="dsResultsBrand" aria-label="One Muslim Live — return to search home" onClick={e=>{e.preventDefault();clear()}}><span>One Muslim</span><span className="dsHomeBrandLive" aria-hidden="true">.live</span></Link>}
       {!homeMode&&<button type="button" className="dsUtilityButton dsResultsThemeToggle" onClick={toggleResultsTheme} aria-label={resultsNight?"Switch search results to light mode":"Switch search results to dark mode"} title={resultsNight?"Light appearance":"Dark appearance"} aria-pressed={resultsNight}><span aria-hidden="true">{resultsNight?"☼":"◐"}</span></button>}
       {account==="guest"?<div className="dsGuestAccount" aria-label="Account access">
-        <Link href="/auth?next=%2Fsearch&login=1" className="dsGuestSignIn">Sign in</Link>
+        <Link href="/auth?next=%2Fsearch&login=1" className="dsGuestSignIn" aria-label="Sign in" title="Sign in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.4 20c.4-4 2.7-6 6.6-6s6.2 2 6.6 6"/></svg></Link>
         <Link href="/auth?next=%2Fsearch&mode=signup" className="dsGuestJoin"><span className="dsGuestJoinFull">Join 1Muslim</span><span className="dsGuestJoinCompact">Join</span></Link>
       </div>:account==="member"?<>
       <Link href="/settings" aria-label="Settings" title="Settings" className="dsUtilityButton">
@@ -278,19 +261,7 @@ export default function SearchHub() {
           {recent.length?<div className="dsRecentList">{recent.map(s=><div className="dsRecentItem" key={s}><button type="button" onClick={()=>commit(s)}><span>◷</span>{s}</button><button type="button" aria-label={"Remove "+s} onClick={()=>remove(s)}>×</button></div>)}</div>
             :<p className="dsEmptyRecent">Your searches will appear here, only on this device.</p>}
         </section>}
-        <section className="dsRecommended" aria-label="Recommended creators">
-          <div className="dsSectionHead"><h2>Discover your Ummah</h2><span className="dsRecommendedLabel">People to explore</span></div>
-          {creatorsLoading
-            ? <div className="dsCreatorLoading" role="status">Finding creators across 1Muslim…</div>
-            : creators.length>0
-              ? <div className="dsCreatorList">{creators.slice(0,4).map((creator,index)=><Link className="dsCreatorRow" href={creator.href} key={creator.id} aria-label={"View "+creator.handle+" profile"}>
-                <span className="dsCreatorRank">{String(index+1).padStart(2,"0")}</span>
-                <span className="dsCreatorAvatar">{creator.avatarUrl?<img src={creator.avatarUrl} alt="" loading="lazy"/>:<span>{creator.displayName.slice(0,1).toUpperCase()}</span>}</span>
-                <span className="dsCreatorName"><strong>{creator.handle}</strong><small>{creator.displayName}</small></span>
-                <span className="dsCreatorPostCount">{creator.postCount} {creator.postCount===1?"post":"posts"}</span><span className="dsCreatorChevron" aria-hidden="true">↗</span>
-              </Link>)}</div>
-              : <p className="dsCreatorEmpty">Creator recommendations will appear here as the Ummah posts.</p>}
-        </section>
+        <div className="dsHomeFeatureBreathingSpace" aria-hidden="true" />
       </div>}
 
       {!homeMode&&loading&&showDirectory&&<div className="dsLoading" role="status"><span className="dsLoadingLine"/><span>Searching the 1Muslim directory…</span><div className="dsSkeletonRow"><i/><i/><i/></div></div>}
@@ -308,8 +279,7 @@ export default function SearchHub() {
           <p>Try a creator name, phrase, film title, surah, or subject. HudHud can help you search the right part of 1Muslim.</p>
           <button type="button" onClick={()=>void openHudHud()}>Ask HudHud →</button></section>}
       </>}
-      {homeMode&&<section className="dsExplore"><div className="dsSectionHead"><div><span className="dsSectionKicker">QUICK DESTINATIONS</span><h2>Explore 1Muslim</h2><p>Jump into the parts of your community you love most.</p></div></div>
-        <div className="dsExploreGrid">{explore.map(x=><Link key={x.href} href={x.href}><span>{x.icon}</span><strong>{x.label}</strong><small>{x.details}</small><b aria-hidden="true">↗</b></Link>)}</div></section>}
+      {homeMode&&<SearchFeatureRails/>}
     </div>
 
 
