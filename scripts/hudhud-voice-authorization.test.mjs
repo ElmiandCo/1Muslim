@@ -33,8 +33,8 @@ test("HudHud shows a single verified verse instead of six unrelated results",()=
  assert.deepEqual(selectHudHudPresentation("Quote Qur'an 112:1"),{kind:"verse",verseKey:"112:1"});
 });
 test("HudHud resolves a natural-language request for Allah guiding whom He wills",()=>{
- assert.deepEqual(selectHudHudPresentation("Where does Allah say in the Quran that Allah guides whom He wills?"),{kind:"verse",verseKey:"28:56"});
- assert.deepEqual(selectHudHudPresentation("Which verse says Allah guides whom he wills"),{kind:"verse",verseKey:"28:56"});
+ assert.deepEqual(selectHudHudPresentation("Where does Allah say in the Quran that Allah guides whom He wills?"),{kind:"verse",verseKey:"2:272"});
+ assert.deepEqual(selectHudHudPresentation("Which verse says Allah guides whom he wills"),{kind:"verse",verseKey:"2:272"});
  assert.deepEqual(selectHudHudPresentation("Why does Allah guide me?"),{kind:"text"});
 });
 
