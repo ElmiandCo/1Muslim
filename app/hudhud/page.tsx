@@ -285,7 +285,7 @@ export default function HudHudPage(){
    <div className="hudTitle" aria-label="HudHud — 1Muslim voice assistant">HudHud</div>
    <div className="hudHeaderActions"><button className="hudCircle" type="button" aria-label={readAloud?"Mute HudHud voice":"Enable HudHud voice"} aria-pressed={readAloud} onClick={()=>{setReadAloud(v=>!v);window.speechSynthesis?.cancel();setSpeaking(false)}}>
     <svg viewBox="0 0 24 24" width="19" height="19" stroke="currentColor" fill="none" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4"/>{readAloud?<path d="M16 8q4 4 0 8M18 5q7 7 0 14"/>:<path d="m16 9 5 6m0-6-5 6"/>}</svg>
-   </button><button className="hudCircle hudHistoryHeaderButton" type="button" aria-label="Show previous HudHud answers" title="History" disabled={!lines.length} onClick={()=>window.dispatchEvent(new Event("1muslim:hudhud-show-history"))}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><path d="M5 8h14M5 12h10M5 16h6"/><path d="m16 16 3 3 3-3m-3-4v7"/></svg></button><button className="hudCircle" type="button" aria-label="HudHud menu" aria-expanded={menuOpen} onClick={()=>{setMenuOpen(true);setSettingsOpen(false)}}><Glyph name="menu"/></button><button className="hudCircle" type="button" aria-label="HudHud settings" aria-expanded={settingsOpen} onClick={()=>{setSettingsOpen(!settingsOpen);setMenuOpen(false)}}><Glyph name="settings"/></button></div>
+   </button><button className="hudCircle" type="button" aria-label="HudHud menu" aria-expanded={menuOpen} onClick={()=>{setMenuOpen(true);setSettingsOpen(false)}}><Glyph name="menu"/></button><button className="hudCircle" type="button" aria-label="HudHud settings" aria-expanded={settingsOpen} onClick={()=>{setSettingsOpen(!settingsOpen);setMenuOpen(false)}}><Glyph name="settings"/></button></div>
   </header>
 
   <section className={"hudMain"+(lines.length?" hudHasChat":"")} aria-label="Conversation">
@@ -328,6 +328,7 @@ export default function HudHudPage(){
     <aside className="hudDrawer" role="dialog" aria-modal="true" aria-label="HudHud menu">
      <div className="hudDrawerTop"><strong>HudHud</strong><button type="button" aria-label="Close menu" onClick={()=>setMenuOpen(false)}><Glyph name="close"/></button></div>
      <button className="hudNewChat" type="button" onClick={newChat} disabled={busy}><Glyph name="new"/> New chat</button>
+      <button className="hudNewChat" type="button" disabled={!lines.length} onClick={()=>{setMenuOpen(false);window.dispatchEvent(new Event("1muslim:hudhud-show-history"))}}>↓ Previous answers</button>
      <nav aria-label="1Muslim destinations">{destinations.map(item=><Link href={item.href} key={item.href}><span aria-hidden="true">{item.symbol}</span>{item.label}</Link>)}</nav>
      <h2>{memoryEnabled?"Your conversations":"This visit"}</h2>
      <div className="hudSessionList">{sessions.map(s=><button type="button" key={s.id} className={s.id===activeId?"isActive":""} onClick={()=>{setActiveId(s.id);setMenuOpen(false)}}><span>{s.title}</span></button>)}</div>
