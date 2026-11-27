@@ -29,19 +29,21 @@ export default function SearchPrayerWordmark({initialLocation,memberId,compact=f
   // Prefer the signed-in member's own saved city. Never request GPS or show
   // another person's location. A locally saved prayer location is the fallback.
   const profile=normalize(initialLocation||{});
-  const sync=()=>{
+  const sync=(preferSaved=false)=>{
    const local=readLocation();
-   setPlace(profile.city&&profile.country?profile:local);
+   setPlace(preferSaved&&local.city&&local.country?local:
+    profile.city&&profile.country?profile:local);
   };
   sync();
   const changeMethod=()=>setMethod(readAdhanPreferences().method);
-  window.addEventListener("1muslim:location-updated",sync);
-  window.addEventListener("storage",sync);
+  const syncSaved=()=>sync(true);
+  window.addEventListener("1muslim:location-updated",syncSaved);
+  window.addEventListener("storage",syncSaved);
   window.addEventListener("storage",changeMethod);
   window.addEventListener(ADHAN_SETTINGS_EVENT,changeMethod);
   return()=>{
-   window.removeEventListener("1muslim:location-updated",sync);
-   window.removeEventListener("storage",sync);
+   window.removeEventListener("1muslim:location-updated",syncSaved);
+   window.removeEventListener("storage",syncSaved);
    window.removeEventListener("storage",changeMethod);
    window.removeEventListener(ADHAN_SETTINGS_EVENT,changeMethod);
   };
@@ -77,14 +79,20 @@ export default function SearchPrayerWordmark({initialLocation,memberId,compact=f
  useEffect(()=>{
   if(!place.city||!place.country){setScheduleEntry(null);return}
   let alive=true;
+  let retryTimer:ReturnType<typeof setTimeout>|undefined;
   const controller=new AbortController();
   void fetchPrayerSchedule(place,method,controller.signal)
    .then(value=>{if(alive)setScheduleEntry({key:placeKey,schedule:value})})
-   .catch(()=>{if(alive){setScheduleEntry(null);setRetry(n=>n+1)}});
-  return()=>{alive=false;controller.abort()};
+   .catch(()=>{
+    if(!alive)return;
+    setScheduleEntry(null);
+    // A disconnected provider must not cause an infinite request loop.
+    retryTimer=setTimeout(()=>setRetry(n=>n+1),45_000);
+   });
+  return()=>{alive=false;controller.abort();if(retryTimer)clearTimeout(retryTimer)};
   // The local calendar day changes at midnight in the saved city's timezone.
   // eslint-disable-next-line react-hooks/exhaustive-deps
- },[placeKey,day]);
+ },[placeKey,day,retry]);
 
  const priorDate=schedule?shiftPrayerDate(schedule.date,-1):"";
  const followingDate=schedule?shiftPrayerDate(schedule.date,1):"";
