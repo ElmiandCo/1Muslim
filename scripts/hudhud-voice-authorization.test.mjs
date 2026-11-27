@@ -34,3 +34,8 @@ test("HudHud only recommends site results for site-content discovery",()=>{
  assert.deepEqual(selectHudHudPresentation("Show members on the app"),{kind:"results"});
  assert.deepEqual(selectHudHudPresentation("What is the capital of France?"),{kind:"text"});
 });
+
+test("asking for a verse interpretation is not silently reduced to only its citation",()=>{
+ assert.deepEqual(selectHudHudPresentation("Explain Quran 2:255 and its meaning"),{kind:"text"});
+ assert.deepEqual(selectHudHudPresentation("What is the context of Surah 112 verse 1?"),{kind:"text"});
+});
