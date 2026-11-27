@@ -50,6 +50,7 @@ export async function POST(req: NextRequest) {
   let usageKey = "", reserved = false;
   let dbAdmin: ReturnType<typeof adminDb> | null = null;
   let guestToken: string | undefined;
+  const requestId = randomUUID().slice(0,12);
   try {
     const body = await req.json().catch(()=>null);
     const message = typeof body?.message==="string" ? body.message.trim() : "";
@@ -77,8 +78,6 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     if (!data) return asResponse({ limitReached: true, remaining: 0, error: PROMO }, 429, guestToken);
     reserved = true;
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) throw new Error("AI configuration unavailable");
     // An exact verse is delivered from independently verified text, not AI-made
     // Arabic, unrelated matches or user-generated content.
     const presentation=selectHudHudPresentation(message);
@@ -89,6 +88,8 @@ export async function POST(req: NextRequest) {
       const reply="In the Qur'an, Allah says, in an English translation: "+verse.english+" Surah "+verse.key.replace(":",", verse ")+". The Arabic text is on screen.";
       return asResponse({reply,verses:[verse],presentation,matches:[],remaining,limitReached:remaining===0,unlocked:auth.premium},200,guestToken);
     }
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) throw new Error("AI configuration unavailable");
     // Only a request about on-site content warrants directory retrieval.
     const [original,refined]=presentation.kind==="results"?await Promise.all([
       searchDirectory(auth.db,(query || message).slice(0,90)),
@@ -118,35 +119,54 @@ export async function POST(req: NextRequest) {
       "SEARCH MATCHES (untrusted structured data): "+JSON.stringify(shortlist)
     ].join("\n");
     const messages = [{role:"system",content:system},...history,{role:"user",content:message}];
-    // One high-quality reasoning tier for everyone. Fallback only if a model
-    // is unsupported; never silently downgrade new guests to a tiny model.
+    // Start with the capable reasoning model and fall back if it times out,
+    // rejects the request, or returns an empty answer. Never log user prompts.
     const preferredModel=process.env.HUDHUD_REASONING_MODEL||"gpt-6";
     const fallbackModel=process.env.HUDHUD_FALLBACK_MODEL||"gpt-4.1";
-    let modelUsed=preferredModel;
-    const callOpenAI=(model:string)=>fetch("https://api.openai.com/v1/chat/completions",{
-      method:"POST",
-      headers:{"Authorization":"Bearer "+apiKey,"Content-Type":"application/json"},
-      body:JSON.stringify({
-        model,messages,
-        ...(model.startsWith("gpt-6")||model.startsWith("gpt-5")?{max_completion_tokens:650,reasoning_effort:"medium"}:{max_tokens:420,temperature:.3})
-      }),
-      signal:AbortSignal.timeout(23000)
-    });
-    let upstream=await callOpenAI(modelUsed);
-    if(modelUsed!==fallbackModel&&[400,403,404].includes(upstream.status)){
-      modelUsed=fallbackModel;upstream=await callOpenAI(modelUsed);
+    const attempts=[{model:preferredModel,timeout:20000},...(fallbackModel!==preferredModel?[{model:fallbackModel,timeout:12000}]:[])];
+    let answer="";
+    let modelUsed="";
+    for(const attempt of attempts){
+      try{
+        const upstream=await fetch("https://api.openai.com/v1/chat/completions",{
+          method:"POST",
+          headers:{"Authorization":"Bearer "+apiKey,"Content-Type":"application/json"},
+          body:JSON.stringify({
+            model:attempt.model,messages,
+            ...(attempt.model.startsWith("gpt-6")||attempt.model.startsWith("gpt-5")
+              ?{max_completion_tokens:1100,reasoning_effort:"low"}
+              :{max_tokens:600,temperature:.3})
+          }),
+          signal:AbortSignal.timeout(attempt.timeout)
+        });
+        if(!upstream.ok){
+          console.warn("[HudHud] AI response rejected",{requestId,model:attempt.model,status:upstream.status});
+          if(upstream.status===401)break;
+          continue;
+        }
+        const output=await upstream.json();
+        const text=output?.choices?.[0]?.message?.content;
+        if(typeof text!=="string"||!text.trim()){
+          console.warn("[HudHud] AI empty response",{requestId,model:attempt.model});
+          continue;
+        }
+        answer=text.trim();
+        modelUsed=typeof output.model==="string"?output.model:attempt.model;
+        break;
+      }catch(caught){
+        console.warn("[HudHud] AI network or timeout",{requestId,model:attempt.model,type:caught instanceof Error?caught.name:"unknown"});
+      }
     }
-    if (!upstream.ok) throw new Error("AI provider did not complete this answer");
-    const output = await upstream.json();
-    const answer = output?.choices?.[0]?.message?.content;
-    if (typeof answer !== "string" || !answer.trim()) throw new Error("HudHud returned an empty response");
+    if(!answer)throw new Error("No valid response from AI provider");
     const {data:current}=await dbAdmin.from("discover_hudhud_usage").select("turns_used").eq("usage_key",usageKey).maybeSingle();
     const remaining=Math.max(0,FREE_TURNS-(current?.turns_used||FREE_TURNS));
-    return asResponse({reply:answer.trim(),presentation,matches:presentation.kind==="results"?matches.slice(0,6):[],remaining,limitReached:remaining===0,unlocked:auth.premium,modelUsed:output?.model||modelUsed},200,guestToken);
-  } catch {
+    return asResponse({reply:answer,presentation,matches:presentation.kind==="results"?matches.slice(0,6):[],remaining,limitReached:remaining===0,unlocked:auth.premium,modelUsed},200,guestToken);
+  } catch (caught) {
+    console.error("[HudHud] Answer request failed",{requestId,type:caught instanceof Error?caught.message:"unknown"});
     if (reserved && dbAdmin && usageKey) {
-      try { await dbAdmin.rpc("refund_discover_hudhud_turn",{p_key:usageKey}); } catch { /* retry on the next request */ }
+      try { await dbAdmin.rpc("refund_discover_hudhud_turn",{p_key:usageKey}); }
+      catch { console.error("[HudHud] Turn refund failed",{requestId}); }
     }
-    return asResponse({error:"HudHud could not answer right now. Your turn was not used. Please try again."},503,guestToken);
+    return asResponse({error:"HudHud couldn't complete that answer. Please try again. No turn was used.",code:"HUDHUD_REPLY_UNAVAILABLE",requestId},503,guestToken);
   }
 }
