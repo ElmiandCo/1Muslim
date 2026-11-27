@@ -12,7 +12,7 @@ const cleanName=(value:string)=>value.normalize("NFKD").replace(/[\u0300-\u036f]
 const deriveNames=(name:string,suffix:string)=>{
  const parts=name.trim().split(/\s+/).map(cleanName).filter(Boolean);
  const first=parts[0]||"muslim",last=parts.length>1?parts[parts.length-1]:"";
- return [...new Set([[first,last].filter(Boolean).join("_"),[first,"muslim",last].filter(Boolean).join("_"),[first,"ibn",last].filter(Boolean).join("_")].map(s=>s.slice(0,23)+"_"+suffix))].slice(0,3);
+ return [...new Set([[first,last].filter(Boolean).join("_"),[first,"muslim",last].filter(Boolean).join("_"),[first,"ibn",last].filter(Boolean).join("_"),[first,"مسلم"].join("_")].map(s=>s.slice(0,23)+"_"+suffix))].slice(0,4);
 };
 function GoogleMark(){
  return <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.25c0-.73-.07-1.42-.2-2.09H12v3.95h5.38a4.6 4.6 0 0 1-2 3.02v2.5h3.22c1.88-1.74 3-4.3 3-7.38Z"/><path fill="#34A853" d="M12 22c2.7 0 4.96-.9 6.6-2.37l-3.22-2.5c-.9.6-2.05.96-3.38.96a6 6 0 0 1-5.64-4.17H3.04v2.58A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.36 13.92a6.02 6.02 0 0 1 0-3.84V7.5H3.04A10 10 0 0 0 2 12c0 1.61.39 3.14 1.04 4.5l3.32-2.58Z"/><path fill="#EA4335" d="M12 5.91c1.47 0 2.78.5 3.81 1.49l2.86-2.86A9.78 9.78 0 0 0 12 2a10 10 0 0 0-8.96 5.5l3.32 2.58A6 6 0 0 1 12 5.91Z"/></svg>;
@@ -24,25 +24,39 @@ export default function SearchAuthFlow({mode,setMode,onClose,onSignedIn,returnTo
  const [pass,setPass]=useState(""),[confirm,setConfirm]=useState("");
  const [reveal,setReveal]=useState(false),[busy,setBusy]=useState(false),[message,setMessage]=useState("");
  const [idStatus,setIdStatus]=useState<"idle"|"checking"|"available"|"taken"|"unavailable">("idle");
- const [suffix]=useState(()=>Math.random().toString(36).slice(2,8));
+ const [checkedId,setCheckedId]=useState("");
+ const [attemptFailed,setAttemptFailed]=useState(false);
+ const [suffix,setSuffix]=useState("");
+ useEffect(()=>{
+  // Generate on the client after hydration: six cryptographically random
+  // characters. Final username availability is still checked server-side.
+  const bytes=new Uint8Array(6);
+  window.crypto.getRandomValues(bytes);
+  setSuffix(Array.from(bytes,x=>(x%36).toString(36)).join(""));
+ },[]);
  const fieldRef=useRef<HTMLInputElement>(null);
- const suggestions=deriveNames(fullName,suffix);
+ const suggestions=suffix?deriveNames(fullName,suffix):[];
  const passwordIssue=passwordWarning(pass,fullName,email);
  useEffect(()=>{if(mode==="signin"||mode==="recover")setStep("identity");setMessage("");},[mode]);
  useEffect(()=>{if(mode==="signup"&&!editedHandle&&fullName.trim())setHandle(suggestions[0]||"");},[mode,fullName,editedHandle,suffix]);
  useEffect(()=>{
-  if(mode!=="signup"||!validId(cleanId(handle))){setIdStatus("idle");return;}
+  if(mode!=="signup"||!validId(cleanId(handle))){setIdStatus("idle");setCheckedId("");return;}
+  setIdStatus("checking");
+  setCheckedId("");
   const controller=new AbortController();
   const timer=setTimeout(()=>{
    setIdStatus("checking");
    void fetch("/api/auth/id-access",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"check",identifier:cleanId(handle)}),signal:controller.signal})
     .then(async r=>{const body=await r.json();if(!r.ok)throw Error("Unavailable");return body;})
-    .then(body=>{if(!controller.signal.aborted)setIdStatus(body.available?"available":"taken");})
+    .then(body=>{if(!controller.signal.aborted){setCheckedId(cleanId(handle));setIdStatus(body.available?"available":"taken");}})
     .catch(()=>{if(!controller.signal.aborted)setIdStatus("unavailable");});
   },450);
   return()=>{clearTimeout(timer);controller.abort()};
  },[mode,handle]);
- const change=(next:SearchAuthMode)=>{setMessage("");setStep("identity");setMode(next);};
+ const change=(next:SearchAuthMode)=>{
+  setMessage("");setPass("");setConfirm("");setReveal(false);setAttemptFailed(false);
+  setStep("identity");setMode(next);
+ };
  const finish=()=>{setBusy(false);setMessage("");onSignedIn();if(returnTo!=="/search"&&returnTo.startsWith("/")&&!returnTo.startsWith("//"))window.location.assign(returnTo);};
  async function signin(event:FormEvent){
   event.preventDefault();if(busy)return;setBusy(true);setMessage("");
@@ -58,8 +72,8 @@ export default function SearchAuthFlow({mode,setMode,onClose,onSignedIn,returnTo
     // Refresh the Supabase browser session from the server's newly set auth cookies.
     await createClient().auth.getUser();
    }
-   finish();
-  }catch(err){setMessage(err instanceof Error?err.message:"Sign-in unavailable right now.");}
+   setPass("");finish();
+  }catch(err){setAttemptFailed(true);setMessage(err instanceof Error?err.message:"Sign-in unavailable right now.");}
   finally{setBusy(false);}
  }
  async function signup(event:FormEvent){
@@ -67,8 +81,8 @@ export default function SearchAuthFlow({mode,setMode,onClose,onSignedIn,returnTo
   if(step==="identity"){
    if(fullName.trim().length<3) {setMessage("Enter your full name.");return;}
    if(!validId(cleanId(handle))){setMessage("Use 3–30 letters, numbers, dots, hyphens or underscores for your 1Muslim ID.");return;}
-   if(idStatus==="taken"){setMessage("That 1Muslim ID is taken. Choose a suggestion.");return;}
-   if(idStatus==="checking"||idStatus==="unavailable"){setMessage("Please wait for 1Muslim ID availability to finish checking.");return;}
+   if(idStatus==="taken"&&checkedId===cleanId(handle)){setMessage("That 1Muslim ID is taken. Choose a suggestion.");return;}
+   if(idStatus!=="available"||checkedId!==cleanId(handle)){setMessage("Please wait until your 1Muslim ID is confirmed available.");return;}
    setStep("security");return;
   }
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())){setMessage("Enter a valid email so we can securely confirm your account.");return;}
@@ -144,12 +158,12 @@ export default function SearchAuthFlow({mode,setMode,onClose,onSignedIn,returnTo
     <label htmlFor="dsSignPass">Password</label>
     <div className="dsInlineAuthPassword"><input id="dsSignPass" type={reveal?"text":"password"} autoComplete="current-password" value={pass} onChange={e=>setPass(e.target.value)} required placeholder="Your password"/><button type="button" onClick={()=>setReveal(v=>!v)}>{reveal?"Hide":"Show"}</button></div>
     <button type="submit" className="dsInlineAuthPrimary" disabled={busy}>{busy?"Signing in…":"Sign in"} <span>→</span></button>
-    <button type="button" className="dsInlineAuthTextLink" onClick={()=>change("recover")}>Forgot your password?</button>
+    {attemptFailed?<div className="dsInlineAuthRecoveryCue"><span>Need a new password?</span><button type="button" onClick={()=>change("recover")}>Reset securely →</button></div>:<button type="button" className="dsInlineAuthTextLink" onClick={()=>change("recover")}>Forgot your password?</button>}
    </form>:<form className="dsInlineAuthFields" onSubmit={signup}>
     {step==="identity"?<>
       <label htmlFor="dsJoinName">Full name</label><input id="dsJoinName" value={fullName} autoComplete="name" required minLength={3} onChange={e=>setFullName(e.target.value)} placeholder="Your full name"/>
       <label htmlFor="dsJoinHandle">Your 1Muslim ID</label><div className="dsInlineAuthAt"><span>@</span><input id="dsJoinHandle" autoComplete="username" value={handle} onChange={e=>{setEditedHandle(true);setHandle(cleanId(e.target.value))}} required placeholder="Choose your ID"/></div>
-      <small className="dsInlineAuthHint" aria-live="polite">{idStatus==="available"?"✓ This ID looks available":idStatus==="taken"?"Already in use — select another":idStatus==="checking"?"Checking availability…":idStatus==="unavailable"?"Couldn't check yet — retry shortly":"Choose a suggested ID or enter your own"}</small>
+      <small className="dsInlineAuthHint" aria-live="polite">{idStatus==="available"&&checkedId===cleanId(handle)?"✓ This ID looks available":idStatus==="taken"?"Already in use — select another":idStatus==="checking"?"Checking availability…":idStatus==="unavailable"?"Couldn't check yet — retry shortly":"Choose a suggested ID or enter your own"}</small>
       {fullName.trim().length>2&&<div className="dsInlineSuggestions" aria-label="Suggested 1Muslim IDs">{suggestions.map(id=><button type="button" key={id} onClick={()=>{setEditedHandle(true);setHandle(id)}}>@{id}</button>)}</div>}
       <button className="dsInlineAuthPrimary" type="submit" disabled={busy}>Continue <span>→</span></button>
      </>:<>
