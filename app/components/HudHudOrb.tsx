@@ -22,6 +22,7 @@ export default function HudHudOrb({listening=false,speaking=false,thinking=false
    <i className="hudV2Layer hudV2LayerA"/><i className="hudV2Layer hudV2LayerB"/><i className="hudV2Layer hudV2LayerC"/>
    <i className="hudV2Core"/><i className="hudV2Highlight"/><i className="hudV2Noise"/>
   </span>
+  <span className="hudV2OrbitSwarm" aria-hidden="true"><i className="hudV2OrbitNear"/><i className="hudV2OrbitFar"/><i className="hudV2Satellite hudV2SatelliteA"/><i className="hudV2Satellite hudV2SatelliteB"/><i className="hudV2Satellite hudV2SatelliteC"/></span>
   <span className="hudV2Particles" aria-hidden="true">{Array.from({length:9},(_,i)=><i key={i} style={{"--i":i} as React.CSSProperties}/>)}</span>
  </button>;
 }

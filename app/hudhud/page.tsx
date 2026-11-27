@@ -2,12 +2,14 @@
 import "./hudhud.css";
 import HudHudOrb from "../components/HudHudOrb";
 import HudHudVerseCard from "../components/HudHudVerseCard";
+import type {HudHudPresentation} from "../lib/hudhud-presentation";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {useCallback,useEffect,useRef,useState,type FormEvent} from "react";
 
 type Match={id:string;kind:string;title:string;href:string;image?:string;description?:string};
-type Line={role:"user"|"assistant";content:string;matches?:Match[]};
+type VerifiedVerse={key:string;arabic:string;english:string;translation:string;source?:string};
+type Line={role:"user"|"assistant";content:string;matches?:Match[];presentation?:HudHudPresentation;verses?:VerifiedVerse[]};
 type Session={id:string;title:string;lines:Line[]};
 type RecognitionEvent={results:ArrayLike<{isFinal:boolean;0:{transcript:string}}>} ;
 type Recognition={lang:string;interimResults:boolean;continuous:boolean;onresult:((event:RecognitionEvent)=>void)|null;onerror:((event:{error:string})=>void)|null;onend:(()=>void)|null;start:()=>void;stop:()=>void;abort:()=>void};
@@ -33,6 +35,15 @@ function Glyph({name}:{name:"menu"|"settings"|"mic"|"plus"|"close"|"send"|"new"|
  return <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
 
+function HudHudNarration({text,spokenChars}:{text:string;spokenChars?:number}){
+ const sentences=text.match(/[^.!?]+[.!?]*\s*/g)||[text];
+ let offset=0;
+ return <p className="hudNarratedReply">{sentences.map((part,index)=>{
+  const start=offset;offset+=part.length;
+  return <span key={index} className={spokenChars===undefined?"":spokenChars>=start?"hudNarratedHeard":"hudNarratedUpcoming"}>{part}</span>;
+ })}</p>;
+}
+
 export default function HudHudPage(){
  const router=useRouter();
  const [sessions,setSessions]=useState<Session[]>([{id:"first",title:"New chat",lines:[]}]);
@@ -47,7 +58,15 @@ export default function HudHudPage(){
  const [settingsOpen,setSettingsOpen]=useState(false);
  const [actionsOpen,setActionsOpen]=useState(false);
  const [readAloud,setReadAloud]=useState(true);
+ const [memoryEnabled,setMemoryEnabled]=useState(false);
+ const [memorySignedIn,setMemorySignedIn]=useState(false);
+ const [memoryPending,setMemoryPending]=useState(false);
+ const [memoryNotice,setMemoryNotice]=useState("");
  const [speaking,setSpeaking]=useState(false);
+ const [speakingAt,setSpeakingAt]=useState<{sessionId:string;index:number}|null>(null);
+ const [speechChar,setSpeechChar]=useState(0);
+ const [voiceBeat,setVoiceBeat]=useState(false);
+ const voiceBeatTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const [exiting,setExiting]=useState(false);
  const [touchStart,setTouchStart]=useState<{x:number;y:number}|null>(null);
  const [stillOrb,setStillOrb]=useState(false);
@@ -65,6 +84,57 @@ export default function HudHudPage(){
  const lines=current.lines;
  const exhausted=remaining===0;
 
+ const memorySave=useCallback(async(session:Session)=>{
+  const response=await fetch("/api/hudhud/memory",{method:"POST",headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({action:"save",id:session.id,title:session.title,lines:session.lines.slice(-40)})});
+  if(!response.ok)throw Error("Could not save this conversation");
+ },[]);
+ useEffect(()=>{
+  const controller=new AbortController();
+  void fetch("/api/hudhud/memory",{cache:"no-store",signal:controller.signal})
+   .then(async response=>{if(!response.ok)throw Error("Memory unavailable");return response.json()})
+   .then(data=>{
+     if(controller.signal.aborted)return;
+     setMemorySignedIn(data.signedIn===true);
+     setMemoryEnabled(data.enabled===true);
+     if(data.enabled===true&&Array.isArray(data.sessions)&&data.sessions.length>0){
+       const saved:Session[]=data.sessions.filter((row:unknown):row is Session=>{
+         if(!row||typeof row!=="object")return false;
+         const r=row as Partial<Session>;
+         return typeof r.id==="string"&&typeof r.title==="string"&&Array.isArray(r.lines);
+       }).slice(0,20);
+       if(saved.length){setSessions(old=>old.length===1&&old[0].lines.length===0?saved:old);setActiveId(old=>old==="first"?saved[0].id:old)}
+     }
+   }).catch(()=>{if(!controller.signal.aborted)setMemoryNotice("Account memory is temporarily unavailable.")});
+  return()=>controller.abort();
+ },[]);
+ const updateMemory=async(enabled:boolean)=>{
+  if(!memorySignedIn){setMemoryNotice("Sign in to save your conversations.");return}
+  setMemoryPending(true);setMemoryNotice("");
+  try{
+   const response=await fetch("/api/hudhud/memory",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"preference",enabled})});
+   if(!response.ok)throw Error("Could not change memory preference");
+   setMemoryEnabled(enabled);
+   if(enabled){
+     const active=sessions.find(x=>x.id===activeId);
+     if(active&&active.lines.length)await memorySave(active);
+     setMemoryNotice("Your account will remember conversations.");
+   }else setMemoryNotice("Memory paused. Saved chats remain until cleared.");
+  }catch{setMemoryNotice("Could not update memory. Please try again.")}
+  finally{setMemoryPending(false)}
+ };
+ const clearMemory=async()=>{
+  if(!window.confirm("Delete all saved HudHud chats? This cannot be undone."))return;
+  setMemoryPending(true);setMemoryNotice("");
+  try{
+   const response=await fetch("/api/hudhud/memory",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"clear"})});
+   if(!response.ok)throw Error("Could not delete saved history");
+   setMemoryEnabled(false);
+   const id="chat-"+Date.now();setSessions([{id,title:"New chat",lines:[]}]);setActiveId(id);
+   setMemoryNotice("Saved conversations deleted. Memory is off.");
+  }catch{setMemoryNotice("Could not delete saved chats. Please try again.")}
+  finally{setMemoryPending(false)}
+ };
  const stopVoice=useCallback((abort=false)=>{
   const rec=recognizer.current;
   recognizer.current=null;
@@ -74,7 +144,10 @@ export default function HudHudPage(){
  useEffect(()=>{
   const controller=new AbortController();
   const params=new URLSearchParams(window.location.search);
-  setQueryContext((params.get("q")||"").trim().slice(0,90));
+  const incomingQuestion=(params.get("q")||"").trim().slice(0,900);
+  setQueryContext(incomingQuestion.slice(0,90));
+  if(incomingQuestion)setDraft(incomingQuestion);
+  if(params.get("settings")==="1")setSettingsOpen(true);
   let referring="/search";
   try{const url=new URL(document.referrer);if(url.origin===window.location.origin)referring=url.pathname+url.search}catch{}
   let remembered="";
@@ -99,12 +172,12 @@ export default function HudHudPage(){
   const onHidden=()=>{if(document.hidden){stopVoice(true);window.speechSynthesis?.cancel()}};
   const onKey=(event:KeyboardEvent)=>{if(event.key==="Escape"){setMenuOpen(false);setSettingsOpen(false);setActionsOpen(false);stopVoice(true)}};
   document.addEventListener("visibilitychange",onHidden);window.addEventListener("keydown",onKey);
-  return()=>{document.removeEventListener("visibilitychange",onHidden);window.removeEventListener("keydown",onKey);stopVoice(true);window.speechSynthesis?.cancel()};
+  return()=>{document.removeEventListener("visibilitychange",onHidden);window.removeEventListener("keydown",onKey);stopVoice(true);window.speechSynthesis?.cancel();if(voiceBeatTimer.current)clearTimeout(voiceBeatTimer.current)};
  },[stopVoice]);
 
  const newChat=()=>{
   if(busy)return;
-  stopVoice(true);window.speechSynthesis?.cancel();
+  stopVoice(true);window.speechSynthesis?.cancel();setSpeaking(false);setSpeakingAt(null);
   const id="chat-"+Date.now();
   setSessions(old=>[{id,title:"New chat",lines:[]},...old].slice(0,20));
   setActiveId(id);setDraft("");setError("");setMenuOpen(false);setActionsOpen(false);
@@ -113,7 +186,7 @@ export default function HudHudPage(){
  const ask=async(event?:FormEvent,spokenMessage?:string)=>{
   event?.preventDefault();
   const message=(spokenMessage||draft).trim();if(!message||busy||exhausted)return;
-  stopVoice();
+  stopVoice();window.speechSynthesis?.cancel();setSpeaking(false);setSpeakingAt(null);
   const conversationId=activeId;
   const history=lines.slice(-6).map(x=>({role:x.role,content:x.content}));
   setSessions(old=>old.map(s=>s.id===conversationId?{...s,title:s.lines.length?s.title:message.slice(0,40),lines:[...s.lines,{role:"user",content:message}]}:s));
@@ -126,12 +199,25 @@ export default function HudHudPage(){
    if(!response.ok)throw Error(data.error||"HudHud could not reply.");
    const reply=String(data.reply||"").trim();
    if(!reply)throw Error("HudHud sent an empty reply.");
-   setSessions(old=>old.map(s=>s.id===conversationId?{...s,lines:[...s.lines,{role:"assistant",content:reply,matches:Array.isArray(data.matches)?data.matches:[]}]}:s));
+   const assistantLine:Line={role:"assistant",content:reply,matches:Array.isArray(data.matches)?data.matches:[],presentation:data.presentation,verses:Array.isArray(data.verses)?data.verses:[]};
+   const savedSession:Session={id:conversationId,title:current.lines.length?current.title:message.slice(0,40),lines:[...lines,({role:"user",content:message} satisfies Line),assistantLine].slice(-40)};
+   setSessions(old=>old.map(s=>s.id===conversationId?savedSession:s));
+   if(memoryEnabled&&memorySignedIn)void memorySave(savedSession).catch(()=>setMemoryNotice("Could not save this reply. Try again later."));
    if(readAloud&&"speechSynthesis" in window){
     window.speechSynthesis.cancel();
     const speech=new SpeechSynthesisUtterance(reply);
     speech.lang="en-US";speech.rate=1.07;speech.volume=.8;
-    speech.onstart=()=>setSpeaking(true);speech.onend=()=>setSpeaking(false);speech.onerror=()=>setSpeaking(false);
+    const target={sessionId:conversationId,index:lines.length+1};
+    speech.onstart=()=>{setSpeaking(true);setSpeakingAt(target);setSpeechChar(0)};
+    speech.onboundary=e=>{
+      if(typeof e.charIndex==="number")setSpeechChar(e.charIndex);
+      setVoiceBeat(true);
+      if(voiceBeatTimer.current)clearTimeout(voiceBeatTimer.current);
+      voiceBeatTimer.current=setTimeout(()=>setVoiceBeat(false),170);
+    };
+    const endSpeech=()=>{setSpeaking(false);setSpeakingAt(null);setVoiceBeat(false)};
+    speech.onpause=()=>setVoiceBeat(false);speech.onresume=()=>setVoiceBeat(true);
+    speech.onend=endSpeech;speech.onerror=endSpeech;
     window.speechSynthesis.speak(speech);
    }
   }catch(caught){
@@ -172,7 +258,7 @@ export default function HudHudPage(){
   }catch{setListening(false);setError("Could not start the microphone. Check browser permissions and try again.")}
  };
  const close=()=>{
-  stopVoice(true);window.speechSynthesis?.cancel();setSpeaking(false);setExiting(true);
+  stopVoice(true);window.speechSynthesis?.cancel();setSpeaking(false);setSpeakingAt(null);setExiting(true);
   window.setTimeout(()=>router.push(safeReturn(originRef.current)),180);
  };
 
@@ -185,9 +271,12 @@ export default function HudHudPage(){
     const dx=(event.changedTouches[0]?.clientX||0)-touchStart.x;
     const dy=(event.changedTouches[0]?.clientY||0)-touchStart.y;
     setTouchStart(null);if(dx< -100&&Math.abs(dy)<65)close();
-   }} className={"hudPage"+(exiting?" hudExiting":"")+(speaking?" hudSpeaking":"")+(focused?" hudTyping":"")+(stillOrb?" hudStill":"")+(listening?" hudListening":"")+(busy?" hudThinking":"")} style={viewport?{height:viewport.height,top:viewport.top}:undefined} aria-label="HudHud chat">
+   }} className={"hudPage"+(exiting?" hudExiting":"")+(speaking?" hudSpeaking":"")+(voiceBeat?" hudVoiceBeat":"")+(focused?" hudTyping":"")+(stillOrb?" hudStill":"")+(listening?" hudListening":"")+(busy?" hudThinking":"")} style={viewport?{height:viewport.height,top:viewport.top}:undefined} aria-label="HudHud chat">
   <header className="hudHeader">
-   <button className="hudBackBrand" type="button" aria-label="Return to previous page" onClick={close}>One Muslim<span>.live</span></button>
+   <div className="hudBrandSlot">
+    <button className="hudBackBrand" type="button" aria-label="Return to previous page" onClick={close}><span className={"hudBrandInitial"+(lines.length?" hudBrandOrbActive":"")}>O</span>ne Muslim<span>.live</span></button>
+    {lines.length>0&&<span className="hudBrandOrb"><HudHudOrb compact listening={listening} speaking={speaking} thinking={busy} quiet={stillOrb} level={voiceBeat?1:0} onClick={()=>{if(!busy)startVoice()}}/></span>}
+   </div>
    <div className="hudTitle" aria-label="HudHud — One Muslim voice assistant">HudHud</div>
    <div className="hudHeaderActions"><button className="hudCircle" type="button" aria-label={readAloud?"Mute HudHud voice":"Enable HudHud voice"} aria-pressed={readAloud} onClick={()=>{setReadAloud(v=>!v);window.speechSynthesis?.cancel();setSpeaking(false)}}>
     <svg viewBox="0 0 24 24" width="19" height="19" stroke="currentColor" fill="none" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4"/>{readAloud?<path d="M16 8q4 4 0 8M18 5q7 7 0 14"/>:<path d="m16 9 5 6m0-6-5 6"/>}</svg>
@@ -202,8 +291,11 @@ export default function HudHudPage(){
    {lines.length>0&&<div className="hudMessages">
      {lines.map((line,index)=><article key={current.id+"-"+index} className={"hudMessage "+(line.role==="user"?"hudUser":"hudAssistant")}>
        {line.role==="assistant"&&<span className="hudTinyOrb" aria-hidden="true"/>}
-       <div className="hudMessageBody"><p>{line.content}</p>
-        {line.matches&&line.matches.length>0&&<div className="hudMatches" role="list" aria-label="HudHud search suggestions">
+       <div className={"hudMessageBody"+(line.presentation?.kind==="verse"?" hudVerseResponse":"")}>
+        {line.role==="assistant"&&line.presentation?.kind==="verse"&&line.verses?.[0]
+          ?<div className="hudVersePresentation"><HudHudVerseCard featured verseKey={line.verses[0].key} verseData={line.verses[0]} href={"/quran-library?verse="+encodeURIComponent(line.verses[0].key)} spokenChars={speakingAt?.sessionId===current.id&&speakingAt.index===index?speechChar-line.content.indexOf(line.verses[0].english):undefined}/></div>
+          :<HudHudNarration text={line.content} spokenChars={line.role==="assistant"&&speakingAt?.sessionId===current.id&&speakingAt.index===index?speechChar:undefined}/>}
+        {line.presentation?.kind==="results"&&line.matches&&line.matches.length>0&&<div className="hudMatches" role="list" aria-label="HudHud search suggestions">
  {line.matches.slice(0,6).map(item=><div className="hudMatchCard" role="listitem" key={item.href}>
   {item.kind==="Qur’an"&&/^\d{1,3}:\d{1,3}$/.test(item.id)
    ?<HudHudVerseCard verseKey={item.id} href={item.href}/>
@@ -216,10 +308,10 @@ export default function HudHudPage(){
    </Link>}
   </div>)}
  </div>}
- {line.matches&&line.matches.length>0&&<div className="hudQuickChoices" aria-label="Follow-up suggestions">
-  <span>Explore these results?</span>
-  <button type="button" onClick={()=>{setDraft("Yes, show me more about these results.");input.current?.focus()}}>Yes</button>
-  <button type="button" onClick={()=>{setDraft("No, try another approach and explain why.");input.current?.focus()}}>No</button>
+ {line.role==="assistant"&&<div className="hudQuickChoices" aria-label="Follow-up suggestions">
+  <span>{line.presentation?.kind==="verse"?"Was this the verse you wanted?":"Was this helpful?"}</span>
+  <button type="button" disabled={busy||exhausted} onClick={()=>void ask(undefined,"Yes, thank you.")}>Yes</button>
+  <button type="button" disabled={busy||exhausted} onClick={()=>void ask(undefined,"No. Please try a different relevant explanation, with verified evidence and no unrelated cards.")}>No</button>
  </div>}
        </div>
      </article>)}
@@ -250,7 +342,11 @@ export default function HudHudPage(){
     <h2>HudHud settings</h2>
     <label><span>Read replies aloud<small>Uses your browser's voice</small></span><input type="checkbox" checked={readAloud} onChange={e=>{setReadAloud(e.target.checked);if(!e.target.checked)window.speechSynthesis?.cancel()}}/></label>
     <label><span>Reduce orb motion<small>Keep the emerald orb still</small></span><input type="checkbox" checked={stillOrb} onChange={e=>setStillOrb(e.target.checked)}/></label>
-    <p>Voice turns send when you finish speaking. You can mute spoken replies. Chats here are temporary.</p>
+    {memorySignedIn?<><label><span>Remember conversations<small>Private to your account. Off by default.</small></span><input type="checkbox" checked={memoryEnabled} disabled={memoryPending} onChange={e=>void updateMemory(e.target.checked)}/></label>
+      <button type="button" disabled={memoryPending} onClick={()=>void clearMemory()}>Clear saved conversations</button></>
+      :<p>Sign in to enable private conversation memory. Guest chats are temporary.</p>}
+    <p>Voice turns send when you finish speaking. You can mute spoken replies.</p>
+    {memoryNotice&&<p role="status">{memoryNotice}</p>}
     <button type="button" onClick={()=>setSettingsOpen(false)}>Close settings</button>
    </div>}
   {menuOpen&&<div className="hudDrawerCover" onMouseDown={e=>{if(e.target===e.currentTarget)setMenuOpen(false)}}>
@@ -258,9 +354,9 @@ export default function HudHudPage(){
      <div className="hudDrawerTop"><strong>HudHud</strong><button type="button" aria-label="Close menu" onClick={()=>setMenuOpen(false)}><Glyph name="close"/></button></div>
      <button className="hudNewChat" type="button" onClick={newChat} disabled={busy}><Glyph name="new"/> New chat</button>
      <nav aria-label="1Muslim destinations">{destinations.map(item=><Link href={item.href} key={item.href}><span aria-hidden="true">{item.symbol}</span>{item.label}</Link>)}</nav>
-     <h2>This visit</h2>
+     <h2>{memoryEnabled?"Your conversations":"This visit"}</h2>
      <div className="hudSessionList">{sessions.map(s=><button type="button" key={s.id} className={s.id===activeId?"isActive":""} onClick={()=>{setActiveId(s.id);setMenuOpen(false)}}><span>{s.title}</span></button>)}</div>
-     <p>Conversations aren't saved to your account on this page.</p>
+     <p>{memoryEnabled?"Saved privately to your account. Clear them in settings.":"Chats here are temporary unless you enable account memory in settings."}</p>
     </aside>
    </div>}
  </main>;
