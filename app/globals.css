@@ -899,3 +899,14 @@ html[data-one-shell-ready="true"] .oneGlobalNav{transition:opacity .4s ease,tran
 
 /* No legacy global HUD layers over the new public landing. */
 html[data-one-route="welcome"] :is(.hh-chat-orb,.hh-restore-tab,.hh-entry-light,.hh-trail-layer,.hh-farewell,.hudhud-live-mini,.imv-root,.sf-wrap,.locationConsentBackdrop,.oneGlobalNav){display:none!important}
+
+
+/* Shared app frame / iOS viewport safe areas. A route's own content and
+   foreground colors remain under its day/night theme; the exposed canvas at
+   the top and bottom no longer falls back to a dark global body background. */
+:root{--one-chrome-bg:#ffffff}
+html[data-one-chrome="day"]{--one-chrome-bg:#ffffff;color-scheme:light}
+html[data-one-chrome="night"]{--one-chrome-bg:#090c0b;color-scheme:dark}
+html{background-color:var(--one-chrome-bg,#fff)}
+body{background-color:var(--one-chrome-bg,#fff)}
+body::after{background:var(--one-chrome-bg,#fff)}
