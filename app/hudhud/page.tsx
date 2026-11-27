@@ -35,6 +35,15 @@ function Glyph({name}:{name:"menu"|"settings"|"mic"|"plus"|"close"|"send"|"new"|
  return <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
 
+function HudHudNarration({text,spokenChars}:{text:string;spokenChars?:number}){
+ const sentences=text.match(/[^.!?]+[.!?]*\s*/g)||[text];
+ let offset=0;
+ return <p className="hudNarratedReply">{sentences.map((part,index)=>{
+  const start=offset;offset+=part.length;
+  return <span key={index} className={spokenChars===undefined?"":spokenChars>=start?"hudNarratedHeard":"hudNarratedUpcoming"}>{part}</span>;
+ })}</p>;
+}
+
 export default function HudHudPage(){
  const router=useRouter();
  const [sessions,setSessions]=useState<Session[]>([{id:"first",title:"New chat",lines:[]}]);
@@ -285,7 +294,7 @@ export default function HudHudPage(){
        <div className={"hudMessageBody"+(line.presentation?.kind==="verse"?" hudVerseResponse":"")}>
         {line.role==="assistant"&&line.presentation?.kind==="verse"&&line.verses?.[0]
           ?<div className="hudVersePresentation"><HudHudVerseCard featured verseKey={line.verses[0].key} verseData={line.verses[0]} href={"/quran-library?verse="+encodeURIComponent(line.verses[0].key)} spokenChars={speakingAt?.sessionId===current.id&&speakingAt.index===index?speechChar-line.content.indexOf(line.verses[0].english):undefined}/></div>
-          :<p>{line.content}</p>}
+          :<HudHudNarration text={line.content} spokenChars={line.role==="assistant"&&speakingAt?.sessionId===current.id&&speakingAt.index===index?speechChar:undefined}/>}
         {line.presentation?.kind==="results"&&line.matches&&line.matches.length>0&&<div className="hudMatches" role="list" aria-label="HudHud search suggestions">
  {line.matches.slice(0,6).map(item=><div className="hudMatchCard" role="listitem" key={item.href}>
   {item.kind==="Qur’an"&&/^\d{1,3}:\d{1,3}$/.test(item.id)
