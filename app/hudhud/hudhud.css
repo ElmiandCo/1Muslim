@@ -255,3 +255,11 @@
 @keyframes hudPresentationFade{from{opacity:0;transform:translateY(12px);filter:blur(3px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
 @media(max-width:520px){.hudBrandSlot{min-width:108px}.hudBrandOrb{left:-5px}.hudVersePresentation .hudVerseHero{padding:16px 0!important}.hudVersePresentation .hudVerseHero .hudVerseArabic{font-size:clamp(28px,8.2vw,42px)!important}}
 @media(prefers-reduced-motion:reduce){.hudBrandOrb,.hudVersePresentation{animation:none!important}.hudVersePresentation .hudVerseHero .hudVerseEnglish span{transition:none}}
+
+/* One presentation pane, voiced sentence-by-sentence without arbitrary cards. */
+.hudNarratedReply{line-height:1.75;white-space:pre-wrap;overflow-wrap:anywhere}
+.hudNarratedReply span{transition:opacity .24s ease,color .24s ease,background .24s ease}
+.hudNarratedReply .hudNarratedHeard{opacity:1;color:inherit}
+.hudNarratedReply .hudNarratedUpcoming{opacity:.47}
+.hudPage.hudSpeaking .hudMessageBody:has(.hudNarratedReply){animation:hudPresentationFade .48s ease-out both}
+@media(prefers-reduced-motion:reduce){.hudNarratedReply span{transition:none!important}}
