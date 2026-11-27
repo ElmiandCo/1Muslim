@@ -168,3 +168,4 @@ export default function SearchAuthFlow({mode,setMode,onClose,onSignedIn,returnTo
   </>}
   {message&&<p role="status" className="dsInlineAuthStatus">{message}</p>}
  </section>;
+}
