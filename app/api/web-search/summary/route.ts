@@ -19,7 +19,9 @@ export async function POST(req:NextRequest){
   try{
     const found=await searchWholeWeb(query);
     const sources=found.results.slice(0,8).map((r,i)=>({number:i+1,title:r.title,url:r.url,description:r.description.slice(0,240)}));
-    if(sources.length===0&&!quranContext)return respond({error:"No web sources available to summarize."},404);
+    if(sources.length===0)return quranContext
+      ?respond({summary:"",quranContext,sources:[],provider:"Qur'an references",notice:"More web information is temporarily unavailable."})
+      :respond({error:"No web sources available to summarize."},404);
     // If the language model is unavailable, a verified Qur'an reference still
     // renders, explicitly separated from unverified web information.
     if(!apiKey)return respond({summary:"",sources:[],quranContext,provider:"Qur'an references"});
