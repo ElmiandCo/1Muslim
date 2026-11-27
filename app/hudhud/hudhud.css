@@ -283,3 +283,134 @@
 /* Link to the same account-level HudHud privacy and history controls. */
 .hudSettings .hudSettingsControlLink{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;box-sizing:border-box;margin:14px 0 9px;padding:12px 15px;background:color-mix(in srgb,#2e7054 10%,white);border:1px solid #bed9cb;border-radius:13px;color:#205d43;text-decoration:none;font-weight:760;font-size:13px;line-height:1.5}
 .hudSettings .hudSettingsControlLink:focus-visible{outline:3px solid #3e8c68;outline-offset:2px}
+
+
+/* HudHud quiet premium refinement — screenshot-approved, 2026-11-27.
+   Presentation-only. Preserve existing voice, search, permissions, menu, and
+   AnimatedMuslimBrand, which ends on the exact 1Muslim.Live wordmark. */
+.hudPage{
+ --hud-green:#365c47;
+ --hud-ink:#253a2f;
+ --hud-soft:#829287;
+ background:#fffefc!important;
+ color:var(--hud-ink)!important;
+}
+.hudHeader{
+ height:88px;min-height:88px;
+ align-items:center;
+ padding:calc(10px + env(safe-area-inset-top,0px)) clamp(17px,3.2vw,38px) 10px;
+}
+.hudBrandSlot .hudBackBrand{
+ font-size:clamp(17px,2.4vw,22px)!important;
+ font-weight:620!important;
+ letter-spacing:-.047em!important;
+ color:#183328!important;
+}
+.hudBrandSlot .hudBackBrand .hudBrandSuffix{
+ color:#b59a78!important;
+ font-weight:500!important;
+}
+.hudTitle{
+ top:calc(28px + env(safe-area-inset-top,0px));
+ color:#506c58;
+ font-size:clamp(17px,2.7vw,23px);
+ line-height:1.2;
+ font-weight:650;
+ letter-spacing:-.035em;
+}
+.hudHeaderActions{gap:9px}
+.hudHeaderActions .hudCircle{
+ display:grid;place-items:center;
+ width:44px;height:44px;
+ border:1px solid #e7ece6!important;
+ border-radius:50%;
+ background:#fffefc!important;
+ color:#607a68!important;
+ box-shadow:0 3px 12px #1537290a,0 1px 2px #15372909!important;
+ transition:background .18s ease,box-shadow .18s ease,transform .18s ease;
+}
+.hudHeaderActions .hudCircle:hover{
+ background:#f7faf7!important;
+ box-shadow:0 5px 16px #15372914,0 1px 2px #1537290b!important;
+}
+.hudHeaderActions .hudCircle svg{width:20px;height:20px}
+.hudComposerArea{
+ padding:0 clamp(16px,3.4vw,30px) calc(18px + env(safe-area-inset-bottom,0px));
+}
+.hudComposer{gap:10px}
+.hudInputPill{
+ min-height:62px;
+ padding:6px 14px 6px 10px;
+ gap:8px;
+ background:#fff!important;
+ border:1px solid #e9ede8!important;
+ border-radius:999px;
+ box-shadow:0 10px 28px #1f36200c,0 2px 5px #1f362009!important;
+ transition:border-color .18s ease,box-shadow .18s ease;
+}
+.hudInputPill:focus-within{
+ border-color:#9db8a6!important;
+ box-shadow:0 0 0 3px #356b5015,0 8px 28px #1f362011!important;
+}
+.hudPlus{
+ flex:0 0 34px;
+ height:44px;
+ color:#25543d!important;
+}
+.hudPlus svg{width:23px;height:23px}
+.hudInputPill input{
+ min-height:42px;
+ font-size:16px!important;
+ font-weight:400;
+ letter-spacing:-.015em;
+ color:#293d31!important;
+}
+.hudInputPill input::placeholder{color:#929f96!important;opacity:1}
+.hudMic,.hudEnd{
+ flex:0 0 57px;
+ width:57px;height:57px;
+ border:1px solid #e7ece6!important;
+ background:#fffefc!important;
+ color:#416850!important;
+ box-shadow:0 6px 19px #193c250e,0 1px 2px #193c250a!important;
+ transition:background .18s ease,transform .18s ease,box-shadow .18s ease;
+}
+.hudMic:hover,.hudEnd:hover{background:#f7faf7!important}
+.hudEnd{color:#607669!important}
+.hudMic svg,.hudEnd svg{width:23px;height:23px}
+.hudMic.isActive{
+ color:#fff!important;background:#1b674a!important;border-color:#1b674a!important;
+ box-shadow:0 0 0 4px #46b98224,0 8px 20px #0364422a!important;
+}
+.hudSend{
+ color:#fff!important;background:#205e4b!important;border-color:#205e4b!important;
+}
+.hudSend:hover{background:#154b3a!important}
+.hudMessageBody{color:#284436}
+.hudUser .hudMessageBody{background:#f3f8f4;border-color:#ebf0ec}
+@media(max-width:600px){
+ .hudHeader{height:76px;min-height:76px;padding:calc(9px + env(safe-area-inset-top,0px)) 13px 9px}
+ .hudBrandSlot .hudBackBrand{font-size:clamp(13px,3.7vw,17px)!important}
+ .hudTitle{top:calc(24px + env(safe-area-inset-top,0px));font-size:clamp(15px,4.2vw,19px)}
+ .hudHeaderActions{gap:6px}
+ .hudHeaderActions .hudCircle{width:40px;height:40px}
+ .hudHeaderActions .hudCircle svg{width:19px;height:19px}
+ .hudComposerArea{padding:0 14px calc(15px + env(safe-area-inset-bottom,0px))}
+ .hudComposer{gap:8px}
+ .hudInputPill{min-height:57px;padding:5px 9px 5px 6px;gap:5px}
+ .hudMic,.hudEnd{flex-basis:51px;width:51px;height:51px}
+}
+@media(max-width:360px){
+ .hudBrandSlot .hudBackBrand{font-size:12px!important}
+ .hudTitle{font-size:13px;top:calc(25px + env(safe-area-inset-top,0px))}
+ .hudHeaderActions{gap:4px}
+ .hudHeaderActions .hudCircle{width:36px;height:36px}
+ .hudComposerArea{padding-left:10px;padding-right:10px}
+ .hudComposer{gap:6px}
+ .hudInputPill{min-height:53px;padding:4px 6px;gap:2px}
+ .hudPlus{flex-basis:31px}
+ .hudMic,.hudEnd{flex-basis:46px;width:46px;height:46px}
+}
+@media(prefers-reduced-motion:reduce){
+ .hudInputPill,.hudHeaderActions .hudCircle,.hudMic,.hudEnd{transition:none!important}
+}
