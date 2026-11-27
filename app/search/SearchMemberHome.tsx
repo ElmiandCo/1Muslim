@@ -55,6 +55,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  const [listening,setListening]=useState(false);
  const [paused,setPaused]=useState(false);
  const [speaking,setSpeaking]=useState(false);
+ const [spokenChars,setSpokenChars]=useState(0);
  const [voiceOn,setVoiceOn]=useState(true);
  const [voiceError,setVoiceError]=useState("");
  const [greetingFailed,setGreetingFailed]=useState(false);
@@ -189,6 +190,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
   stopAudio();
   const words=text.trim().slice(0,2500);
   const utterance=new SpeechSynthesisUtterance(words);
+  setSpokenChars(0);
   // Hold the microphone before speech starts, not after the browser emits onstart.
   speechActive.current=true;setSpeaking(true);
   utterance.lang="en-US";utterance.rate=.99;utterance.volume=.88;
@@ -197,6 +199,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
    if(speechTimer.current){clearTimeout(speechTimer.current);speechTimer.current=null}onEnd?.()};
   utterance.onstart=()=>{started=true;speechActive.current=true;setSpeaking(true);setGreetingFailed(false)};
   utterance.onerror=()=>{setGreetingFailed(true);finish()};
+  utterance.onboundary=event=>{if(typeof event.charIndex==="number")setSpokenChars(event.charIndex)};
   utterance.onend=finish;
   // iOS may reject sound without a direct user interaction; keep the manual replay control.
   speechTimer.current=setTimeout(()=>{if(!started)setGreetingFailed(true);finish()},Math.max(4500,words.length*125));
@@ -322,7 +325,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
     {voiceError&&<p className="smhError" role="status">{voiceError}</p>}
   </section>
   <div className="smhResponseSpace">
-   <ProfileImmersiveStage request={request} onReply={onReply} onSettled={onSettled} persist={false} showEmpty={false}/>
+   <ProfileImmersiveStage request={request} onReply={onReply} onSettled={onSettled} persist={false} showEmpty={false} speaking={speaking} spokenChars={spokenChars}/>
    {request&&<Link className="smhAllResults" href={"/search?q="+encodeURIComponent(request.query)}>All search results ↗</Link>}
   </div>
   <div className="smhExplore"><SearchFeatureRails/></div>
