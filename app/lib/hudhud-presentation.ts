@@ -19,7 +19,8 @@ function verseReference(text:string):string|null{
 export function selectHudHudPresentation(message:string):HudHudPresentation{
  const text=message.trim();
  const ref=verseReference(text);
- if(ref && (QURAN.test(text)||VERSE.test(text)||/^\d{1,3}:\d{1,3}$/.test(text)))return {kind:"verse",verseKey:ref};
+ const detailedQuestion=/\b(explain|why|meaning|how|context|tafsir|interpret|commentary|lessons?|support|hadith|about)\b/i.test(text);
+ if(ref&&!detailedQuestion&&(QURAN.test(text)||VERSE.test(text)||/^\d{1,3}:\d{1,3}$/.test(text)))return {kind:"verse",verseKey:ref};
  // Never replace an invalid explicitly requested reference with an unrelated ayah.
  if(!ref&&/\b(?:sura|surah|chapter)\s*\d+\s+(?:verse|ayah|ayat)\s*\d+\b/i.test(text))return {kind:"text"};
  const simpleVerse=(QURAN.test(text)&&VERSE.test(text)&&SHOW.test(text))
