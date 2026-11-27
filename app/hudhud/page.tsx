@@ -60,7 +60,7 @@ export default function HudHudPage(){
  const voiceTranscript=useRef("");
  const askRef=useRef<(message:string)=>void>(()=>{});
  const originRef=useRef("/search");
- const safeReturn=(s:string)=>s.startsWith("/")&&!s.startsWith("//")&&!s.includes("://")&&!s.startsWith("/hudhud")?s:"/search";
+ const safeReturn=(s:string)=>s.startsWith("/")&&!s.startsWith("//")&&!s.startsWith("/\\")&&!s.includes("://")&&!s.startsWith("/hudhud")&&!s.startsWith("/auth")?s:"/search";
  const current=sessions.find(x=>x.id===activeId)||sessions[0];
  const lines=current.lines;
  const exhausted=remaining===0;
