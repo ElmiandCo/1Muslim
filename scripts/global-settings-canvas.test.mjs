@@ -9,6 +9,9 @@ test("Real signed-in Search Home opens settings as a local overlay, not a route"
  assert.match(home,/aria-label="Settings"[\s\S]{0,250}1muslim:open-settings/);
  assert.match(results,/aria-label="Settings"[\s\S]{0,250}1muslim:open-settings/);
  assert.doesNotMatch(home,/href="\/settings"/);
+ const canvas=read("app/components/GlobalSettingsCanvas.tsx");
+ assert.match(canvas,/document\.addEventListener\("click",onLink,true\)/);
+ assert.match(canvas,/path==="\/profile"&&destination\.searchParams\.has\("edit"\)/);
  const layout=read("app/layout.tsx");
  assert.match(layout,/<GlobalSettingsCanvas\s*\/>/);
 });
