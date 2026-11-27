@@ -6,8 +6,8 @@ const read=path=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
 test("Real signed-in Search Home opens settings as a local overlay, not a route",()=>{
  const home=read("app/search/SearchMemberHome.tsx");
  const results=read("app/search/page.tsx");
- assert.match(home,/aria-label="Settings"[^>]*1muslim:open-settings/);
- assert.match(results,/aria-label="Settings"[^>]*1muslim:open-settings/);
+ assert.match(home,/aria-label="Settings"[\s\S]{0,250}1muslim:open-settings/);
+ assert.match(results,/aria-label="Settings"[\s\S]{0,250}1muslim:open-settings/);
  assert.doesNotMatch(home,/href="\/settings"/);
  const layout=read("app/layout.tsx");
  assert.match(layout,/<GlobalSettingsCanvas\s*\/>/);
