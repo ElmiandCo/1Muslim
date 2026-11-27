@@ -54,3 +54,13 @@ test("HudHud account memory uses separate RLS-isolated AI chat storage, not lega
  assert.match(route,/body\.action==="preference"/);
  assert.match(route,/body\.action==="clear"/);
 });
+
+test("HudHud does not show broken Yes/No feedback controls under replies",()=>{
+ const page=readFileSync(new URL("../app/hudhud/page.tsx",import.meta.url),"utf8");
+ const css=readFileSync(new URL("../app/hudhud/hudhud.css",import.meta.url),"utf8");
+ assert.doesNotMatch(page,/hudQuickChoices|Was this the verse you wanted\?|Was this helpful\?/);
+ assert.doesNotMatch(page,/ask\(undefined,"Yes, thank you\."\)/);
+ assert.doesNotMatch(css,/\.hudQuickChoices/);
+ // Users may still ask follow-up questions in the existing composer.
+ assert.match(page,/className="hudComposer"/);
+});
