@@ -38,3 +38,5 @@
  .hudV2Help{max-height:59dvh;overflow:auto;overscroll-behavior:contain;padding:3px 5px}
 }
 @media(prefers-reduced-motion:reduce){.hudV2Shahada h1{animation:none!important}}
+
+.hudV2HelpListen{border:1px solid #e1e9e2;border-radius:999px;background:#fff;color:#365e4b;font-size:12px;font-weight:700;padding:10px 16px;cursor:pointer;box-shadow:0 3px 12px #1934230c}
