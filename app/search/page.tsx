@@ -55,23 +55,6 @@ function ResultRail({title,subtitle,items,category}:{title:string;subtitle:strin
   </section>;
 }
 
-function DirectoryResultList({items}:{items:DiscoverItem[]}){
- if(!items.length)return null;
- return <section className="dsOrganicDirectory" aria-label="Best 1Muslim matches">
-   <div className="dsOrganicHeader"><span className="dsSectionKicker">FROM 1MUSLIM</span><h2>Results from your Ummah</h2></div>
-   <div className="dsOrganicResults">{items.map(item=><article className="dsOrganicResult" key={item.kind+":"+item.id}>
-     <Link href={item.href} className="dsOrganicLink">
-       <span className="dsOrganicSourceIcon" aria-hidden="true">{item.kind==="People"?"◉":item.kind==="Qur’an"?"۞":"1M"}</span>
-       <span className="dsOrganicIdentity"><strong>1Muslim · {item.kind}</strong><small>{item.byline||"1Muslim community"}</small></span>
-     </Link>
-     <div className="dsOrganicBody">
-       <div className="dsOrganicCopy"><h3><Link href={item.href}>{item.title}</Link></h3>
-         {item.description&&<p>{item.description}</p>}</div>
-       {item.image&&<Link href={item.href} className="dsOrganicThumbnail" aria-label={"View "+item.title}><img src={item.image} alt="" loading="lazy"/></Link>}
-     </div>
-   </article>)}</div>
- </section>;
-}
 export default function SearchHub() {
   const router=useRouter();
   const magneticRoot=useRef<HTMLElement>(null);
@@ -219,7 +202,6 @@ export default function SearchHub() {
     ...result?.best?.filter(x=>x.title.toLowerCase().includes(query.toLowerCase())&&x.title.length<45).map(x=>x.title)||[],
     ...result?.suggestions?.filter(x=>x.toLowerCase().includes(query.toLowerCase()))||[]
   ])].slice(0,6),[result,query]);
-  const topMatches=result?.best||[];
   const visibleCategories=tab==="All"?CATEGORIES:CATEGORIES.filter(c=>c===tab);
   const showDirectory=tab==="All"||CATEGORIES.includes(tab as DiscoverKind);
   const showGlobal=tab==="All"||tab==="Web"||tab==="Images"||tab==="Videos"||tab==="News"||tab==="AI Overview";
@@ -336,10 +318,10 @@ export default function SearchHub() {
       {!homeMode&&showDirectory&&error&&<div className="dsError" role="alert">{error}<button onClick={()=>setQuery(s=>s+" ")}>Try again</button></div>}
       {!homeMode&&!loading&&!error&&result&&showDirectory&&<>
         {(query.trim().length>=2||submitted)&&<section className="dsResultIntro">
-          <span className="dsResultStats">{result.total} results on 1Muslim · {CATEGORIES.filter(c=>totalFor(c)>0).length} categories{result.partial?" · Some sources temporarily unavailable":""}</span>
+          <span className="dsResultStats">On 1Muslim · {result.total} community results in {CATEGORIES.filter(c=>totalFor(c)>0).length} categories{result.partial?" · Some sources temporarily unavailable":""}. Separate from independent web results.</span>
           <button className="dsSearchWithHud" type="button" onClick={()=>void openHudHud()}>✦ Ask HudHud about these results <span>→</span></button>
         </section>}
-        {tab==="All"&&topMatches.length>0&&query.trim()&&<DirectoryResultList items={topMatches.slice(0,7)} />}
+        
         {visibleCategories.map(category=><ResultRail key={category} category={category} title={category==="Movies & Series"?"Movies, shows & series":category==="Qur’an"?"Qur’an verses & chapters":category}
           subtitle={category==="Comments"?"Conversations happening in Ummah posts.":category==="People"?"Members and creators you can connect with.":category==="Qur’an"?"Verified verse references and English translation search.":"Explore related "+category.toLowerCase()+" on 1Muslim."}
           items={result.groups[category]||[]} />)}
