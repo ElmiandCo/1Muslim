@@ -55,6 +55,16 @@ export default function HudHudPage(){
  const [settingsOpen,setSettingsOpen]=useState(false);
  const [actionsOpen,setActionsOpen]=useState(false);
  const [readAloud,setReadAloud]=useState(true);
+ useEffect(()=>{
+  const read=()=>{try{setReadAloud(localStorage.getItem("1muslim:hudhud:voice-read-aloud")!=="off")}catch{}};
+  read();window.addEventListener("1muslim:hudhud-voice-preference",read);
+  return()=>window.removeEventListener("1muslim:hudhud-voice-preference",read);
+ },[]);
+ const saveVoice= (next:boolean)=>{
+  setReadAloud(next);
+  try{localStorage.setItem("1muslim:hudhud:voice-read-aloud",next?"on":"off")}catch{}
+  if(!next){window.speechSynthesis?.cancel();setSpeaking(false);setSpeechPending(false)}
+ };
  const [memoryEnabled,setMemoryEnabled]=useState(false);
  const [memorySignedIn,setMemorySignedIn]=useState(false);
  const [memoryPending,setMemoryPending]=useState(false);
@@ -94,13 +104,18 @@ export default function HudHudPage(){
      if(controller.signal.aborted)return;
      setMemorySignedIn(data.signedIn===true);
      setMemoryEnabled(data.enabled===true);
-     if(data.enabled===true&&Array.isArray(data.sessions)&&data.sessions.length>0){
+     const selectedSession=new URLSearchParams(window.location.search).get("session");
+     if(Array.isArray(data.sessions)&&data.sessions.length>0&&(data.enabled===true||Boolean(selectedSession))){
        const saved:Session[]=data.sessions.filter((row:unknown):row is Session=>{
          if(!row||typeof row!=="object")return false;
          const r=row as Partial<Session>;
          return typeof r.id==="string"&&typeof r.title==="string"&&Array.isArray(r.lines);
        }).slice(0,20);
-       if(saved.length){setSessions(old=>old.length===1&&old[0].lines.length===0?saved:old);setActiveId(old=>old==="first"?saved[0].id:old)}
+       const selected=saved.find(item=>item.id===selectedSession);
+       if(saved.length&&(data.enabled===true||selected)){
+         setSessions(old=>old.length===1&&old[0].lines.length===0?saved:old);
+         setActiveId(old=>old==="first"?(selected?.id||saved[0].id):old);
+       }
      }
    }).catch(()=>{if(!controller.signal.aborted)setMemoryNotice("Account memory is temporarily unavailable.")});
   return()=>controller.abort();
@@ -370,7 +385,7 @@ export default function HudHudPage(){
     <button className="hudBackBrand" type="button" aria-label="Return to previous page" onClick={close}><AnimatedMuslimBrand/><span className="hudBrandSuffix">.Live</span></button>
    </div>
    <div className="hudTitle" aria-label="HudHud — 1Muslim voice assistant">HudHud</div>
-   <div className="hudHeaderActions"><button className="hudCircle" type="button" aria-label={readAloud?"Mute HudHud voice":"Enable HudHud voice"} aria-pressed={readAloud} onClick={()=>{setReadAloud(v=>!v);window.speechSynthesis?.cancel();setSpeaking(false);setSpeechPending(false)}}>
+   <div className="hudHeaderActions"><button className="hudCircle" type="button" aria-label={readAloud?"Mute HudHud voice":"Enable HudHud voice"} aria-pressed={readAloud} onClick={()=>saveVoice(!readAloud)}>
     <svg viewBox="0 0 24 24" width="19" height="19" stroke="currentColor" fill="none" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4"/>{readAloud?<path d="M16 8q4 4 0 8M18 5q7 7 0 14"/>:<path d="m16 9 5 6m0-6-5 6"/>}</svg>
    </button><button className="hudCircle" type="button" aria-label="HudHud menu" aria-expanded={menuOpen} onClick={()=>{setMenuOpen(true);setSettingsOpen(false)}}><Glyph name="menu"/></button><button className="hudCircle" type="button" aria-label="HudHud settings" aria-expanded={settingsOpen} onClick={()=>{setSettingsOpen(!settingsOpen);setMenuOpen(false)}}><Glyph name="settings"/></button></div>
   </header>
@@ -403,7 +418,7 @@ export default function HudHudPage(){
    </div>}
   {settingsOpen&&<div className="hudSettings" role="dialog" aria-label="HudHud settings">
     <h2>HudHud settings</h2>
-    <label><span>Read replies aloud<small>Uses your browser's voice</small></span><input type="checkbox" checked={readAloud} onChange={e=>{setReadAloud(e.target.checked);if(!e.target.checked){window.speechSynthesis?.cancel();setSpeaking(false);setSpeechPending(false)}}}/></label>
+    <label><span>Read replies aloud<small>Uses your browser's voice</small></span><input type="checkbox" checked={readAloud} onChange={e=>saveVoice(e.target.checked)}/></label>
     <label><span>Auto-listen<small>Start after permission; pauses while HudHud speaks or you type. Browser recognition may process audio; HudHud does not store raw audio.</small></span><input type="checkbox" checked={autoListening} onChange={e=>{setAutoListening(e.target.checked);setMicPaused(!e.target.checked);if(!e.target.checked)stopVoice(true)}}/></label>
     <div className="hudMicSettings"><span>Microphone access<small>{micAccess==="granted"?(autoListening&&!micPaused?"Allowed · auto-listening is on":"Allowed · tap microphone to speak"):micAccess==="checking"?"Checking browser permission…":"Not enabled · you can still type"}</small></span><button type="button" onClick={()=>void requestMicrophonePermission()}>Enable mic</button></div>
     {memorySignedIn?<><label><span>Remember conversations<small>Private to your account. Off by default.</small></span><input type="checkbox" checked={memoryEnabled} disabled={memoryPending} onChange={e=>void updateMemory(e.target.checked)}/></label>
