@@ -25,6 +25,19 @@ test("HudHud shows a single verified verse instead of six unrelated results",()=
  assert.deepEqual(selectHudHudPresentation("Show me Surah 2 verse 255"),{kind:"verse",verseKey:"2:255"});
  assert.deepEqual(selectHudHudPresentation("Quote Qur'an 112:1"),{kind:"verse",verseKey:"112:1"});
 });
+test("HudHud resolves a natural-language request for Allah guiding whom He wills",()=>{
+ assert.deepEqual(selectHudHudPresentation("Where does Allah say in the Quran that Allah guides whom He wills?"),{kind:"verse",verseKey:"28:56"});
+ assert.deepEqual(selectHudHudPresentation("Which verse says Allah guides whom he wills"),{kind:"verse",verseKey:"28:56"});
+ assert.deepEqual(selectHudHudPresentation("Why does Allah guide me?"),{kind:"text"});
+});
+
+test("HudHud recognizes explicit cat images without converting unrelated questions into image searches",()=>{
+ assert.deepEqual(selectHudHudPresentation("Can I see an image of a cat?"),{kind:"image",query:"cat"});
+ assert.deepEqual(selectHudHudPresentation("Show me a picture of a fluffy cat"),{kind:"image",query:"fluffy cat"});
+ assert.deepEqual(selectHudHudPresentation("Find photos of sunsets"),{kind:"image",query:"sunsets"});
+ assert.deepEqual(selectHudHudPresentation("Does Allah mention cats?"),{kind:"text"});
+});
+
 test("HudHud never substitutes an unrelated default verse for a themed question",()=>{
  assert.deepEqual(selectHudHudPresentation("What does the Qur'an say about patience?"),{kind:"text"});
  assert.deepEqual(selectHudHudPresentation("Find a Quran verse about mercy"),{kind:"text"});
