@@ -9,7 +9,7 @@ import "../settings/settings-control-center.css";
 import "./global-settings-canvas.css";
 
 const ProfileEditor=dynamic(()=>import("../profile/page"),{ssr:false,loading:()=> <p className="gscLoading">Preparing your existing profile controls…</p>});
-const AppSettings=dynamic(()=>import("../settings/page").then(mod=>mod.SettingsContent),{ssr:false,loading:()=> <p className="gscLoading">Preparing your app controls…</p>});
+const AppSettings=dynamic(()=>import("../settings/SettingsContent"),{ssr:false,loading:()=> <p className="gscLoading">Preparing your app controls…</p>});
 type ProfileTab="profile"|"avatar"|"header"|"live"|"shahada"|"analytics";
 type Panel="home"|"hudhud"|"profile"|"avatar"|"header"|"live"|"shahada"|"analytics"|"app";
 type ProfileSummary={display_name:string|null;username:string|null;avatar_gender:string|null;gender:string|null;avatar_config:Record<string,unknown>|null;profile_background_image_url:string|null;shahada_verified_at:string|null};
@@ -39,11 +39,18 @@ export default function GlobalSettingsCanvas(){
  const [appFocus,setAppFocus]=useState("");
  const [profile,setProfile]=useState<ProfileSummary|null>(null);
  const [signedIn,setSignedIn]=useState(false);
+ const [night,setNight]=useState(false);
  const shell=useRef<HTMLElement|null>(null);
  const scroll=useRef<HTMLDivElement|null>(null);
  const opener=useRef<HTMLElement|null>(null);
  const grab=useRef<number|null>(null);
- useEffect(()=>{setMounted(true)},[]);
+ useEffect(()=>{
+  setMounted(true);
+  const refresh=()=>{try{setNight(localStorage.getItem("1muslim-theme-mode")==="night")}catch{}};
+  refresh();window.addEventListener("1muslim:appearance-updated",refresh);
+  window.addEventListener("1muslim:theme-changed",refresh);
+  return()=>{window.removeEventListener("1muslim:appearance-updated",refresh);window.removeEventListener("1muslim:theme-changed",refresh)};
+ },[]);
  useEffect(()=>{
   let active=true;
   const client=createClient();
@@ -122,8 +129,8 @@ export default function GlobalSettingsCanvas(){
  };
  const heading=panel==="home"?"Control Center":panel==="hudhud"?"HudHud AI":panel==="app"?"App preferences":editorLabels[panel as ProfileTab];
  return createPortal(<div className="gscBackdrop" role="presentation" onPointerDown={event=>{if(event.target===event.currentTarget)setOpen(false)}}>
-  <section className="gscSheet" ref={shell} role="dialog" aria-modal="true" aria-label="1Muslim account settings and AI control center">
-   <div className="gscGrab" onTouchStart={(event:TouchEvent<HTMLDivElement>)=>{grab.current=event.touches[0]?.clientY||null}} onTouchEnd={(event:TouchEvent<HTMLDivElement>)=>{const begin=grab.current;grab.current=null;if(begin!==null&&event.changedTouches[0]?.clientY-begin>65)setOpen(false)}}><span aria-hidden="true"/></div>
+  <section className={"gscSheet"+(night?" gscNight":"")} ref={shell} role="dialog" aria-modal="true" aria-label="1Muslim account settings and AI control center">
+   <div className="gscGrab" onTouchStart={(event:TouchEvent<HTMLDivElement>)=>{grab.current=event.touches[0]?.clientY||null}} onTouchEnd={(event:TouchEvent<HTMLDivElement>)=>{const begin=grab.current;grab.current=null;const endY=event.changedTouches[0]?.clientY;if(begin!==null&&typeof endY==="number"&&endY-begin>65)setOpen(false)}}><span aria-hidden="true"/></div>
    <header className="gscHeader">
     <button className="gscBack" type="button" aria-label={panel==="home"?"Close settings":"Return to settings sections"} onClick={()=>panel==="home"?setOpen(false):onOpenTab("home")}>{panel==="home"?"✦":"‹"}</button>
     <div><small>1MUSLIM.LIVE</small><h2>{heading}</h2></div>
