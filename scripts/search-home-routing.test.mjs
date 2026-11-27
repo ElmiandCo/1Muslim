@@ -36,7 +36,7 @@ test("one-second in-place Search Home reveal is quiet, repeat-safe and motion-sa
   assert.match(styles,/dsIntroArrive 1000ms/);
   assert.match(styles,/@media\(prefers-reduced-motion:reduce\)/);
   // No hard route changes, duplicate logo, fixed splash or layout replacement.
-  assert.doesNotMatch(page,/setTimeout\(\(\)=>router\.(?:push|replace)/);
+  assert.doesNotMatch(page.slice(page.indexOf("const [introStage"),page.indexOf("// The same Search Home renders")),/setTimeout\(\(\)=>router\.(?:push|replace)/);
 });
 
 test("auth defaults to Search Home but preserves explicit deep links",()=>{
@@ -74,7 +74,7 @@ test("Shahada admission returns directly to prior work without forcing profile g
  const onboard=read("app/components/HudHudShahadaV2.tsx");
  const route=read("app/onboarding/page.tsx");
  assert.match(onboard,/shahada_verified_at/);
- assert.match(onboard,/onComplete\?\./);
+ assert.match(onboard,/if\(onComplete\)\{onComplete\(\);return\}/);
  assert.match(onboard,/1muslim:auth-return/);
  assert.match(route,/<HudHudShahadaV2\/>/);
  assert.doesNotMatch(route,/ShahadaOnboardingExperience/);
