@@ -61,7 +61,7 @@ export async function POST(req:NextRequest){
    const value=line as Record<string,unknown>;
    if(value.role!=="user"&&value.role!=="assistant")return null;
    if(typeof value.content!=="string"||value.content.length<1||value.content.length>3000)return null;
-   const safe:{role:string;content:string;presentation?:{kind:string;verseKey?:string};verses?:unknown[]}={role:value.role,content:value.content};
+   const safe:{role:string;content:string;presentation?:{kind:string;verseKey?:string;query?:string};verses?:unknown[];images?:unknown[]}={role:value.role,content:value.content};
    const p=value.presentation as Record<string,unknown>|undefined;
    if(p?.kind==="verse"&&typeof p.verseKey==="string"&&/^\d{1,3}:\d{1,3}$/.test(p.verseKey)){
     safe.presentation={kind:"verse",verseKey:p.verseKey};
@@ -70,6 +70,22 @@ export async function POST(req:NextRequest){
      const v=verses[0] as Record<string,unknown>;
      if(["key","arabic","english","translation"].every(k=>typeof v[k]==="string")&&
        JSON.stringify(v).length<=7000)safe.verses=[{key:v.key,arabic:v.arabic,english:v.english,translation:v.translation}];
+    }
+   }else if(p?.kind==="image"&&typeof p.query==="string"&&p.query.length<=110){
+    safe.presentation={kind:"image",query:p.query};
+    const candidate=Array.isArray(value.images)?value.images[0]:null;
+    if(candidate&&typeof candidate==="object"){
+     const image=candidate as Record<string,unknown>;
+     const validHttps=(u:unknown)=>{if(typeof u!=="string"||u.length>2048)return false;try{return new URL(u).protocol==="https:"}catch{return false}};
+     const validPage=(u:unknown)=>{if(typeof u!=="string"||u.length>2048)return false;try{return ["http:","https:"].includes(new URL(u).protocol)}catch{return false}};
+     if(validHttps(image.imageUrl)&&validHttps(image.thumbnailUrl)&&validPage(image.pageUrl)&&typeof image.title==="string"&&typeof image.source==="string"){
+      safe.images=[{
+       imageUrl:image.imageUrl,thumbnailUrl:image.thumbnailUrl,pageUrl:image.pageUrl,
+       title:image.title.slice(0,160),source:image.source.slice(0,120),
+       ...(typeof image.width==="number"&&Number.isFinite(image.width)?{width:image.width}:{}),
+       ...(typeof image.height==="number"&&Number.isFinite(image.height)?{height:image.height}:{})
+      }];
+     }
     }
    }else if(p?.kind==="text")safe.presentation={kind:"text"};
    // Directory matches are not trusted as persistent cross-visit links.
