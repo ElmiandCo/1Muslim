@@ -20,6 +20,8 @@ export function selectHudHudPresentation(message:string):HudHudPresentation{
  const text=message.trim();
  const ref=verseReference(text);
  if(ref && (QURAN.test(text)||VERSE.test(text)||/^\d{1,3}:\d{1,3}$/.test(text)))return {kind:"verse",verseKey:ref};
+ // Never replace an invalid explicitly requested reference with an unrelated ayah.
+ if(!ref&&/\b(?:sura|surah|chapter)\s*\d+\s+(?:verse|ayah|ayat)\s*\d+\b/i.test(text))return {kind:"text"};
  const simpleVerse=(QURAN.test(text)&&VERSE.test(text)&&SHOW.test(text))
   || (/(?:show|give|share|read|quote)\s+(?:me\s+)?(?:a|one|any|random|first)\s+(?:verse|ayah)\b/i.test(text));
  // A theme-specific question needs a retrieved verse relevant to that theme;
