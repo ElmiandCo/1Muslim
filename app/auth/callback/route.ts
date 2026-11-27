@@ -56,7 +56,7 @@ export async function GET(request: Request) {
           ]);
           if (profileError) console.warn("Google profile autofill skipped:", profileError.message);
         }
-        if (!profile?.gender) return NextResponse.redirect(`${origin}/onboarding`);
+        if (!profile?.gender) return NextResponse.redirect(`${origin}/search?auth=shahada`);
       }
       return NextResponse.redirect(`${origin}${next}`);
     }
