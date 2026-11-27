@@ -208,7 +208,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
    onEnd?.();
    // Give iPhone speakers and microphone hardware time to settle after audio.
    setMicCooldown(true);
-   resumeTimer.current=window.setTimeout(()=>setMicCooldown(false),1400);
+   resumeTimer.current=setTimeout(()=>setMicCooldown(false),1400);
   });
  };
   const greet=()=>{
