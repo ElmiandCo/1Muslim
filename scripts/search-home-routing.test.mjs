@@ -69,9 +69,14 @@ test("visitors can search without signing in, while private account controls are
   assert.match(css,/\.dsResultsNight \.dsGuestAccount/);
 });
 
-test("Shahada only returns explicitly requested profile flows to Profile",()=>{
-  const onboard=read("app/components/ShahadaOnboardingExperience.tsx");
-  assert.equal((onboard.match(/get\("return"\)==="profile"\?"\/profile":"\/search"/g)||[]).length,2);
+test("Shahada admission returns directly to prior work without forcing profile gender",()=>{
+ const onboard=read("app/components/HudHudShahadaV2.tsx");
+ const route=read("app/onboarding/page.tsx");
+ assert.match(onboard,/shahada_verified_at/);
+ assert.match(onboard,/onComplete\?\./);
+ assert.match(onboard,/1muslim:auth-return/);
+ assert.match(route,/<HudHudShahadaV2\/>/);
+ assert.doesNotMatch(route,/ShahadaOnboardingExperience/);
 });
 
 test("Home tab opens Search and Profile remains a distinct destination",()=>{
@@ -195,19 +200,24 @@ test("Search Home account entry morphs in place and preserves public search",()=
  assert.match(flowCss,/\.dsInlineAuthFields/);
  assert.doesNotMatch(flow,/position:fixed|backdrop-filter/);
 });
-test("HudHud Shahada uses the original verified recording and account completion",()=>{
+test("HudHud owns a single white Shahada flow with audio, optional Help and secure saving",()=>{
  const page=read("app/search/page.tsx");
- const onboard=read("app/components/ShahadaOnboardingExperience.tsx");
+ const onboard=read("app/components/HudHudShahadaV2.tsx");
  const callback=read("app/auth/callback/route.ts");
  const auth=read("app/auth/page.tsx");
- assert.match(page,/<ShahadaOnboardingExperience embedded onComplete=/);
- assert.match(onboard,/export default function ShahadaOnboardingExperience\(\{embedded=false,onComplete\}/);
- assert.match(read("app/onboarding/page.tsx"),/<ShahadaOnboardingExperience\/>/);
+ const styles=read("app/components/hudhud-shahada-v2.css");
+ assert.match(page,/<HudHudShahadaV2 embedded returnTo=/);
+ assert.match(onboard,/getUserMedia/);
+ assert.match(onboard,/MediaRecorder/);
+ assert.match(onboard,/hasShahada/);
  assert.match(onboard,/shahada-safe-vault/);
  assert.match(onboard,/award_profile_badge/);
- assert.match(onboard,/shahada_verified_at:/);
- assert.match(onboard,/onComplete\?\.\(\)/);
- assert.match(callback,/\/search\?auth=shahada/);
+ assert.match(onboard,/shahada_verified_at/);
+ assert.match(onboard,/onComplete\?/);
+ assert.match(onboard,/self-attested-checkbox/);
+ assert.match(onboard,/60-elapsed/);
+ assert.match(styles,/background:#fff/);
+ assert.match(callback,/!profile\?\.shahada_verified_at/);
  assert.match(auth,/search\.searchParams\.set\("auth",requestedSignup\?"signup":"signin"\)/);
  assert.doesNotMatch(auth,/<SeamlessEntry /);
 });
