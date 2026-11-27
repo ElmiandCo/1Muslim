@@ -140,7 +140,7 @@
 @media(prefers-reduced-motion:reduce){
  .smhPage *, .smhPage *:before,.smhPage *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 }
-html[data-one-chrome="night"] .smhPage{background:#111719!important;color:#f1f4f2!important}
+html[data-one-chrome="night"] .smhPage.dsPage.dsHomeMode,.smhPage.dsPage.dsHomeMode.smhNight{background:#111719!important;color:#f1f4f2!important}
 html[data-one-chrome="night"] .smhName,html[data-one-chrome="night"] .smhLogo{color:#f4f5f2!important}
 html[data-one-chrome="night"] .smhSearchForm{background:#1b272a;border-color:#3f4c4b;box-shadow:none}
 html[data-one-chrome="night"] .smhInputWrap input{color:#fff}
@@ -148,3 +148,12 @@ html[data-one-chrome="night"] .smhOrb{background:#1f2a2c;color:#e2eae8}
 html[data-one-chrome="night"] .smhResponseSpace .hudNarratedReply{color:#edf1ef}
 html[data-one-chrome="night"] .smhExplore .dsFeatureCard{background:#1d2a2b;color:#e5e9e6}
 html[data-one-chrome="night"] .smhExplore .dsFeatureCopy strong{color:#e6ece8}
+
+/* Theme applies even when a browser restored the Search Home before its UI chrome was repainted. */
+.smhPage.smhNight .smhName,.smhPage.smhNight .smhLogo{color:#f4f5f2!important}
+.smhPage.smhNight .smhSearchForm{background:#1b272a;border-color:#3f4c4b;box-shadow:none}
+.smhPage.smhNight .smhInputWrap input{color:#fff}
+.smhPage.smhNight .smhOrb{background:#1f2a2c;color:#e2eae8}
+.smhPage.smhNight .smhResponseSpace .hudNarratedReply{color:#edf1ef}
+.smhPage.smhNight .smhExplore .dsFeatureCard{background:#1d2a2b}
+.smhPage.smhNight .smhExplore .dsFeatureCopy strong{color:#e6ece8}
