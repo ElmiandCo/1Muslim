@@ -275,6 +275,7 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
    <h1 aria-live="polite">{state==="recognized"||state==="complete"?"Shahada recognized":state==="saving"?"One Muslim":state==="help"?"Shahada":"Shahada"}</h1>
    {state==="help"?<div className="hudV2Help">
      <p>The Shahada is the declaration of belief in Allah and His Messenger. You can speak it in Arabic or English, or personally affirm it here if recording isn't possible.</p>
+     <small className="hudV2PrivacyNote">Your browser may use its speech-recognition service to process voice. A recognized recording is stored only in our private Shahada vault. You can instead use the declaration below without recording.</small>
      <p className="hudV2Arabic" lang="ar" dir="rtl">{SHAHADA_ARABIC}</p><p>{SHAHADA_ENGLISH}</p>
      <button type="button" className="hudV2HelpListen" onClick={reciteExample}>▶ Hear the Shahada</button>
      <label className="hudV2Check"><input type="checkbox" checked={manual} onChange={e=>setManual(e.target.checked)}/> I sincerely affirm this Shahada myself.</label>
