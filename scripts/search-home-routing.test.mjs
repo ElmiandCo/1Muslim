@@ -70,7 +70,7 @@ test("visitors can search without signing in, while private account controls are
 });
 
 test("Shahada only returns explicitly requested profile flows to Profile",()=>{
-  const onboard=read("app/onboarding/page.tsx");
+  const onboard=read("app/components/ShahadaOnboardingExperience.tsx");
   assert.equal((onboard.match(/get\("return"\)==="profile"\?"\/profile":"\/search"/g)||[]).length,2);
 });
 
@@ -197,11 +197,12 @@ test("Search Home account entry morphs in place and preserves public search",()=
 });
 test("HudHud Shahada uses the original verified recording and account completion",()=>{
  const page=read("app/search/page.tsx");
- const onboard=read("app/onboarding/page.tsx");
+ const onboard=read("app/components/ShahadaOnboardingExperience.tsx");
  const callback=read("app/auth/callback/route.ts");
  const auth=read("app/auth/page.tsx");
- assert.match(page,/<OnboardingPage embedded onComplete=/);
- assert.match(onboard,/export default function OnboardingPage\(\{embedded=false,onComplete\}/);
+ assert.match(page,/<ShahadaOnboardingExperience embedded onComplete=/);
+ assert.match(onboard,/export default function ShahadaOnboardingExperience\(\{embedded=false,onComplete\}/);
+ assert.match(read("app/onboarding/page.tsx"),/<ShahadaOnboardingExperience\/>/);
  assert.match(onboard,/shahada-safe-vault/);
  assert.match(onboard,/award_profile_badge/);
  assert.match(onboard,/shahada_verified_at:/);
