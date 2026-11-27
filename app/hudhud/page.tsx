@@ -352,7 +352,7 @@ export default function HudHudPage(){
    setMicPaused(true);setMicAccess("needs-tap");
    setError("Tap the microphone to enable speech recognition, or type your question.");
   }
- },[busy,exhausted,focused,speaking,speechPending,draft,stopVoice]);
+ },[busy,exhausted,focused,speaking,speechPending,audioCooldown,draft,stopVoice]);
  useEffect(()=>{
   if(!autoListening||micPaused||micAccess!=="granted"||audioCooldown||!pageVisible||
      listening||busy||speaking||speechPending||exhausted||focused||exiting||
