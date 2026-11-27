@@ -137,3 +137,31 @@
 :global(.dsResultsNight) .overviewUnavailable button{border-color:#5d6585;color:#acc9ff}
 :global(.dsResultsNight) .imageCard{background:#282a2f;border-color:#3c424b;color:#e1e4e9}
 :global(.dsResultsNight) .imageInfo small{color:#a4acb6}
+
+/* HudHud's first-party Qur'an context is not a generated web citation.
+   Give it clear editorial hierarchy without loud guidance badges/cards. */
+.quranContext{
+  display:flex;flex-direction:column;gap:10px;
+  margin:1px 0 17px;padding:0 0 14px;
+  border:0;border-bottom:1px solid color-mix(in srgb,#216c4b 24%,transparent);
+  color:inherit;background:transparent;clear:both;
+  animation:searchQuranArrival .35s ease-out both;
+}
+.quranContext p{
+  margin:0!important;font-size:clamp(15px,1.9vw,19px)!important;
+  line-height:1.72!important;letter-spacing:-.012em;color:inherit!important;
+  overflow-wrap:anywhere;white-space:normal;
+}
+.quranReferences{display:flex;flex-wrap:wrap;gap:8px}
+.quranReferences a{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:34px;max-width:100%;padding:6px 12px;
+  font-size:12px;font-weight:700;line-height:1.3;text-decoration:none;
+  color:#146e4d!important;border:1px solid #b8d9ca;
+  background:color-mix(in srgb,#effbf5 85%,transparent);border-radius:999px;
+  transition:background .15s ease,border-color .15s ease;
+}
+.quranReferences a:hover{background:#e0f4e9;border-color:#79b99c}
+.quranReferences a:focus-visible{outline:2px solid #298a63;outline-offset:2px}
+@keyframes searchQuranArrival{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.quranContext{animation:none!important}.quranReferences a{transition:none}}
