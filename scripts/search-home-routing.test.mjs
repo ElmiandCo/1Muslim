@@ -14,6 +14,29 @@ test("signed-in and anonymous visitors enter the same Search Home immediately",(
   assert.match(proxy,/loginUrl\.pathname = "\/auth"/);
 });
 
+test("one-second in-place Search Home reveal is quiet, repeat-safe and motion-safe",()=>{
+  const page=read("app/search/page.tsx");
+  const styles=read("app/search/search.css");
+  const auth=read("app/auth/page.tsx");
+  assert.match(page,/useState<"pending"\|"playing"\|"done">\("pending"\)/);
+  assert.match(page,/sessionStorage\.getItem\(key\)==="seen"/);
+  assert.match(page,/const hasQuery=Boolean\(params\.get\("q"\)\?\.trim\(\)\)/);
+  assert.match(page,/\(prefers-reduced-motion: reduce\)/);
+  assert.match(page,/window\.setTimeout\(\(\)=>setIntroStage\("done"\),1000\)/);
+  assert.match(page,/dsIntro/);
+  assert.match(auth,/sessionStorage\.removeItem\("1muslim:search-intro:v1"\)/);
+  assert.match(styles,/\.dsPage\.dsHomeMode\.dsIntroPending/);
+  assert.match(styles,/@keyframes dsIntroWordmark/);
+  assert.match(styles,/@keyframes dsIntroLive/);
+  assert.match(styles,/@keyframes dsIntroArrive/);
+  assert.match(styles,/dsIntroWordmark 1000ms/);
+  assert.match(styles,/dsIntroLive 1000ms/);
+  assert.match(styles,/dsIntroArrive 1000ms/);
+  assert.match(styles,/@media\(prefers-reduced-motion:reduce\)/);
+  // No hard route changes, duplicate logo, fixed splash or layout replacement.
+  assert.doesNotMatch(page,/setTimeout\(\(\)=>router\.(?:push|replace)/);
+});
+
 test("auth defaults to Search Home but preserves explicit deep links",()=>{
   const auth=read("app/auth/page.tsx");
   assert.match(auth,/const safeNext =/);
