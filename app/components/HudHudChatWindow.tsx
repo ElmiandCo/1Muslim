@@ -4,6 +4,7 @@ import Link from "next/link";
 import {useEffect, useRef, useState} from "react";
 import type {ChangeEvent, FormEvent, KeyboardEvent, ReactNode} from "react";
 import styles from "./HudHudChatWindow.module.css";
+import HudHudImageStudio from "./HudHudImageStudio";
 import {createHudHudAiVoicePlayer} from "../lib/hudhud-ai-voice-player";
 
 export type HudHudMessage = {
@@ -54,6 +55,7 @@ export default function HudHudChatWindow({
  const voiceBusy=useRef(false);
  const voiceEpoch=useRef(0);
  const [menuOpen,setMenuOpen]=useState(false);
+ const [imageStudioOpen,setImageStudioOpen]=useState(false);
  const [listening,setListening]=useState(false);
  const [voiceError,setVoiceError]=useState("");
  const [copiedId,setCopiedId]=useState<number|null>(null);
@@ -74,13 +76,14 @@ export default function HudHudChatWindow({
  useEffect(()=>{
   const key=(event:globalThis.KeyboardEvent)=>{
    if(event.key!=="Escape")return;
+   if(imageStudioOpen){setImageStudioOpen(false);return;}
    if(menuOpen){setMenuOpen(false);return;}
    if(settingsOpen){onSettingsChange(false);return;}
    onClose();
   };
   document.addEventListener("keydown",key);
   return()=>document.removeEventListener("keydown",key);
- },[menuOpen,settingsOpen,onSettingsChange,onClose]);
+ },[imageStudioOpen,menuOpen,settingsOpen,onSettingsChange,onClose]);
 
  useEffect(()=>{
   const element=scroll.current;
@@ -149,6 +152,7 @@ export default function HudHudChatWindow({
     <button type="button" className={styles.newChat} onClick={newChat}><span aria-hidden="true">＋</span> New conversation</button>
     <div className={styles.sidebarLabel}>YOUR SPACE</div>
     <button type="button" className={styles.currentChat} onClick={()=>{setMenuOpen(false);onSettingsChange(false);}}>✧ <span>Current conversation</span></button>
+    <button type="button" className={styles.currentChat} onClick={()=>{setImageStudioOpen(true);setMenuOpen(false);onSettingsChange(false)}}>▣ <span>Image &amp; Border Text Studio</span></button>
     <div className={styles.sidebarLabel}>EXPLORE WITH HUDHUD</div>
     <div className={styles.topicList}>{starters.map(item=><button type="button" key={item.title} onClick={()=>choosePrompt(item.prompt)}>{item.title}<span aria-hidden="true">↗</span></button>)}</div>
     <div className={styles.sidebarLabel}>QUICK ACCESS</div>
@@ -161,6 +165,7 @@ export default function HudHudChatWindow({
      <button type="button" className={styles.menuButton} aria-label="Open conversation menu" onClick={()=>setMenuOpen(true)}>☰</button>
      <div className={styles.headerTitle}><strong>HudHud</strong><span>Your Muslim-inspired AI companion</span></div>
      <div className={styles.headerActions}>
+      <button type="button" title="Create or edit an image" aria-label="HudHud Image Studio" onClick={()=>{onSettingsChange(false);setMenuOpen(false);setImageStudioOpen(true)}}>▣</button>
       <button type="button" title="New conversation" aria-label="New conversation" onClick={newChat}>＋</button>
       <button type="button" title="HudHud settings" aria-label="HudHud settings" aria-pressed={settingsOpen} onClick={()=>onSettingsChange(!settingsOpen)}>⚙</button>
       <button type="button" title="Close chat" aria-label="Close HudHud" onClick={onClose}>✕</button>
@@ -199,6 +204,7 @@ export default function HudHudChatWindow({
         <div className={styles.composeLeft}>
          <input ref={file} type="file" accept="image/*" hidden onChange={onAttach}/>
          <button type="button" title="Attach image preview" aria-label="Attach image preview" onClick={()=>file.current?.click()}>＋</button>
+          <button type="button" title="Create or edit images" aria-label="Open HudHud Image Studio" onClick={()=>setImageStudioOpen(true)}>▣</button>
          <button type="button" className={listening?styles.recording:""} title="Dictate a message" aria-label={listening?"Stop voice typing":"Start voice typing"} aria-pressed={listening} onClick={toggleDictation}>🎙</button>
         </div>
         <button type="submit" className={styles.sendButton} disabled={sending||(!draft.trim()&&!pending)||(remaining===0)} aria-label="Send message">{sending?"···":"↑"}</button>
@@ -209,8 +215,9 @@ export default function HudHudChatWindow({
        {remaining===0&&<Link href="/search" onClick={onClose}>Return to Search ↗</Link>}
       </div>
       {(notice||voiceError)&&<div className={styles.notice} role="status">{voiceError||notice}</div>}
-      <p className={styles.disclaimer}>AI can make mistakes. Verify important information. Images are preview-only, not analyzed.</p>
+      <p className={styles.disclaimer}>AI can make mistakes. Chat attachments are previews; open Image Studio for AI generation and edits.</p>
      </div>}
+    {imageStudioOpen&&<HudHudImageStudio onClose={()=>setImageStudioOpen(false)}/>}
    </div>
   </div>
  </section>;
