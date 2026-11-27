@@ -1,6 +1,4 @@
 "use client";
-import ShahadaOnboardingExperience from "../components/ShahadaOnboardingExperience";
-
-/** Next.js route entry: preserve the original recorder behind a page-safe
- * default export. The Search Home can embed the same component directly. */
-export default function OnboardingPage(){return <ShahadaOnboardingExperience/>;}
+import HudHudShahadaV2 from "../components/HudHudShahadaV2";
+/** One white, accessible HudHud-led verification flow on every entry route. */
+export default function OnboardingPage(){return <HudHudShahadaV2/>;}
