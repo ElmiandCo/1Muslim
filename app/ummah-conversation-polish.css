@@ -102,99 +102,99 @@
 
 /* Full-screen viewer retains existing native draggable slider and parallax
    but uses one integrated, scrollable comment surface and same compact controls. */
-.immersiveStoryPage{height:var(--imm-visual-height,100dvh)!important;top:var(--imm-visual-top,0px)!important;bottom:auto!important;transition:height .18s ease!important}
+html body main.immersiveStoryPage{height:var(--imm-visual-height,100dvh)!important;top:var(--imm-visual-top,0px)!important;bottom:auto!important;transition:height .18s ease!important}
 .immersiveStoryPage .immersiveStory{height:100%!important}
-.immersiveStoryPage .immersiveSheet{
+html body .immersiveStoryPage .immersiveSheet{
  --story-sheet-bg:#fff;--story-sheet-ink:#20282c;--story-sheet-muted:#78858b;
  --story-sheet-border:#e7eaed;--story-sheet-entry:#f2f4f4;
  background:var(--story-sheet-bg)!important;color:var(--story-sheet-ink)!important;
  border-radius:25px 25px 0 0!important;
  box-shadow:0 -10px 34px #0002!important;
 }
-html[data-one-chrome="night"] .immersiveStoryPage .immersiveSheet{
+html[data-one-chrome="night"] body .immersiveStoryPage .immersiveSheet{
  --story-sheet-bg:#171b1f;--story-sheet-ink:#f2f5f6;--story-sheet-muted:#a3acb3;
  --story-sheet-border:#34393d;--story-sheet-entry:#22282c;
  color-scheme:dark;
 }
-.immersiveStoryPage .immersiveSheet .immersiveSheetHandle,
-.immersiveStoryPage .immersiveSheet .socialConversation,
-.immersiveStoryPage .immersiveSheet .commentList,
-.immersiveStoryPage .immersiveSheet .socialEngagement{
+html body .immersiveStoryPage .immersiveSheet .immersiveSheetHandle,
+html body .immersiveStoryPage .immersiveSheet .socialConversation,
+html body .immersiveStoryPage .immersiveSheet .commentList,
+html body .immersiveStoryPage .immersiveSheet .socialEngagement{
  background:var(--story-sheet-bg)!important;color:var(--story-sheet-ink)!important;
 }
-.immersiveStoryPage .immersiveSheet .immersiveSheetHandle{
+html body .immersiveStoryPage .immersiveSheet .immersiveSheetHandle{
  background:var(--story-sheet-bg)!important;
  border-bottom:1px solid var(--story-sheet-border)!important;
 }
-.immersiveStoryPage .immersiveSheet .immersiveCaptionTab{color:var(--story-sheet-ink)!important}
-.immersiveStoryPage .immersiveSheet .immersiveCaptionOpen{
+html body .immersiveStoryPage .immersiveSheet .immersiveCaptionTab{color:var(--story-sheet-ink)!important}
+html body .immersiveStoryPage .immersiveSheet .immersiveCaptionOpen{
  background:var(--story-sheet-entry)!important;color:var(--story-sheet-muted)!important;
 }
-.immersiveStoryPage .immersiveSheet .conversationTitle{color:var(--story-sheet-ink)!important}
-.immersiveStoryPage .immersiveSheet .commentByline a,
-.immersiveStoryPage .immersiveSheet .commentMain p{color:var(--story-sheet-ink)!important}
-.immersiveStoryPage .immersiveSheet .commentByline time{color:var(--story-sheet-muted)!important}
-.immersiveStoryPage .immersiveSheet .socialComment{
+html body .immersiveStoryPage .immersiveSheet .conversationTitle{color:var(--story-sheet-ink)!important}
+html body .immersiveStoryPage .immersiveSheet .commentByline a,
+html body .immersiveStoryPage .immersiveSheet .commentMain p{color:var(--story-sheet-ink)!important}
+html body .immersiveStoryPage .immersiveSheet .commentByline time{color:var(--story-sheet-muted)!important}
+html body .immersiveStoryPage .immersiveSheet .socialComment{
  border-bottom:1px solid var(--story-sheet-border)!important;
  padding:14px 2px 10px!important;
 }
-.immersiveStoryPage .immersiveSheet .commentActions{
+html body .immersiveStoryPage .immersiveSheet .commentActions{
  display:flex!important;flex-flow:row nowrap!important;
  align-items:center!important;justify-content:flex-end!important;gap:5px!important;
  min-height:39px!important;height:auto!important;max-height:none!important;
  width:100%!important;overflow:visible!important;
 }
-.immersiveStoryPage .immersiveSheet .commentActions>button{
+html body .immersiveStoryPage .immersiveSheet .commentActions>button{
  display:inline-flex!important;flex:0 0 auto!important;min-width:40px!important;
  height:40px!important;min-height:40px!important;max-height:40px!important;
  padding:0 7px!important;margin:0!important;border:0!important;border-radius:12px!important;
  color:var(--story-sheet-muted)!important;background:transparent!important;box-shadow:none!important;
  font:500 12px/1.2 system-ui,sans-serif!important;gap:5px!important;
 }
-.immersiveStoryPage .immersiveSheet .commentActions>button.replyAction{margin-right:auto!important}
-.immersiveStoryPage .immersiveSheet .commentActions>button[aria-pressed="true"]{color:#ef4e7b!important}
-.immersiveStoryPage .immersiveSheet .viewReplies{color:var(--story-sheet-muted)!important}
-.immersiveStoryPage .immersiveSheet .commentComposer{
+html body .immersiveStoryPage .immersiveSheet .commentActions>button.replyAction{margin-right:auto!important}
+html body .immersiveStoryPage .immersiveSheet .commentActions>button[aria-pressed="true"]{color:#ef4e7b!important}
+html body .immersiveStoryPage .immersiveSheet .viewReplies{color:var(--story-sheet-muted)!important}
+html body .immersiveStoryPage .immersiveSheet .commentComposer{
  display:flex!important;align-items:center!important;gap:6px!important;
  padding:9px 12px max(11px,env(safe-area-inset-bottom,0px))!important;
  border-top:1px solid var(--story-sheet-border)!important;
  background:var(--story-sheet-bg)!important;color:var(--story-sheet-ink)!important;
 }
-.immersiveStoryPage .immersiveSheet .commentComposer>div:first-child{flex:1 1 auto!important;min-width:0!important;width:auto!important}
-.immersiveStoryPage .immersiveSheet .commentComposer [contenteditable="true"]{
+html body .immersiveStoryPage .immersiveSheet .commentComposer>div:first-child{flex:1 1 auto!important;min-width:0!important;width:auto!important}
+html body .immersiveStoryPage .immersiveSheet .commentComposer [contenteditable="true"]{
  color:var(--story-sheet-ink)!important;min-width:0!important;font-size:16px!important;
 }
-.immersiveStoryPage .immersiveSheet .commentComposer>button{
+html body .immersiveStoryPage .immersiveSheet .commentComposer>button{
  width:39px!important;min-width:39px!important;flex:0 0 39px!important;
  height:39px!important;min-height:39px!important;border-radius:12px!important;
  background:var(--story-sheet-entry)!important;color:var(--story-sheet-ink)!important;
 }
-.immersiveStoryPage .immersiveSheet .commentComposer>button[type="submit"]{
+html body .immersiveStoryPage .immersiveSheet .commentComposer>button[type="submit"]{
  width:auto!important;min-width:52px!important;flex:0 0 auto!important;
  padding:0 9px!important;background:#27684b!important;color:#fff!important;
 }
-.immersiveStoryPage .immersiveSheet .ummahEmojiRow{
+html body .immersiveStoryPage .immersiveSheet .ummahEmojiRow{
  display:flex;flex:0 0 auto;gap:3px;overflow-x:auto;scrollbar-width:none;
  padding:6px 10px!important;border-top:1px solid var(--story-sheet-border);
  background:var(--story-sheet-bg);
 }
-.immersiveStoryPage .immersiveSheet .ummahEmojiRow button{
+html body .immersiveStoryPage .immersiveSheet .ummahEmojiRow button{
  flex:1 0 37px;min-height:40px;border:0;background:transparent;
  font-size:24px;padding:5px;
 }
-.immersiveStoryPage .immersiveSheet .replyNotice{
+html body .immersiveStoryPage .immersiveSheet .replyNotice{
  background:var(--story-sheet-entry)!important;color:var(--story-sheet-ink)!important;
  margin:0 12px!important;
 }
-.immersiveStoryPage .immersiveSheet .socialActionBar{
+html body .immersiveStoryPage .immersiveSheet .socialActionBar{
  flex:0 0 auto!important;border-bottom:1px solid var(--story-sheet-border)!important;
 }
-.immersiveStoryPage .immersiveSheet .socialActionBar button{color:var(--story-sheet-ink)!important}
-.immersiveStoryPage .immersiveSheet .commentList{
+html body .immersiveStoryPage .immersiveSheet .socialActionBar button{color:var(--story-sheet-ink)!important}
+html body .immersiveStoryPage .immersiveSheet .commentList{
  padding:4px 14px 12px!important;min-height:0!important;
  overscroll-behavior:contain!important;
 }
-.immersiveStoryPage .immersiveSheet .socialComment.child{margin-left:12px!important;padding-left:10px!important;border-left:1px solid var(--story-sheet-border)!important}
+html body .immersiveStoryPage .immersiveSheet .socialComment.child{margin-left:12px!important;padding-left:10px!important;border-left:1px solid var(--story-sheet-border)!important}
 @media(prefers-reduced-motion:reduce){
  .ummahCommentPortal .ummahCommentSheet,.immersiveStoryPage{transition:none!important}
  .ummahCommentPortal .commentActions>button{transition:none!important}
