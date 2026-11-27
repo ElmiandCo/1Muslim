@@ -7,17 +7,14 @@ type Destination = {
   icon: "posts" | "watch" | "live" | "book" | "prayer" | "compass";
 };
 
-const rows: Destination[][] = [
-  [
-    {label:"Ummah Posts",detail:"What the Ummah is sharing",href:"/posts",icon:"posts"},
-    {label:"DeepWatch",detail:"Films, shows and series",href:"/deepwatch",icon:"watch"},
-    {label:"LIVE",detail:"Join live conversations",href:"/streaming",icon:"live"},
-  ],
-  [
-    {label:"Qur’an",detail:"Read and explore",href:"/quran-library",icon:"book"},
-    {label:"Prayer Journey",detail:"Prayer times and learning",href:"/widget-tools/prayer",icon:"prayer"},
-    {label:"Qibla",detail:"Open your profile compass",href:"/profile?compass=1",icon:"compass"},
-  ]
+// All destinations share a single horizontally scrollable rail, on every screen size.
+const destinations:Destination[]=[
+  {label:"Ummah Posts",detail:"What the Ummah is sharing",href:"/posts",icon:"posts"},
+  {label:"DeepWatch",detail:"Films, shows and series",href:"/deepwatch",icon:"watch"},
+  {label:"LIVE",detail:"Join live conversations",href:"/streaming",icon:"live"},
+  {label:"Qur’an",detail:"Read and explore",href:"/quran-library",icon:"book"},
+  {label:"Prayer Journey",detail:"Prayer times and learning",href:"/widget-tools/prayer",icon:"prayer"},
+  {label:"Qibla",detail:"Open your profile compass",href:"/profile?compass=1",icon:"compass"}
 ];
 
 function FeatureIcon({icon}:{icon:Destination["icon"]}) {
@@ -34,15 +31,14 @@ export default function SearchFeatureRails() {
   return <section className="dsExploreFeatureSection" aria-labelledby="dsExploreFeatureTitle">
     <div className="dsSectionHead"><h2 id="dsExploreFeatureTitle">Explore 1Muslim</h2></div>
     <div className="dsFeatureRails">
-      {rows.map((items,index)=><div className="dsFeatureRail" role="region" tabIndex={0}
-          aria-label={`Explore 1Muslim, row ${index+1} of ${rows.length}. Swipe left or right to see more.`} key={index}>
-        {items.map(item=><Link className="dsFeatureCard" href={item.href} key={item.href}
+      <nav className="dsFeatureRail" aria-label="Explore all 1Muslim destinations. Swipe horizontally for more.">
+        {destinations.map(item=><Link className="dsFeatureCard" href={item.href} key={item.href}
             aria-label={`${item.label}: ${item.detail}`}>
           <span className="dsFeatureIcon"><FeatureIcon icon={item.icon}/></span>
           <span className="dsFeatureCopy"><strong>{item.label}</strong><small>{item.detail}</small></span>
           {item.icon==="posts"&&<span className="dsFeaturePostPulse" aria-hidden="true"/>}
         </Link>)}
-      </div>)}
+      </nav>
     </div>
   </section>;
 }
