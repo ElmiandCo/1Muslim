@@ -2,12 +2,14 @@
 import "./hudhud.css";
 import HudHudOrb from "../components/HudHudOrb";
 import HudHudVerseCard from "../components/HudHudVerseCard";
+import type {HudHudPresentation} from "../lib/hudhud-presentation";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {useCallback,useEffect,useRef,useState,type FormEvent} from "react";
 
 type Match={id:string;kind:string;title:string;href:string;image?:string;description?:string};
-type Line={role:"user"|"assistant";content:string;matches?:Match[]};
+type VerifiedVerse={key:string;arabic:string;english:string;translation:string;source?:string};
+type Line={role:"user"|"assistant";content:string;matches?:Match[];presentation?:HudHudPresentation;verses?:VerifiedVerse[]};
 type Session={id:string;title:string;lines:Line[]};
 type RecognitionEvent={results:ArrayLike<{isFinal:boolean;0:{transcript:string}}>} ;
 type Recognition={lang:string;interimResults:boolean;continuous:boolean;onresult:((event:RecognitionEvent)=>void)|null;onerror:((event:{error:string})=>void)|null;onend:(()=>void)|null;start:()=>void;stop:()=>void;abort:()=>void};
@@ -48,6 +50,10 @@ export default function HudHudPage(){
  const [actionsOpen,setActionsOpen]=useState(false);
  const [readAloud,setReadAloud]=useState(true);
  const [speaking,setSpeaking]=useState(false);
+ const [speakingAt,setSpeakingAt]=useState<{sessionId:string;index:number}|null>(null);
+ const [speechChar,setSpeechChar]=useState(0);
+ const [voiceBeat,setVoiceBeat]=useState(false);
+ const voiceBeatTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const [exiting,setExiting]=useState(false);
  const [touchStart,setTouchStart]=useState<{x:number;y:number}|null>(null);
  const [stillOrb,setStillOrb]=useState(false);
@@ -99,12 +105,12 @@ export default function HudHudPage(){
   const onHidden=()=>{if(document.hidden){stopVoice(true);window.speechSynthesis?.cancel()}};
   const onKey=(event:KeyboardEvent)=>{if(event.key==="Escape"){setMenuOpen(false);setSettingsOpen(false);setActionsOpen(false);stopVoice(true)}};
   document.addEventListener("visibilitychange",onHidden);window.addEventListener("keydown",onKey);
-  return()=>{document.removeEventListener("visibilitychange",onHidden);window.removeEventListener("keydown",onKey);stopVoice(true);window.speechSynthesis?.cancel()};
+  return()=>{document.removeEventListener("visibilitychange",onHidden);window.removeEventListener("keydown",onKey);stopVoice(true);window.speechSynthesis?.cancel();if(voiceBeatTimer.current)clearTimeout(voiceBeatTimer.current)};
  },[stopVoice]);
 
  const newChat=()=>{
   if(busy)return;
-  stopVoice(true);window.speechSynthesis?.cancel();
+  stopVoice(true);window.speechSynthesis?.cancel();setSpeaking(false);setSpeakingAt(null);
   const id="chat-"+Date.now();
   setSessions(old=>[{id,title:"New chat",lines:[]},...old].slice(0,20));
   setActiveId(id);setDraft("");setError("");setMenuOpen(false);setActionsOpen(false);
@@ -113,7 +119,7 @@ export default function HudHudPage(){
  const ask=async(event?:FormEvent,spokenMessage?:string)=>{
   event?.preventDefault();
   const message=(spokenMessage||draft).trim();if(!message||busy||exhausted)return;
-  stopVoice();
+  stopVoice();window.speechSynthesis?.cancel();setSpeaking(false);setSpeakingAt(null);
   const conversationId=activeId;
   const history=lines.slice(-6).map(x=>({role:x.role,content:x.content}));
   setSessions(old=>old.map(s=>s.id===conversationId?{...s,title:s.lines.length?s.title:message.slice(0,40),lines:[...s.lines,{role:"user",content:message}]}:s));
@@ -126,12 +132,22 @@ export default function HudHudPage(){
    if(!response.ok)throw Error(data.error||"HudHud could not reply.");
    const reply=String(data.reply||"").trim();
    if(!reply)throw Error("HudHud sent an empty reply.");
-   setSessions(old=>old.map(s=>s.id===conversationId?{...s,lines:[...s.lines,{role:"assistant",content:reply,matches:Array.isArray(data.matches)?data.matches:[]}]}:s));
+   setSessions(old=>old.map(s=>s.id===conversationId?{...s,lines:[...s.lines,{role:"assistant",content:reply,matches:Array.isArray(data.matches)?data.matches:[],presentation:data.presentation,verses:Array.isArray(data.verses)?data.verses:[]}]}:s));
    if(readAloud&&"speechSynthesis" in window){
     window.speechSynthesis.cancel();
     const speech=new SpeechSynthesisUtterance(reply);
     speech.lang="en-US";speech.rate=1.07;speech.volume=.8;
-    speech.onstart=()=>setSpeaking(true);speech.onend=()=>setSpeaking(false);speech.onerror=()=>setSpeaking(false);
+    const target={sessionId:conversationId,index:lines.length+1};
+    speech.onstart=()=>{setSpeaking(true);setSpeakingAt(target);setSpeechChar(0)};
+    speech.onboundary=e=>{
+      if(typeof e.charIndex==="number")setSpeechChar(e.charIndex);
+      setVoiceBeat(true);
+      if(voiceBeatTimer.current)clearTimeout(voiceBeatTimer.current);
+      voiceBeatTimer.current=setTimeout(()=>setVoiceBeat(false),170);
+    };
+    const endSpeech=()=>{setSpeaking(false);setSpeakingAt(null);setVoiceBeat(false)};
+    speech.onpause=()=>setVoiceBeat(false);speech.onresume=()=>setVoiceBeat(true);
+    speech.onend=endSpeech;speech.onerror=endSpeech;
     window.speechSynthesis.speak(speech);
    }
   }catch(caught){
@@ -172,7 +188,7 @@ export default function HudHudPage(){
   }catch{setListening(false);setError("Could not start the microphone. Check browser permissions and try again.")}
  };
  const close=()=>{
-  stopVoice(true);window.speechSynthesis?.cancel();setSpeaking(false);setExiting(true);
+  stopVoice(true);window.speechSynthesis?.cancel();setSpeaking(false);setSpeakingAt(null);setExiting(true);
   window.setTimeout(()=>router.push(safeReturn(originRef.current)),180);
  };
 
@@ -185,9 +201,12 @@ export default function HudHudPage(){
     const dx=(event.changedTouches[0]?.clientX||0)-touchStart.x;
     const dy=(event.changedTouches[0]?.clientY||0)-touchStart.y;
     setTouchStart(null);if(dx< -100&&Math.abs(dy)<65)close();
-   }} className={"hudPage"+(exiting?" hudExiting":"")+(speaking?" hudSpeaking":"")+(focused?" hudTyping":"")+(stillOrb?" hudStill":"")+(listening?" hudListening":"")+(busy?" hudThinking":"")} style={viewport?{height:viewport.height,top:viewport.top}:undefined} aria-label="HudHud chat">
+   }} className={"hudPage"+(exiting?" hudExiting":"")+(speaking?" hudSpeaking":"")+(voiceBeat?" hudVoiceBeat":"")+(focused?" hudTyping":"")+(stillOrb?" hudStill":"")+(listening?" hudListening":"")+(busy?" hudThinking":"")} style={viewport?{height:viewport.height,top:viewport.top}:undefined} aria-label="HudHud chat">
   <header className="hudHeader">
-   <button className="hudBackBrand" type="button" aria-label="Return to previous page" onClick={close}>One Muslim<span>.live</span></button>
+   <div className="hudBrandSlot">
+    <button className="hudBackBrand" type="button" aria-label="Return to previous page" onClick={close}><span className={"hudBrandInitial"+(lines.length?" hudBrandOrbActive":"")}>O</span>ne Muslim<span>.live</span></button>
+    {lines.length>0&&<span className="hudBrandOrb"><HudHudOrb compact listening={listening} speaking={speaking} thinking={busy} quiet={stillOrb} level={voiceBeat?1:0} onClick={()=>{if(!busy)startVoice()}}/></span>}
+   </div>
    <div className="hudTitle" aria-label="HudHud — One Muslim voice assistant">HudHud</div>
    <div className="hudHeaderActions"><button className="hudCircle" type="button" aria-label={readAloud?"Mute HudHud voice":"Enable HudHud voice"} aria-pressed={readAloud} onClick={()=>{setReadAloud(v=>!v);window.speechSynthesis?.cancel();setSpeaking(false)}}>
     <svg viewBox="0 0 24 24" width="19" height="19" stroke="currentColor" fill="none" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4"/>{readAloud?<path d="M16 8q4 4 0 8M18 5q7 7 0 14"/>:<path d="m16 9 5 6m0-6-5 6"/>}</svg>
@@ -202,8 +221,11 @@ export default function HudHudPage(){
    {lines.length>0&&<div className="hudMessages">
      {lines.map((line,index)=><article key={current.id+"-"+index} className={"hudMessage "+(line.role==="user"?"hudUser":"hudAssistant")}>
        {line.role==="assistant"&&<span className="hudTinyOrb" aria-hidden="true"/>}
-       <div className="hudMessageBody"><p>{line.content}</p>
-        {line.matches&&line.matches.length>0&&<div className="hudMatches" role="list" aria-label="HudHud search suggestions">
+       <div className={"hudMessageBody"+(line.presentation?.kind==="verse"?" hudVerseResponse":"")}>
+        {line.role==="assistant"&&line.presentation?.kind==="verse"&&line.verses?.[0]
+          ?<div className="hudVersePresentation"><HudHudVerseCard featured verseKey={line.verses[0].key} verseData={line.verses[0]} href={"/quran-library?verse="+encodeURIComponent(line.verses[0].key)} spokenChars={speakingAt?.sessionId===current.id&&speakingAt.index===index?speechChar-line.content.indexOf(line.verses[0].english):undefined}/></div>
+          :<p>{line.content}</p>}
+        {line.presentation?.kind==="results"&&line.matches&&line.matches.length>0&&<div className="hudMatches" role="list" aria-label="HudHud search suggestions">
  {line.matches.slice(0,6).map(item=><div className="hudMatchCard" role="listitem" key={item.href}>
   {item.kind==="Qur’an"&&/^\d{1,3}:\d{1,3}$/.test(item.id)
    ?<HudHudVerseCard verseKey={item.id} href={item.href}/>
@@ -216,10 +238,10 @@ export default function HudHudPage(){
    </Link>}
   </div>)}
  </div>}
- {line.matches&&line.matches.length>0&&<div className="hudQuickChoices" aria-label="Follow-up suggestions">
-  <span>Explore these results?</span>
-  <button type="button" onClick={()=>{setDraft("Yes, show me more about these results.");input.current?.focus()}}>Yes</button>
-  <button type="button" onClick={()=>{setDraft("No, try another approach and explain why.");input.current?.focus()}}>No</button>
+ {line.role==="assistant"&&<div className="hudQuickChoices" aria-label="Follow-up suggestions">
+  <span>{line.presentation?.kind==="verse"?"Was this the verse you wanted?":"Was this helpful?"}</span>
+  <button type="button" disabled={busy||exhausted} onClick={()=>void ask(undefined,"Yes, thank you.")}>Yes</button>
+  <button type="button" disabled={busy||exhausted} onClick={()=>void ask(undefined,"No. Please try a different relevant explanation, with verified evidence and no unrelated cards.")}>No</button>
  </div>}
        </div>
      </article>)}
