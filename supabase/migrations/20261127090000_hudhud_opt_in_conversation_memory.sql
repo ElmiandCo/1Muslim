@@ -29,11 +29,11 @@ create policy "HudHud conversations are visible only to account owner" on public
  for select to authenticated using ((select auth.uid()) = user_id);
 create policy "HudHud conversations are inserted only by account owner" on public.hudhud_conversations
  for insert to authenticated with check ((select auth.uid()) = user_id
-   and exists(select 1 from public.hudhud_memory_preferences p where p.user_id = user_id and p.enabled));
+   and exists(select 1 from public.hudhud_memory_preferences p where p.user_id = hudhud_conversations.user_id and p.enabled));
 create policy "HudHud conversations are updated only by account owner" on public.hudhud_conversations
  for update to authenticated using ((select auth.uid()) = user_id)
  with check ((select auth.uid()) = user_id
-   and exists(select 1 from public.hudhud_memory_preferences p where p.user_id = user_id and p.enabled));
+   and exists(select 1 from public.hudhud_memory_preferences p where p.user_id = hudhud_conversations.user_id and p.enabled));
 create policy "HudHud conversations are deleted only by account owner" on public.hudhud_conversations
  for delete to authenticated using ((select auth.uid()) = user_id);
 comment on table public.hudhud_conversations is 'Bounded opt-in HudHud chat memory; user-specific. Owner may clear at any time.';
