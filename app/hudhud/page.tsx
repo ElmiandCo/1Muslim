@@ -2,6 +2,7 @@
 import "./hudhud.css";
 import AnimatedMuslimBrand from "../components/AnimatedMuslimBrand";
 import HudHudFocusStage,{type HudHudLine} from "./HudHudFocusStage";
+import {normalizeSpokenHudHudQuestion} from "../lib/hudhud-speech";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {useCallback,useEffect,useRef,useState,type FormEvent} from "react";
@@ -248,7 +249,7 @@ export default function HudHudPage(){
    rec.onresult=event=>{
     let transcript="";
     for(let i=0;i<event.results.length;i++)transcript+=event.results[i][0].transcript+" ";
-    voiceTranscript.current=(prefix?prefix+" ":"")+transcript.trim();
+    voiceTranscript.current=normalizeSpokenHudHudQuestion((prefix?prefix+" ":"")+transcript.trim());
     setDraft(voiceTranscript.current);
    };
    rec.onerror=event=>{
@@ -257,7 +258,7 @@ export default function HudHudPage(){
    };
    rec.onend=()=>{
     recognizer.current=null;setListening(false);
-    const text=voiceTranscript.current.trim();
+    const text=normalizeSpokenHudHudQuestion(voiceTranscript.current.trim());
     if(text.length>2)window.setTimeout(()=>askRef.current(text),190);
    };
    rec.start();recognizer.current=rec;setListening(true);
