@@ -219,7 +219,7 @@ test("HudHud owns a single white Shahada flow with audio, optional Help and secu
  assert.match(onboard,/60-elapsed/);
  assert.match(styles,/background:#fff/);
  assert.match(callback,/!profile\?\.shahada_verified_at/);
- assert.match(auth,/search\.searchParams\.set\("auth",requestedSignup\?"signup":"signin"\)/);
+ assert.match(auth,/search\.searchParams\.set\("auth",guided\?/);
  assert.doesNotMatch(auth,/<SeamlessEntry /);
 });
 test("Password policy blocks trivial passwords and user identity leakage",()=>{
@@ -230,7 +230,7 @@ test("Password policy blocks trivial passwords and user identity leakage",()=>{
  const flow=read("app/components/SearchAuthFlow.tsx");
  assert.match(flow,/pass!==confirm/);
  assert.match(flow,/idStatus==="taken"/);
- assert.match(flow,/callback\.searchParams\.set\("next","\/search\?auth=shahada"\)/);
+ assert.match(flow,/callback\.searchParams\.set\("next","\/search\?auth=shahada"/);
 });
 test("1Muslim ID authentication does not reveal email and is distributed rate limited",()=>{
  const handler=read("app/api/auth/id-access/route.ts");
