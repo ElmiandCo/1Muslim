@@ -1,6 +1,6 @@
 "use client";
 import "./hudhud.css";
-import HudHudOrb from "../components/HudHudOrb";
+import AnimatedMuslimBrand from "../components/AnimatedMuslimBrand";
 import HudHudVerseCard from "../components/HudHudVerseCard";
 import type {HudHudPresentation} from "../lib/hudhud-presentation";
 import Link from "next/link";
@@ -54,6 +54,7 @@ export default function HudHudPage(){
  const [remaining,setRemaining]=useState<number|null>(null);
  const [unlocked,setUnlocked]=useState(false);
  const [listening,setListening]=useState(false);
+ const [micAccess,setMicAccess]=useState<"checking"|"granted"|"denied"|"needs-tap"|"unavailable">("checking");
  const [menuOpen,setMenuOpen]=useState(false);
  const [settingsOpen,setSettingsOpen]=useState(false);
  const [actionsOpen,setActionsOpen]=useState(false);
@@ -69,11 +70,11 @@ export default function HudHudPage(){
  const voiceBeatTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const [exiting,setExiting]=useState(false);
  const [touchStart,setTouchStart]=useState<{x:number;y:number}|null>(null);
- const [stillOrb,setStillOrb]=useState(false);
  const [focused,setFocused]=useState(false);
  const [queryContext,setQueryContext]=useState("");
  const [viewport,setViewport]=useState<{height:number;top:number}|null>(null);
  const recognizer=useRef<Recognition|null>(null);
+ const micPermissionRequest=useRef(0);
  const chatEnd=useRef<HTMLDivElement>(null);
  const input=useRef<HTMLInputElement>(null);
  const voiceTranscript=useRef("");
@@ -135,6 +136,25 @@ export default function HudHudPage(){
   }catch{setMemoryNotice("Could not delete saved chats. Please try again.")}
   finally{setMemoryPending(false)}
  };
+ const requestMicrophonePermission=useCallback(async()=>{
+  // Ask when HudHud opens. Never record or upload audio just from landing here.
+  // Some browsers require a user gesture; offer a fallback enable button.
+  const request=++micPermissionRequest.current;
+  if(!navigator.mediaDevices?.getUserMedia){setMicAccess("unavailable");return}
+  try{
+   const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+   stream.getTracks().forEach(track=>track.stop());
+   if(request===micPermissionRequest.current)setMicAccess("granted");
+  }catch(caught){
+   if(request!==micPermissionRequest.current)return;
+   const name=caught instanceof Error?caught.name:"";
+   setMicAccess(name==="NotAllowedError"||name==="PermissionDeniedError"?"denied":"needs-tap");
+  }
+ },[]);
+ useEffect(()=>{
+  void requestMicrophonePermission();
+  return()=>{micPermissionRequest.current+=1};
+ },[requestMicrophonePermission]);
  const stopVoice=useCallback((abort=false)=>{
   const rec=recognizer.current;
   recognizer.current=null;
@@ -271,23 +291,18 @@ export default function HudHudPage(){
     const dx=(event.changedTouches[0]?.clientX||0)-touchStart.x;
     const dy=(event.changedTouches[0]?.clientY||0)-touchStart.y;
     setTouchStart(null);if(dx< -100&&Math.abs(dy)<65)close();
-   }} className={"hudPage"+(exiting?" hudExiting":"")+(speaking?" hudSpeaking":"")+(voiceBeat?" hudVoiceBeat":"")+(focused?" hudTyping":"")+(stillOrb?" hudStill":"")+(listening?" hudListening":"")+(busy?" hudThinking":"")} style={viewport?{height:viewport.height,top:viewport.top}:undefined} aria-label="HudHud chat">
+   }} className={"hudPage"+(exiting?" hudExiting":"")+(speaking?" hudSpeaking":"")+(voiceBeat?" hudVoiceBeat":"")+(focused?" hudTyping":"")+(listening?" hudListening":"")+(busy?" hudThinking":"")} style={viewport?{height:viewport.height,top:viewport.top}:undefined} aria-label="HudHud chat">
   <header className="hudHeader">
    <div className="hudBrandSlot">
-    <button className="hudBackBrand" type="button" aria-label="Return to previous page" onClick={close}><span className={"hudBrandInitial"+(lines.length?" hudBrandOrbActive":"")}>O</span>ne Muslim<span>.live</span></button>
-    {lines.length>0&&<span className="hudBrandOrb"><HudHudOrb compact listening={listening} speaking={speaking} thinking={busy} quiet={stillOrb} level={voiceBeat?1:0} onClick={()=>{if(!busy)startVoice()}}/></span>}
+    <button className="hudBackBrand" type="button" aria-label="Return to previous page" onClick={close}><AnimatedMuslimBrand/><span className="hudBrandSuffix">.Live</span></button>
    </div>
-   <div className="hudTitle" aria-label="HudHud — One Muslim voice assistant">HudHud</div>
+   <div className="hudTitle" aria-label="HudHud — 1Muslim voice assistant">HudHud</div>
    <div className="hudHeaderActions"><button className="hudCircle" type="button" aria-label={readAloud?"Mute HudHud voice":"Enable HudHud voice"} aria-pressed={readAloud} onClick={()=>{setReadAloud(v=>!v);window.speechSynthesis?.cancel();setSpeaking(false)}}>
     <svg viewBox="0 0 24 24" width="19" height="19" stroke="currentColor" fill="none" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4"/>{readAloud?<path d="M16 8q4 4 0 8M18 5q7 7 0 14"/>:<path d="m16 9 5 6m0-6-5 6"/>}</svg>
    </button><button className="hudCircle" type="button" aria-label="HudHud menu" aria-expanded={menuOpen} onClick={()=>{setMenuOpen(true);setSettingsOpen(false)}}><Glyph name="menu"/></button><button className="hudCircle" type="button" aria-label="HudHud settings" aria-expanded={settingsOpen} onClick={()=>{setSettingsOpen(!settingsOpen);setMenuOpen(false)}}><Glyph name="settings"/></button></div>
   </header>
 
   <section className={"hudMain"+(lines.length?" hudHasChat":"")} aria-label="Conversation">
-   {lines.length===0&&<div className="hudOrbStage">
-     <HudHudOrb listening={listening} speaking={speaking} thinking={busy} quiet={stillOrb} onClick={()=>{if(listening)stopVoice(true);else if(!busy)startVoice()}}/>
-     <p aria-live="polite">{listening?"Listening…":busy?"One moment…":"As-salāmu ʿalaykum"}</p>
-   </div>}
    {lines.length>0&&<div className="hudMessages">
      {lines.map((line,index)=><article key={current.id+"-"+index} className={"hudMessage "+(line.role==="user"?"hudUser":"hudAssistant")}>
        {line.role==="assistant"&&<span className="hudTinyOrb" aria-hidden="true"/>}
@@ -328,7 +343,10 @@ export default function HudHudPage(){
     {draft.trim()&&!exhausted?<button className="hudMic hudSend" aria-label="Send question" type="submit" disabled={busy}><Glyph name="send"/></button>:<button className={"hudMic"+(listening?" isActive":"")} type="button" aria-label={listening?"Stop listening":"Dictate question with microphone"} aria-pressed={listening} onClick={startVoice} disabled={busy||exhausted}><Glyph name="mic"/></button>}
     <button className="hudEnd" type="button" aria-label="Close HudHud" onClick={close}><Glyph name="close"/></button>
    </form>
-   
+   {(micAccess==="denied"||micAccess==="needs-tap"||micAccess==="unavailable")&&<div className="hudMicAccessHint" role="status">
+    <span>{micAccess==="unavailable"?"Microphone access is unavailable here. You can still type.":micAccess==="denied"?"Microphone access is blocked. Allow it in your browser settings, or type instead.":"Tap to allow microphone access. You can still type."}</span>
+    {micAccess!=="unavailable"&&<button type="button" onClick={()=>void requestMicrophonePermission()}>Enable mic</button>}
+   </div>}
   </div>
 
   {actionsOpen&&<div className="hudActionPop" role="menu" aria-label="HudHud shortcuts">
@@ -337,7 +355,7 @@ export default function HudHudPage(){
   {settingsOpen&&<div className="hudSettings" role="dialog" aria-label="HudHud settings">
     <h2>HudHud settings</h2>
     <label><span>Read replies aloud<small>Uses your browser's voice</small></span><input type="checkbox" checked={readAloud} onChange={e=>{setReadAloud(e.target.checked);if(!e.target.checked)window.speechSynthesis?.cancel()}}/></label>
-    <label><span>Reduce orb motion<small>Keep the emerald orb still</small></span><input type="checkbox" checked={stillOrb} onChange={e=>setStillOrb(e.target.checked)}/></label>
+    <div className="hudMicSettings"><span>Microphone access<small>{micAccess==="granted"?"Allowed · only listens after you tap the mic":micAccess==="checking"?"Checking browser permission…":"Not enabled · you can still type"}</small></span><button type="button" onClick={()=>void requestMicrophonePermission()}>Enable mic</button></div>
     {memorySignedIn?<><label><span>Remember conversations<small>Private to your account. Off by default.</small></span><input type="checkbox" checked={memoryEnabled} disabled={memoryPending} onChange={e=>void updateMemory(e.target.checked)}/></label>
       <button type="button" disabled={memoryPending} onClick={()=>void clearMemory()}>Clear saved conversations</button></>
       :<p>Sign in to enable private conversation memory. Guest chats are temporary.</p>}
