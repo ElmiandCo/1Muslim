@@ -42,3 +42,6 @@
 @keyframes dsAuthSlide{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:600px){.dsInlineAuth{width:calc(100% - 28px)}.dsInlineAuthFields>input,.dsInlineAuthPassword,.dsInlineAuthAt{height:49px}.dsInlineAuthFields label{font-size:11px}.dsInlineAuthMode{margin-bottom:10px}.dsInlineAuthTop{padding-bottom:9px}.dsInlineAuthPrimary,.dsInlineAuthGoogle{min-height:46px}.dsInlineAuthLegal{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.dsInlineAuth{animation:none!important}.dsInlineAuth *{transition:none!important}}
+
+.dsInlineAuthRecoveryCue{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 16px;border:1px solid #e7eee8;background:#f6faf7;border-radius:999px;color:#5b7263;font-size:11px;animation:dsAuthSlide .3s ease-out both}
+.dsInlineAuthRecoveryCue button{border:0;background:transparent;color:#286b4f;font-weight:750;font-size:11px;white-space:nowrap;text-decoration:underline;text-underline-offset:4px}
