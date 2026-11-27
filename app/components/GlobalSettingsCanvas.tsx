@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import {usePathname} from "next/navigation";
 import {createClient} from "../../utils/supabase/client";
 import SettingsHudHudCenter from "../settings/SettingsHudHudCenter";
+import {SettingsEmbedContext} from "./SettingsEmbedContext";
 import "../settings/settings-control-center.css";
 import "./global-settings-canvas.css";
 
@@ -151,7 +152,7 @@ export default function GlobalSettingsCanvas(){
     </>}
     {panel==="hudhud"&&<div className="gscHudPanel"><SettingsHudHudCenter/></div>}
     {editorTabs.includes(panel as ProfileTab)&&<div className="gscInlineProfile" key="live-profile">
-      <ProfileEditor embeddedEditorTab={panel as ProfileTab}/>
+      <SettingsEmbedContext.Provider value={panel as ProfileTab}><ProfileEditor/></SettingsEmbedContext.Provider>
      </div>}
     {panel==="app"&&<div className="gscInlineSettings"><AppSettings embedded/></div>}
    </div>
