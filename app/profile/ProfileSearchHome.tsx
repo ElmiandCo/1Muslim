@@ -143,7 +143,7 @@ export default function ProfileSearchHome({profile,postCount,expanded,editing,on
           </button>
           <input ref={searchInput} aria-label="Search One Muslim" type="search" autoComplete="off" placeholder="Search with HudHud" value={search} onChange={e=>setSearch(e.target.value)}/>
           <button type="button" className={"profileSearchHud"+(micListening?" isListening":"")} aria-label={micListening?"Stop HudHud microphone":search.trim()?"Ask HudHud this question":"Speak with HudHud"} aria-pressed={micListening}
-            onClick={()=>search.trim()?runStage("hudhud",search):speak()}><img src="/assets/hudhud-logo.PNG" alt=""/></button>
+            onClick={()=>search.trim()?runStage("hudhud",search):speak()}><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="m12 2 1.8 7.3L21 12l-7.2 2.7L12 22l-1.8-7.3L3 12l7.2-2.7L12 2Z"/><path d="m19.5 3.7.5 1.6 1.6.5-1.6.5-.5 1.6-.5-1.6-1.6-.5 1.6-.5.5-1.6Z"/></svg></button>
           <button type="button" className="profileSearchAvatarControl" onClick={expanded||editing?onCollapse:()=>setDetailsOpen(o=>!o)} aria-label={expanded||editing?"Return to search profile":detailsOpen?"Collapse profile details":"Show your profile details"} title="My profile">
             <img className="profileSearchCurrentAvatar" src={avatarFor(profile)} alt=""/>
           </button>
