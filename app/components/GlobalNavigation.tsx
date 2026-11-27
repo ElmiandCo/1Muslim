@@ -166,9 +166,9 @@ export default function GlobalNavigation(){
   });
  };
  useEffect(()=>()=>{if(railFrame.current)cancelAnimationFrame(railFrame.current)},[]);
- // The Qur’an Library / Studio owns its own top navigation and reading controls.
- // Never overlay the global bottom carousel on the 114-surah index or reader.
- if(pathname?.startsWith("/quran")||pathname?.startsWith("/elm-tent/quran"))return null;
+ // DeepWatch and every Qur’an experience are immersive screens with their own controls.
+ // Keep the global bottom dock off both destinations (including reader/studio aliases).
+ if(pathname?.startsWith("/deepwatch")||pathname?.startsWith("/quran")||pathname?.startsWith("/elm-tent/quran"))return null;
  // Signed-in Search Home has its own small account controls and immersive search surface.
  if(pathname==="/"||pathname?.startsWith("/search")||pathname?.startsWith("/hudhud")||pathname?.startsWith("/onboarding")||pathname?.startsWith("/streaming/go-live")||pathname?.startsWith("/auth")||pathname?.startsWith("/login")||pathname?.startsWith("/posts/story/")||pathname==="/create")return null;
  async function perform(item:Entry){
