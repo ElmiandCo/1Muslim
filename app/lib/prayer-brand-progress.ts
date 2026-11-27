@@ -5,7 +5,7 @@ import type {AdhanPrayer,PrayerSchedule} from "./adhan";
  * the previous and next verified prayer boundaries. */
 const ORDER:AdhanPrayer[]=["Fajr","Dhuhr","Asr","Maghrib","Isha"];
 const numericMinute=(time:string)=>{
- const match=/^(\\d{1,2}):(\\d{2})/.exec(time);
+ const match=/^(\d{1,2}):(\d{2})/.exec(time);
  if(!match)return null;
  const h=Number(match[1]),m=Number(match[2]);
  return h<24&&m<60?h*60+m:null;
