@@ -189,7 +189,7 @@ export default function HudHudChatWindow({
        </div>
       </form>
       <div className={styles.footerText}>
-       <span>HudHud · One Muslim voice and search</span>
+       <span>HudHud · 1Muslim voice and search</span>
        {remaining===0&&<Link href="/search" onClick={onClose}>Return to Search ↗</Link>}
       </div>
       {(notice||voiceError)&&<div className={styles.notice} role="status">{voiceError||notice}</div>}

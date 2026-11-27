@@ -230,7 +230,7 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
     }
    },300);
    reminders.current.push(setTimeout(()=>{
-    if(active.current&&!done.current)guide("Assalamu alaikum. Welcome to One Muslim. Say your Shahada whenever you're ready.");
+    if(active.current&&!done.current)guide("Assalamu alaikum. Welcome to 1Muslim. Say your Shahada whenever you're ready.");
    },950));
    reminders.current.push(setTimeout(()=>{
     if(active.current&&!done.current&&!spoken)guide("Take your time. I'm listening. Say your Shahada when you're ready.");
@@ -270,9 +270,9 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
   router.replace(safeDestination(next));
  };
  return <section className={"hudV2Shahada "+(embedded?"isEmbedded":"")} aria-label="HudHud Shahada">
-  {!embedded&&<header className="hudV2Brand"><button type="button" onClick={exit} aria-label="Back to One Muslim Search Home">One Muslim<span>.live</span></button></header>}
+  {!embedded&&<header className="hudV2Brand"><button type="button" onClick={exit} aria-label="Back to 1Muslim Search Home">1Muslim<span>.live</span></button></header>}
   <div className="hudV2ShahadaBody">
-   <h1 aria-live="polite">{state==="recognized"||state==="complete"?"Shahada recognized":state==="saving"?"One Muslim":state==="help"?"Shahada":"Shahada"}</h1>
+   <h1 aria-live="polite">{state==="recognized"||state==="complete"?"Shahada recognized":state==="saving"?"1Muslim":state==="help"?"Shahada":"Shahada"}</h1>
    {state==="help"?<div className="hudV2Help">
      <p>The Shahada is the declaration of belief in Allah and His Messenger. You can speak it in Arabic or English, or personally affirm it here if recording isn't possible.</p>
      <small className="hudV2PrivacyNote">Your browser may use its speech-recognition service to process voice. A recognized recording is stored only in our private Shahada vault. You can instead use the declaration below without recording.</small>
@@ -288,7 +288,7 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
       {state==="listening"&&<span className="hudV2ListeningPulse" aria-live="off">Listening · {seconds}s</span>}
       {state==="permission"&&<span className="hudV2ListeningPulse">Allow microphone</span>}
     </div>
-    <p className="hudV2ShahadaStatus" role="status" aria-live="polite">{state==="checking"?"Preparing HudHud…":message|| (state==="ready"?"Allow microphone to begin":state==="listening"?"I'm listening.":state==="complete"?"Welcome to One Muslim.":"")}</p>
+    <p className="hudV2ShahadaStatus" role="status" aria-live="polite">{state==="checking"?"Preparing HudHud…":message|| (state==="ready"?"Allow microphone to begin":state==="listening"?"I'm listening.":state==="complete"?"Welcome to 1Muslim.":"")}</p>
     {heardError&&state==="listening"&&<small className="hudV2Gentle">Your browser can't automatically recognize speech right now. Try Help.</small>}
     <div className="hudV2ShahadaActions">
      {(state==="ready"||state==="unavailable")&&<button type="button" className="hudV2Primary" onClick={()=>void begin()}>Enable microphone</button>}

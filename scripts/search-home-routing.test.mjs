@@ -154,7 +154,7 @@ test("30-second .live wordmark loop is seamless, interactive and reduced-motion 
   assert.match(css,/\.dsResultsBrand:hover \.dsHomeBrandLive/);
   assert.match(css,/\.dsResultsBrand:focus-visible \.dsHomeBrandLive/);
   assert.match(css,/\.dsHomeBrandLive\{animation:none!important;transition:none!important/);
-  assert.match(page,/className="dsHomeBrandLive" aria-hidden="true">\.live/);
+  assert.match(page,/className="dsHomeBrandLive" aria-hidden="true">\.Live/);
 });
 
 test("magnetic interactions preserve page markup and navigation while staying motion-safe",()=>{
@@ -178,12 +178,12 @@ test("magnetic interactions preserve page markup and navigation while staying mo
   assert.doesNotMatch(hook,/preventDefault\(|router\.push\(|router\.replace\(/);
 });
 
-test("results header reuses the animated One Muslim.live brand at the top left",()=>{
+test("results header reuses the inward-animating 1Muslim.Live brand at the top left",()=>{
   const page=read("app/search/page.tsx");
   const css=read("app/search/search.css");
   const resultCss=read("app/search/search-results.css");
   assert.match(page,/!homeMode&&<Link href="\/search" className="dsResultsBrand"/);
-  assert.match(page,/className="dsHomeBrandLive" aria-hidden="true">\.live/);
+  assert.match(page,/className="dsHomeBrandLive" aria-hidden="true">\.Live/);
   assert.match(css,/@keyframes dsLivePulse/);
   assert.match(css,/\.dsHomeBrandLive\{/);
   assert.match(resultCss,/\.dsResultsMode \.dsHomeUtilities \.dsResultsBrand/);
@@ -275,7 +275,13 @@ test("HudHud pilot keeps one reasoning tier and the 50-action server cap",()=>{
  assert.doesNotMatch(api,/gpt-4o-mini/);
  assert.match(sql,/turns_used < 50/);
  assert.match(sql,/REVOKE ALL/);
- assert.match(page,/HudHudOrb/);
+ assert.doesNotMatch(page,/HudHudOrb/);
+  assert.match(page,/requestMicrophonePermission/);
+  assert.match(page,/getUserMedia\(\{audio:true\}\)/);
+  assert.match(page,/AnimatedMuslimBrand/);
+  const brand=read("app/components/AnimatedMuslimBrand.tsx");
+  assert.match(brand,/setTimeout\(\(\)=>setCondensed\(true\),4000\)/);
+  assert.match(brand,/prefers-reduced-motion/);
  assert.match(page,/HudHudVerseCard/);
  assert.match(page,/askRef\.current\(text\)/);
  assert.match(page,/hudExiting/);

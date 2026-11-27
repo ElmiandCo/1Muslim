@@ -4,6 +4,7 @@ import "./search-results.css";
 import "./search-magnetic.css";
 import "./search-feature-rails.css";
 import SearchFeatureRails from "./SearchFeatureRails";
+import AnimatedMuslimBrand from "../components/AnimatedMuslimBrand";
 import SearchAuthFlow,{type SearchAuthMode} from "../components/SearchAuthFlow";
 import dynamic from "next/dynamic";
 const HudHudShahadaV2=dynamic(()=>import("../components/HudHudShahadaV2"),{ssr:false,loading:()=>null});
@@ -262,7 +263,7 @@ export default function SearchHub() {
   const showAuth=authMode!==null;
   return <main ref={magneticRoot} className={"dsPage "+(homeMode?"dsHomeMode dsIntro"+(introStage==="pending"?"Pending":introStage==="playing"?"Playing":"Done"):"dsResultsMode "+(resultsNight?"dsResultsNight":"dsResultsDay"))+(showAuth?" dsInlineAuthOpen":"")+(authLeaving?" dsInlineAuthLeaving":"")}>
     <nav className="dsHomeUtilities" aria-label="Account shortcuts">
-      {!homeMode&&<Link href="/search" className="dsResultsBrand" aria-label="One Muslim Live — return to search home" onClick={e=>{e.preventDefault();clear()}}><span>One Muslim</span><span className="dsHomeBrandLive" aria-hidden="true">.live</span></Link>}
+      {!homeMode&&<Link href="/search" className="dsResultsBrand" aria-label="1Muslim.Live — return to search home" onClick={e=>{e.preventDefault();clear()}}><AnimatedMuslimBrand/><span className="dsHomeBrandLive" aria-hidden="true">.Live</span></Link>}
       {!homeMode&&<button type="button" className="dsUtilityButton dsResultsThemeToggle" onClick={toggleResultsTheme} aria-label={resultsNight?"Switch search results to light mode":"Switch search results to dark mode"} title={resultsNight?"Light appearance":"Dark appearance"} aria-pressed={resultsNight}><span aria-hidden="true">{resultsNight?"☼":"◐"}</span></button>}
       {account==="guest"?<div className="dsGuestAccount" aria-label="Account access">
         <Link href="/auth?next=%2Fsearch&login=1" onClick={e=>{e.preventDefault();openAuth("signin")}} className="dsGuestSignIn" aria-label="Sign in" title="Sign in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.4 20c.4-4 2.7-6 6.6-6s6.2 2 6.6 6"/></svg></Link>
@@ -280,7 +281,7 @@ export default function SearchHub() {
       </>:null}
     </nav>
     <header className={"dsHeader"+(compactHeader?" dsHeaderCompact":"")}>
-      <h1 className="dsHomeBrand" aria-hidden={!homeMode}><span>One Muslim</span><span className="dsHomeBrandLive" aria-hidden="true">.live</span></h1>
+      <h1 className="dsHomeBrand" aria-hidden={!homeMode}><AnimatedMuslimBrand/><span className="dsHomeBrandLive" aria-hidden="true">.Live</span></h1>
       <div className="dsHeaderRow">
         <Link href="/search" className="dsBack" aria-label="Back to search home" onClick={e=>{e.preventDefault();showAuth?closeAuth():clear()}}>‹</Link>
         <form className="dsSearchForm" role="search" aria-hidden={showAuth} onSubmit={e=>{e.preventDefault();if(!showAuth)commit(query);}}>
@@ -352,7 +353,7 @@ export default function SearchHub() {
 
     {account==="member"&&signoutConfirm&&<div className="dsSignoutBackdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setSignoutConfirm(false)}}>
       <div className="dsSignoutDialog" role="dialog" aria-modal="true" aria-labelledby="dsSignoutTitle">
-        <h2 id="dsSignoutTitle">Sign out of One Muslim?</h2>
+        <h2 id="dsSignoutTitle">Sign out of 1Muslim?</h2>
         <div className="dsSignoutActions">
           <button type="button" onClick={()=>setSignoutConfirm(false)} disabled={signoutBusy}>Cancel</button>
           <button type="button" onClick={()=>void signOut()} disabled={signoutBusy}>{signoutBusy?"Signing out…":"Sign out"}</button>

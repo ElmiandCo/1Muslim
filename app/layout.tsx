@@ -37,24 +37,24 @@ export const viewport = {themeColor:"#ffffff",width:"device-width",initialScale:
 
 export const metadata = {
   metadataBase: new URL("https://1muslim.live"),
-  title: "1Muslim | One Muslim Live — Social Network, Qur’an & Live",
+  title: "1Muslim.Live — Social Network, Qur’an & Live",
   applicationName: "1Muslim",
   appleWebApp: {capable:true,title:"1Muslim",statusBarStyle:"default" as const},
   icons: {apple:[{url:"/apple-icon",sizes:"180x180",type:"image/png"}],icon:[{url:"/icon.svg",type:"image/svg+xml"},{url:"/app-install-icon",sizes:"512x512",type:"image/png"}]},
-  description: "1Muslim Live (One Muslim) is a Muslim social network for profiles, Ummah posts, short videos, Messenger, live streams, Qur’an learning, prayer tools and HudHud AI.",
+  description: "1Muslim.Live is a Muslim social network for profiles, Ummah posts, short videos, Messenger, live streams, Qur’an learning, prayer tools and HudHud AI.",
   category: "social networking",
   openGraph: {
     siteName: "1Muslim",
-    title: "1Muslim Live (One Muslim) — Muslim Social Network & Learning",
-    description: "Explore 1Muslim Live, also called One Muslim: a Muslim social network combining profiles, Ummah posts, short videos, Messenger, live broadcasts, Qur’an tracking, prayer tools, XP and HudHud AI.",
+    title: "1Muslim.Live — Muslim Social Network & Learning",
+    description: "Explore 1Muslim.Live: profiles, Ummah posts, short videos, Messenger, live broadcasts, Qur’an tracking, prayer tools, XP and HudHud AI.",
     url: "https://1muslim.live",
     type: "website" as const,
     locale: "en_US"
   },
   twitter: {
     card: "summary" as const,
-    title: "1Muslim Live — One Muslim Social Network & HudHud AI",
-    description: "One Muslim Live: profiles, posts, videos, followers, Messenger, live streaming, Qur’an progress, prayer tools and HudHud, a Muslim-inspired AI companion."
+    title: "1Muslim.Live — Social Network & HudHud AI",
+    description: "1Muslim.Live: profiles, posts, videos, followers, Messenger, live streaming, Qur’an progress, prayer tools and HudHud, a Muslim-inspired AI companion."
   }
 };
 

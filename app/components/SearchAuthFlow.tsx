@@ -138,7 +138,7 @@ export default function SearchAuthFlow({mode,setMode,onClose,onSignedIn,returnTo
   }catch(err){setMessage(err instanceof Error?err.message:"Google sign-in is unavailable.");setBusy(false);}
  }
  const signinMode=mode==="signin";
- return <section className="dsInlineAuth" aria-label={signinMode?"Sign in to One Muslim":"Create your One Muslim account"}>
+ return <section className="dsInlineAuth" aria-label={signinMode?"Sign in to 1Muslim":"Create your 1Muslim account"}>
   <div className="dsInlineAuthTop">
    <span className="dsInlineAuthEyebrow">{signinMode?"WELCOME BACK":mode==="signup"?"JOIN ONE MUSLIM":mode==="verify"?"ALMOST THERE":"ACCOUNT RECOVERY"}</span>
    <button type="button" className="dsInlineAuthClose" aria-label="Close account form and return to search" onClick={onClose}>✕</button>
