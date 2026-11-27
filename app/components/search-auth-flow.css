@@ -1,0 +1,44 @@
+/* Search-first identity: no modal, no competing palette, no separate splash. */
+.dsInlineAuth{width:min(780px,calc(100% - 28px));margin:0 auto;position:relative;z-index:3;color:#253038;animation:dsAuthSlide .32s cubic-bezier(.2,.75,.2,1) both}
+.dsInlineAuthTop{display:flex;justify-content:space-between;align-items:center;padding:2px 8px 13px}
+.dsInlineAuthEyebrow{font-size:10px;font-weight:740;letter-spacing:.15em;color:#80908b}
+.dsInlineAuthClose{width:35px;height:35px;display:grid;place-items:center;color:#52645c;background:#fff;border:1px solid #e4e9e6;border-radius:50%;font-size:12px;cursor:pointer}
+.dsInlineAuthMode{display:grid;grid-template-columns:1fr 1fr;border:1px solid #e4e8e7;background:#f7f9f8;padding:4px;gap:4px;border-radius:999px;margin:0 0 15px}
+.dsInlineAuthMode button{min-height:40px;border:0;border-radius:999px;background:transparent;color:#68756f;letter-spacing:-.02em;font-weight:650;font-size:13px}
+.dsInlineAuthMode button[aria-current=page]{background:#fff;box-shadow:0 2px 9px #22382d12;color:#1d332c}
+.dsInlineAuthFields{display:grid;gap:7px;max-width:625px;margin:0 auto}
+.dsInlineAuthFields label{color:#53615a;font-size:12px;font-weight:700;padding:4px 12px 0}
+.dsInlineAuthFields>input,.dsInlineAuthPassword,.dsInlineAuthAt{background:#fff;border:1px solid #e1e6e4;border-radius:999px;height:54px;box-shadow:0 7px 20px rgba(31,46,40,.045)}
+.dsInlineAuthFields>input,.dsInlineAuthPassword>input,.dsInlineAuthAt>input{min-width:0;width:100%;padding:0 23px;border:0;border-radius:inherit;background:transparent;color:#172c28;font:inherit;font-size:15px;outline:none}
+.dsInlineAuthFields>input:focus,.dsInlineAuthPassword:focus-within,.dsInlineAuthAt:focus-within{border-color:#c6ad84;box-shadow:0 0 0 3px #d5b78e28,0 7px 20px #2135230c}
+.dsInlineAuthPassword,.dsInlineAuthAt{display:flex;align-items:center}
+.dsInlineAuthAt>span{color:#6b8473;font-weight:700;padding-left:21px;font-size:17px}
+.dsInlineAuthAt>input{padding-left:6px}
+.dsInlineAuthPassword>button{flex:none;border:0;background:transparent;padding:8px 17px;color:#456354;font-size:12px;font-weight:700}
+.dsInlineAuthPrimary,.dsInlineAuthGoogle{display:flex;align-items:center;justify-content:center;gap:12px;min-height:50px;border-radius:999px;font-weight:700;font-size:14px;cursor:pointer}
+.dsInlineAuthPrimary{color:#fff;background:#213f3d;border:1px solid #213f3d;margin-top:11px;box-shadow:0 8px 18px #183c3316;transition:transform .22s ease,box-shadow .22s ease}
+.dsInlineAuthPrimary span{font-size:19px;font-weight:400}
+.dsInlineAuthPrimary:active,.dsInlineAuthGoogle:active{transform:scale(.985)}
+.dsInlineAuthPrimary:disabled,.dsInlineAuthGoogle:disabled{opacity:.45;cursor:not-allowed}
+.dsInlineAuthTextLink{justify-self:center;min-height:32px;border:0;background:transparent;color:#426357;text-decoration:underline;text-underline-offset:4px;font-size:12px;font-weight:650}
+.dsInlineAuthDivider{max-width:625px;margin:10px auto 10px;text-align:center;display:flex;align-items:center;gap:15px;color:#93a19a;font-size:12px}
+.dsInlineAuthDivider:before,.dsInlineAuthDivider:after{content:"";height:1px;background:#e4e8e6;flex:1}
+.dsInlineAuthGoogle{max-width:625px;width:100%;margin:auto;background:#fff;border:1px solid #e0e6e1;color:#26322c}
+.dsInlineAuthLegal{display:block;margin:12px auto 4px;max-width:450px;font-size:11px;line-height:1.6;text-align:center;color:#7d8b86}
+.dsInlineAuthHint{color:#77867d;font-size:11px;padding:0 13px}
+.dsInlineAuthHint.isWeak{color:#af5939}.dsInlineAuthHint.isGood{color:#338267}
+.dsInlineSuggestions{display:flex;flex-wrap:wrap;gap:6px;padding:4px 10px}
+.dsInlineSuggestions button{font-size:11px;border:1px solid #e5e9e6;background:#f8faf8;color:#426452;border-radius:999px;padding:8px 10px}
+.dsInlineSuggestions button:focus-visible{outline:2px solid #b89362}
+.dsInlineAuthContext{color:#697d73;font-size:12px;text-align:center;margin:0 0 3px}
+.dsInlineAuthActions{display:flex;gap:10px}
+.dsInlineAuthBack{min-width:75px;padding:0 14px;border:1px solid #e2e8e3;background:#fff;color:#4e6b5b;border-radius:999px;font-size:12px}
+.dsInlineAuthActions .dsInlineAuthPrimary{flex:1}
+.dsInlineAuthStatus{color:#a44d3d;font-size:12px;text-align:center;line-height:1.5;margin:10px auto;max-width:580px}
+.dsInlineAuthMessage{text-align:center;display:grid;gap:12px;justify-content:center;padding:24px 15px}
+.dsInlineAuthMessage strong{font-size:22px;letter-spacing:-.03em}
+.dsInlineAuthMessage p{color:#6c7e72;font-size:13px;line-height:1.65;max-width:430px}
+.dsInlineAuthMessage button{border:1px solid #dce8df;background:#fff;border-radius:999px;padding:13px 18px;color:#27604a}
+@keyframes dsAuthSlide{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){.dsInlineAuth{width:calc(100% - 28px)}.dsInlineAuthFields>input,.dsInlineAuthPassword,.dsInlineAuthAt{height:49px}.dsInlineAuthFields label{font-size:11px}.dsInlineAuthMode{margin-bottom:10px}.dsInlineAuthTop{padding-bottom:9px}.dsInlineAuthPrimary,.dsInlineAuthGoogle{min-height:46px}.dsInlineAuthLegal{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.dsInlineAuth{animation:none!important}.dsInlineAuth *{transition:none!important}}
