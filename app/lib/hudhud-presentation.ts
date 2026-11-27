@@ -2,6 +2,7 @@
 // Keep this module independent from Next.js so it can be regression-tested.
 export type HudHudPresentation =
  | {kind:"verse";verseKey:string}
+ | {kind:"image";query:string}
  | {kind:"results"}
  | {kind:"text"};
 
@@ -16,8 +17,24 @@ function verseReference(text:string):string|null{
  const chapter=Number((compact||words)?.[1]),verse=Number((compact||words)?.[2]);
  return chapter>=1&&chapter<=114&&verse>=1&&verse<=286?chapter+":"+verse:null;
 }
+/** Return only explicit image requests; don't treat any mention of a photo as a search. */
+export function imageQueryFromHudHud(text:string):string|null{
+ const request=/(?:can (?:i|we) (?:see|view)|show (?:me|us)|find|display|pull up|look up|search for|i (?:want|would like) to see)\s+(?:an?\s+|some\s+)?(?:images?|pictures?|photos?|photographs?)\s+(?:of|showing|for|about)\s+(.+?)(?:[?.!]+)?$/i.exec(text.trim());
+ const subject=request?.[1]?.replace(/[?.!]+$/,"").trim().replace(/^(?:an?|the)\s+/i,"").slice(0,110);
+ return subject&&subject.length>=2?subject:null;
+}
+
 export function selectHudHudPresentation(message:string):HudHudPresentation{
  const text=message.trim();
+ const imageQuery=imageQueryFromHudHud(text);
+ if(imageQuery)return {kind:"image",query:imageQuery};
+ // A natural-language request for divine guidance should cite an exact,
+ // independently verified ayah rather than relying on a fabricated quotation.
+ const asksForVerse=/(?:where|which|what|show|give|find|read|verse|ayah|qur['’]?an|koran)/i.test(text);
+ if(asksForVerse&&/\b(?:allah|god|he)\b/i.test(text)
+   &&/\bguid(?:e|es|ance|ing)\b/i.test(text)
+   &&/\b(?:whom|who|whoever|whomever)\b[^.!?]{0,35}\bwills?\b/i.test(text))
+  return {kind:"verse",verseKey:"28:56"};
  const ref=verseReference(text);
  const detailedQuestion=/\b(explain|why|meaning|how|context|tafsir|interpret|commentary|lessons?|support|hadith|about)\b/i.test(text);
  if(ref&&!detailedQuestion&&(QURAN.test(text)||VERSE.test(text)||/^\d{1,3}:\d{1,3}$/.test(text)))return {kind:"verse",verseKey:ref};
