@@ -89,7 +89,7 @@ test("Home tab opens Search and Profile remains a distinct destination",()=>{
 });
 
 
-test("Search Home retains real search and replaces creators and shortcut pills with two swipable card rows",()=>{
+test("Search Home places every Explore destination in one bottom-anchored swipable rail",()=>{
   const page=read("app/search/page.tsx");
   const css=read("app/search/search.css");
   const rail=read("app/search/SearchFeatureRails.tsx");
@@ -107,14 +107,19 @@ test("Search Home retains real search and replaces creators and shortcut pills w
   assert.match(page,/!homeMode&&!loading&&!error&&result/);
   assert.match(page,/!homeMode&&loading/);
   assert.match(css,/\.dsHomeMode \.dsSearchForm/);
-  assert.match(rail,/const rows: Destination\[\]\[\]/);
-  assert.match(rail,/rows\.map\(\(items,index\)=>/);
+  assert.match(rail,/const destinations: Destination\[\]/);
+  assert.match(rail,/destinations\.map\(item=>/);
+  assert.doesNotMatch(rail,/rows\.map|const rows:/);
   assert.match(rail,/href:"\/profile\?compass=1"/);
   assert.match(profile,/get\("compass"\)==="1"/);
   assert.match(railCss,/scroll-snap-type:x mandatory/);
   assert.match(railCss,/overflow-x:auto/);
   assert.match(railCss,/border:0/);
-  assert.match(railCss,/\.dsHomeFeatureBreathingSpace\{height:205px/);
+  assert.match(railCss,/\.dsHomeFeatureBreathingSpace\{/);
+  assert.match(railCss,/\.dsPage\.dsHomeMode\{[\s\S]*display:flex;[\s\S]*flex-direction:column/);
+  assert.match(railCss,/\.dsHomeMode \.dsContent\{[\s\S]*display:flex;[\s\S]*flex-direction:column/);
+  assert.match(railCss,/\.dsHomeMode \.dsExploreFeatureSection\{[\s\S]*margin-top:auto/);
+  assert.match(railCss,/\.dsHomeMode \.dsFeatureRail\{[\s\S]*flex-wrap:nowrap/);
   assert.match(railCss,/@media\(prefers-reduced-motion:reduce\)/);
 });
 test("HudHud docks before activation and keeps the existing conversation endpoint",()=>{
@@ -305,4 +310,26 @@ test("location cue never interrupts Shahada or blocks the white Search Home",()=
  assert.match(location,/pointer-events:none!important/);
  assert.match(location,/setTimeout\(\(\)=>/);
  assert.doesNotMatch(location,/role="dialog" aria-modal="true"/);
+});
+
+test("Shared route-aware mobile chrome stays white on Search Home and supports day/night",()=>{
+ const component=read("app/components/SiteChromeTheme.tsx");
+ const root=read("app/layout.tsx");
+ const global=read("app/globals.css");
+ const manifest=read("app/manifest.ts");
+ const search=read("app/search/page.tsx");
+ const deepwatch=read("app/deepwatch/useDeepWatchSolarTheme.ts");
+ assert.match(root,/SiteChromeTheme/);
+ assert.match(root,/themeColor:"#ffffff"/);
+ assert.match(root,/viewportFit:"cover"/);
+ assert.match(component,/const LIGHT="#ffffff",DARK="#090c0b"/);
+ assert.match(component,/root\.dataset\.oneChrome=night\?"night":"day"/);
+ assert.match(component,/meta\[name="theme-color"\]/);
+ assert.match(component,/1muslim:appearance-updated/);
+ assert.match(component,/1muslim:route-appearance/);
+ assert.match(search,/night:!homeMode&&resultsNight/);
+ assert.match(deepwatch,/night:appearance\.night/);
+ assert.match(global,/html\[data-one-chrome="day"\]/);
+ assert.match(global,/html\[data-one-chrome="night"\]/);
+ assert.match(manifest,/"theme_color": "#ffffff"/);
 });
