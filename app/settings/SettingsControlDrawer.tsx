@@ -30,12 +30,9 @@ const APP_SECTIONS:Section[]=[
 ];
 function safeMedia(value:unknown):string|null{
  if(typeof value!=="string"||value.length>2000)return null;
- try{
-  const url=new URL(value,window.location.origin);
-  if(!["https:","http:"].includes(url.protocol))return null;
-  if(url.origin!==window.location.origin&&url.protocol!=="https:")return null;
-  return url.href;
- }catch{return null;}
+ if(value.startsWith("/")&&!value.startsWith("//"))return value;
+ try{const url=new URL(value);return url.protocol==="https:"?url.href:null}
+ catch{return null}
 }
 export default function SettingsControlDrawer(){
  const [open,setOpen]=useState(true);
@@ -59,7 +56,14 @@ export default function SettingsControlDrawer(){
  },[]);
  useEffect(()=>{
   if(!open)return;
-  const onKey=(event:KeyboardEvent)=>{if(event.key==="Escape"){setOpen(false);opener.current?.focus()}};
+  const onKey=(event:KeyboardEvent)=>{
+   if(event.key==="Escape"){setOpen(false);opener.current?.focus();return}
+   if(event.key!=="Tab")return;
+   const focusable=Array.from(drawer.current?.querySelectorAll<HTMLElement>('button:not([disabled]),a[href],input:not([disabled])')||[]);
+   if(!focusable.length)return;
+   if(event.shiftKey&&document.activeElement===focusable[0]){event.preventDefault();focusable[focusable.length-1].focus()}
+   else if(!event.shiftKey&&document.activeElement===focusable[focusable.length-1]){event.preventDefault();focusable[0].focus()}
+  };
   window.addEventListener("keydown",onKey);
   // Keep focus inside the visible slide-out, including on iOS keyboard access.
   const timer=window.setTimeout(()=>drawer.current?.querySelector<HTMLButtonElement>(".scDismiss")?.focus(),80);
