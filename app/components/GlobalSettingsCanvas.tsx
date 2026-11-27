@@ -72,6 +72,36 @@ export default function GlobalSettingsCanvas(){
   return()=>{active=false;window.removeEventListener("1muslim:profile-saved",handler);window.removeEventListener("1muslim:profile-cover-changed",handler)};
  },[open]);
  useEffect(()=>{
+  // Bring legacy Settings and profile-editor deep links into the same overlay.
+  // Other app navigation remains untouched.
+  const onLink=(event:MouseEvent)=>{
+   if(event.defaultPrevented||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+   const element=event.target;
+   if(!(element instanceof Element))return;
+   const anchor=element.closest<HTMLAnchorElement>("a[href]");
+   if(!anchor||anchor.target==="_blank"||anchor.hasAttribute("download"))return;
+   let destination:URL;
+   try{destination=new URL(anchor.href,window.location.origin)}catch{return}
+   if(destination.origin!==window.location.origin)return;
+   const path=destination.pathname.replace(/\\/$/,"");
+   if(path==="/settings"){
+    event.preventDefault();event.stopPropagation();
+    const hash=destination.hash.slice(1);
+    const section=hash==="hudhud-ai"?"hudhud":hash||"home";
+    window.dispatchEvent(new CustomEvent("1muslim:open-settings",{detail:{section}}));
+    return;
+   }
+   if(path==="/profile"&&destination.searchParams.has("edit")){
+    const tab=destination.searchParams.get("edit");
+    if(!tab||!["profile","avatar","header","live","shahada","analytics"].includes(tab))return;
+    event.preventDefault();event.stopPropagation();
+    window.dispatchEvent(new CustomEvent("1muslim:open-settings",{detail:{section:tab}}));
+   }
+  };
+  document.addEventListener("click",onLink,true);
+  return()=>document.removeEventListener("click",onLink,true);
+ },[]);
+ useEffect(()=>{
   const available=new Set<Panel>(["home","hudhud","profile","avatar","header","live","shahada","analytics","app"]);
   const openHandler=(event:Event)=>{
    const target=(event as OpenSettingsEvent).detail?.section;
