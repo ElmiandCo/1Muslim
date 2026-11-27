@@ -83,7 +83,7 @@ export default function GlobalSettingsCanvas(){
    let destination:URL;
    try{destination=new URL(anchor.href,window.location.origin)}catch{return}
    if(destination.origin!==window.location.origin)return;
-   const path=destination.pathname.replace(/\\/$/,"");
+   const path=destination.pathname.endsWith("/")?destination.pathname.slice(0,-1):destination.pathname;
    if(path==="/settings"){
     event.preventDefault();event.stopPropagation();
     const hash=destination.hash.slice(1);
