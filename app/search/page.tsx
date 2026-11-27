@@ -5,7 +5,7 @@ import "./search-magnetic.css";
 import "./search-feature-rails.css";
 import SearchFeatureRails from "./SearchFeatureRails";
 import SearchAuthFlow,{type SearchAuthMode} from "../components/SearchAuthFlow";
-import OnboardingPage from "../onboarding/page";
+import ShahadaOnboardingExperience from "../components/ShahadaOnboardingExperience";
 import Link from "next/link";
 import WebSearchPanel,{type GlobalSearchMode} from "../components/WebSearchPanel";
 import { useSearchMagneticMotion } from "./useSearchMagneticMotion";
@@ -277,7 +277,7 @@ export default function SearchHub() {
     </header>
 
     {showAuth&&authMode==="shahada"&&<section className="dsAuthShahada" aria-label="Shahada verification">
-      {account==="member"?<OnboardingPage embedded onComplete={()=>{setAccount("member");closeAuth()}}/>:account==="checking"?<p role="status">Preparing your secure Shahada session…</p>:<div className="dsAuthShahadaWait"><strong>Confirm your email to begin</strong><p>Once your account is verified, sign in here and HudHud will guide your Shahada.</p><button type="button" onClick={()=>openAuth("signin")}>Sign in</button></div>}
+      {account==="member"?<ShahadaOnboardingExperience embedded onComplete={()=>{setAccount("member");closeAuth()}}/>:account==="checking"?<p role="status">Preparing your secure Shahada session…</p>:<div className="dsAuthShahadaWait"><strong>Confirm your email to begin</strong><p>Once your account is verified, sign in here and HudHud will guide your Shahada.</p><button type="button" onClick={()=>openAuth("signin")}>Sign in</button></div>}
     </section>}
     {!showAuth&&showSuggestions&&<section className="dsSuggestions" aria-label="Search suggestions">
       <span className="dsSectionKicker">SUGGESTED MATCHES</span>
