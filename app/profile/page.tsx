@@ -31,6 +31,7 @@ import ProfileMagneticTiles from "../components/ProfileMagneticTiles";
 import ProfileCinematicOverlay from "../components/ProfileCinematicOverlay";
 import "./profile-polish.css";
 import "./profile-mosaic.css";
+import "./profile-home-unification.css";
 import "./appearance-modern.css";
 import ProfileFirstPostPrompt from "../components/ProfileFirstPostPrompt";
 import ProfileNavIcon from "../components/icons/ProfileNavIcon";
