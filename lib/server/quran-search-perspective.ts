@@ -15,8 +15,8 @@ export function getQuranSearchPerspective(input:string):QuranSearchPerspective|n
  if(!q)return null;
  // Health emergencies and technical chemistry queries need their direct
  // factual response first; avoid inserting a generic moral ruling.
- if(/\b(poisoning|overdose|withdrawal|seizure|emergency|detox|chemical formula|chemical structure|solvent|sanitizer|disinfectant|isopropyl|rubbing alcohol|ethanol production|alcohol free|alcohol-free|alcohol ink|alcohol thermometer)\b/i.test(q))return null;
- if(/\b(alcohol|alcoholic|beer|wine|liquor|drinking|intoxicants?|khamr)\b/i.test(q)){
+ if(/\b(poisoning|overdose|withdrawal|seizure|emergency|detox|chemical formula|chemical structure|solvent|sanitizer|disinfectant|isopropyl|rubbing alcohol|ethanol production|alcohol free|alcohol-free|alcohol ink|alcohol thermometer|cleaning|cosmetic|perfume|hand sanitizer|wine vinegar|vinegar|industrial alcohol|alcohol based|alcohol-based)\b/i.test(q))return null;
+ if(/\b(alcohol|alcoholic|beer|wine|liquor|intoxicants?|khamr)\b/i.test(q)){
   // Only drinking/intoxicants are addressed by the Qur'anic prohibition.
   // Ethanol in hand sanitizer, perfumes and medicines is not automatically
   // equivalent to consuming alcoholic beverages.
