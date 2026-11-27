@@ -165,3 +165,64 @@
  .hudOrbGlow,.hudOrbCloud,.hudDots{animation:none!important}
  .hudOrbGlow,.hudOrbStage,.hudCircle,.hudMic,.hudEnd{transition:none!important}
 }
+
+/* White search-native HudHud command surface (2026 redesign).
+   Keep Search Home unchanged. Only /hudhud receives these overrides. */
+.hudPage{background:#fff!important;color:#28362d!important}
+.hudPage.hudExiting{animation:hudSlideAway .2s cubic-bezier(.4,0,.8,.8) both}
+.hudHeader{align-items:center;height:76px;min-height:76px;padding:calc(9px + env(safe-area-inset-top)) clamp(14px,3vw,35px) 8px}
+.hudBackBrand{font-size:clamp(14px,2.4vw,21px)!important;line-height:1;letter-spacing:-.055em;font-weight:760;color:#2e3435!important;background:none;border:none;cursor:pointer;text-align:left;white-space:nowrap;padding:8px 2px}
+.hudBackBrand span{font-size:.52em;color:#aa906b;letter-spacing:-.04em;margin-left:2px}
+.hudTitle{font-size:14px;color:#61796b;top:calc(26px + env(safe-area-inset-top));letter-spacing:-.01em;font-weight:650}
+.hudHeaderActions{display:flex;gap:7px;align-items:center}
+.hudHeaderActions .hudCircle{width:36px;height:36px;box-shadow:none!important;background:#fff!important;border:1px solid #e8eee9!important;color:#6e8675!important}
+.hudHeaderActions .hudCircle svg{width:20px;height:20px}
+.hudOrbStage{transform:none!important;align-items:flex-start;justify-content:center;padding:0 clamp(38px,8vw,165px);gap:12px}
+.hudOrbStage .hudV2Orb{width:clamp(115px,22vw,158px);height:clamp(115px,22vw,158px)}
+.hudOrbStage p{margin:0 0 0 7px;color:#7b9080;font-size:12px;text-align:left}
+.hudTyping .hudOrbStage{transform:none!important}
+.hudComposerArea{padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.hudInputPill{min-height:55px;border:1px solid #e5e9e6;box-shadow:0 5px 25px #1734220b;background:#fff}
+.hudInputPill input::placeholder{color:#889a8e}
+.hudMic,.hudEnd{width:52px;height:52px;flex-basis:52px;border:1px solid #e8ede8;background:#fff;color:#3b6552;box-shadow:0 7px 18px #1734220d}
+.hudMic.isActive{background:#215f47!important;border-color:#215f47!important;color:#fff}
+.hudSend{background:#205e4b!important;color:#fff!important}
+.hudEnd{background:#f7f9f8;color:#546d5d}
+.hudEnd svg{width:20px;height:20px}
+.hudMessageBody{color:#2c4134;font-size:14px;line-height:1.6}
+.hudUser .hudMessageBody{background:#f4f8f5;border-color:#e9eee9}
+.hudAssistant .hudMessageBody{padding-top:4px;padding-bottom:11px}
+.hudMessages{gap:16px;padding-bottom:24px}
+.hudAssistant .hudTinyOrb{background:radial-gradient(circle at 36% 18%,#dfffee,#159968 61%,#06382d 100%);box-shadow:0 2px 11px #227d5360}
+.hudMatches{display:flex;gap:12px;flex-wrap:nowrap;width:min(100%,760px);max-width:100%;margin:17px 0 0;overflow-x:auto;overflow-y:hidden;padding:5px 3px 15px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.hudMatchCard{flex:0 0 clamp(190px,38vw,245px);max-width:245px;scroll-snap-align:start;border:1px solid #e9eee9;background:#fff;box-shadow:0 8px 24px #142c1d0b;border-radius:21px;overflow:hidden;align-self:stretch;animation:hudCardsRise .3s cubic-bezier(.2,.72,.2,1) both}
+.hudMatchCard:nth-child(2){animation-delay:80ms}.hudMatchCard:nth-child(3){animation-delay:160ms}
+.hudMatchCard a{display:flex;flex-direction:column;align-items:flex-start;gap:7px;padding:11px;color:#294f3b!important;text-decoration:none;max-width:100%;height:100%;background:transparent!important;border:none!important;white-space:normal}
+.hudMatchCard img{display:block;width:100%;height:115px;object-fit:cover;border-radius:14px;background:#f6f9f7}
+.hudMatchCard strong{font-size:12px;line-height:1.45;letter-spacing:-.015em;color:#2c4334}
+.hudMatchCard small{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:10px;color:#7d8c80;line-height:1.5}
+.hudMatchCard em{font-style:normal;font-size:10px;margin-top:auto;color:#368568}
+.hudMatchKind{font-size:9px!important;letter-spacing:.07em;text-transform:uppercase;color:#418a67!important;font-weight:800}
+.hudVerseCard .hudVerseArabic{display:block;font-size:clamp(17px,3.3vw,22px);line-height:1.85;direction:rtl;width:100%;color:#25523b;animation:hudVerseReveal .34s ease-out both}
+.hudVerseCard .hudVerseEnglish{margin:0!important;line-height:1.6;font-size:11px;color:#425e4b;animation:hudVerseReveal .4s ease-out .2s both}
+.hudQuickChoices{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 0 4px;padding-top:5px}
+.hudQuickChoices span{font-size:10px;color:#8a9c90;margin-right:4px}
+.hudQuickChoices button{border:1px solid #e3ebe6;background:#fff;border-radius:14px;padding:8px 16px;color:#355b45;font-size:11px;font-weight:680}
+.hudQuickChoices button:active{transform:scale(.98)}
+.hudPage.hudSpeaking .hudTinyOrb{animation:hudTinySpeak 750ms ease-in-out infinite alternate}
+.hudUpgrade{background:#f4f9f5;border-color:#e5ede7;color:#43624b}
+@keyframes hudSlideAway{to{transform:translateX(-85%);opacity:0}}
+@keyframes hudCardsRise{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+@keyframes hudVerseReveal{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+@keyframes hudTinySpeak{to{transform:scale(1.17);filter:brightness(1.25)}}
+@media(max-width:600px){
+ .hudHeader{height:73px;min-height:73px;padding:calc(8px + env(safe-area-inset-top)) 12px 8px}
+ .hudBackBrand{font-size:clamp(14px,4vw,18px)!important}
+ .hudTitle{top:calc(25px + env(safe-area-inset-top));font-size:12px}
+ .hudHeaderActions .hudCircle{width:33px;height:33px}
+ .hudOrbStage{padding-left:clamp(38px,15vw,72px);padding-right:20px}
+ .hudOrbStage .hudV2Orb{width:119px;height:119px}
+ .hudInputPill{min-height:51px}.hudMic,.hudEnd{flex-basis:47px;width:47px;height:47px}
+ .hudMatchCard{flex-basis:205px}.hudMatchCard img{height:105px}
+}
+@media(prefers-reduced-motion:reduce){.hudPage.hudExiting,.hudMatchCard,.hudVerseCard .hudVerseArabic,.hudVerseCard .hudVerseEnglish,.hudPage.hudSpeaking .hudTinyOrb{animation:none!important;transform:none!important}}

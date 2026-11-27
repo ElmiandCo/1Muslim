@@ -2,6 +2,9 @@ import Link from "next/link";
 import {createClient} from "../../../utils/supabase/server";
 import {createClient as serviceClient} from "@supabase/supabase-js";
 import {redirect} from "next/navigation";
+import {cookies} from "next/headers";
+import AdminPasswordGate from "../../components/AdminPasswordGate";
+import {ADMIN_GATE_COOKIE,validAdminGate} from "../../../lib/admin-security-gate";
 export const dynamic="force-dynamic";
 type Incident={id:string;subject_user_id:string;rule_code:string;severity:string;status:string;action_taken:string|null;restriction_ends_at:string|null;created_at:string;summary:string;};
 export default async function AdminSecurityPage(){
@@ -10,7 +13,9 @@ export default async function AdminSecurityPage(){
  if(!user)redirect("/auth?next=/admin/security");
  // Admin privileges are verified against trusted Auth app_metadata, never user_metadata or client-side flags.
  const admin=user.app_metadata?.role==="admin"||user.app_metadata?.is_admin===true;
- if(!admin)return <main style={{minHeight:"100vh",background:"#071811",color:"#fff",display:"grid",placeItems:"center",padding:24}}><section><h1>Restricted area</h1><p>Only verified 1Muslim administrators can view security incidents.</p><Link href="/">Return home</Link></section></main>;
+ if(!admin)return <main style={{minHeight:"100vh",background:"#fff",color:"#24372c",display:"grid",placeItems:"center",padding:24}}><section><h1>Restricted area</h1><p>Only verified administrators can open this private screen.</p><Link href="/search">Return home</Link></section></main>;
+ const jar=await cookies();
+ if(!validAdminGate(jar.get(ADMIN_GATE_COOKIE)?.value,user.id))return <AdminPasswordGate/>;
  const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
  let incidents:Incident[]=[];let error="";
  if(!url||!key){error="Security incident storage has not been configured."}

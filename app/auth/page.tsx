@@ -37,7 +37,7 @@ export default function AuthPage() {
   const [emailLogin,setEmailLogin]=useState(false);
   const [visionVisible,setVisionVisible]=useState(true);
   const [entryStage,setEntryStage]=useState<"welcome"|"membership"|"guest"|"auth">("welcome");
-  const [entryReady,setEntryReady]=useState(false);
+  const [entryReady,setEntryReady]=useState(true);
   useEffect(()=>{
     // Returning from Sign in/Join should give the member the same quiet brand
     // welcome on Search Home, even if they browsed anonymously first.
@@ -51,13 +51,18 @@ export default function AuthPage() {
     // search pill seamlessly becomes a progressive sign-in or join form.
     // Keep the original guided Shahada route available as a safe fallback.
     const params=new URLSearchParams(window.location.search);
-    if(params.has("shahada")||params.has("method"))return;
+    const guided=params.has("shahada")||params.has("method");
     const requestedSignup=params.get("mode")==="signup"||params.get("signup")==="1";
-    const next=safeNext();
-    const search=new URL("/search",window.location.origin);
-    search.searchParams.set("auth",requestedSignup?"signup":"signin");
-    if(next!=="/search")search.searchParams.set("next",next);
-    window.location.replace(search.pathname+search.search);
+    const destination=safeNext();
+    const redirectFor=(member:boolean)=>{
+      const search=new URL("/search",window.location.origin);
+      search.searchParams.set("auth",guided?(member?"shahada":"signup"):requestedSignup?"signup":"signin");
+      if(destination!=="/search")search.searchParams.set("next",destination);
+      window.location.replace(search.pathname+search.search);
+    };
+    // Old explicit guided links now use the SAME white HudHud stage too.
+    if(guided){void createClient().auth.getUser().then(({data:{user}})=>redirectFor(Boolean(user))).catch(()=>redirectFor(false));return;}
+    redirectFor(false);
   },[]);
 
   useEffect(() => {
@@ -130,7 +135,7 @@ export default function AuthPage() {
   // Preserve the legacy guided Shahada route when explicitly requested.
   const authParams=typeof window!=="undefined"?new URLSearchParams(window.location.search):null;
   const guidedShahada=authParams?.has("shahada")||authParams?.has("method");
-  if(!guidedShahada){
+  if(entryReady||guidedShahada){
     return <main style={{minHeight:"100dvh",background:"#fff"}} aria-label="Opening 1Muslim secure sign in"/>;
   }
   const embedded=typeof window!=="undefined"&&new URLSearchParams(window.location.search).has("embedded");

@@ -185,12 +185,12 @@ export default function HudHudChatWindow({
          <button type="button" title="Attach image preview" aria-label="Attach image preview" onClick={()=>file.current?.click()}>＋</button>
          <button type="button" className={listening?styles.recording:""} title="Dictate a message" aria-label={listening?"Stop voice typing":"Start voice typing"} aria-pressed={listening} onClick={toggleDictation}>🎙</button>
         </div>
-        <button type="submit" className={styles.sendButton} disabled={sending||(!draft.trim()&&!pending)||(remaining===0&&!unlocked)} aria-label="Send message">{sending?"···":"↑"}</button>
+        <button type="submit" className={styles.sendButton} disabled={sending||(!draft.trim()&&!pending)||(remaining===0)} aria-label="Send message">{sending?"···":"↑"}</button>
        </div>
       </form>
       <div className={styles.footerText}>
-       <span>{unlocked?"✧ HudHud Unlocked":remaining===null?"HudHud AI":remaining===0?"Free messages used":remaining+" of 3 free messages left"}</span>
-       {remaining===0&&!unlocked&&<Link href="/unlocked" onClick={onClose}>Unlock HudHud ↗</Link>}
+       <span>HudHud · One Muslim voice and search</span>
+       {remaining===0&&<Link href="/search" onClick={onClose}>Return to Search ↗</Link>}
       </div>
       {(notice||voiceError)&&<div className={styles.notice} role="status">{voiceError||notice}</div>}
       <p className={styles.disclaimer}>AI can make mistakes. Verify important information. Images are preview-only, not analyzed.</p>

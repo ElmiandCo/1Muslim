@@ -224,7 +224,7 @@ export default function HudHudChatLauncher(){
   e.preventDefault();if((!draft.trim()&&!pending)||hudhudSending)return;
   const text=draft.trim(),image=pending?.url;
   const generation=chatGeneration.current;
-  if(hudhudRemaining===0&&!hudhudUnlocked){setMessages(prev=>[...prev,{id:nextId.current++,role:"hudhud",text:"You've reached your three free HudHud answers. Unlock HudHud everywhere on 1Muslim to keep going.",links:[{title:"1Muslim Unlocked",href:"/unlocked"}]}]);return;}
+  if(hudhudRemaining===0){setMessages(prev=>[...prev,{id:nextId.current++,role:"hudhud",text:"Your current HudHud exploration is complete. You can continue using 1Muslim Search.",links:[{title:"Search One Muslim",href:"/search"}]}]);return;}
   const history=messages.filter(m=>m.id!==0).slice(-6).map(m=>({role:m.role==="hudhud"?"assistant":"user",content:m.text}));
   setMessages(prev=>[...prev,{id:nextId.current++,role:"user",text,image}]);
   setDraft("");setPending(null);setHudhudSending(true);setNotice("");
@@ -241,15 +241,14 @@ export default function HudHudChatLauncher(){
     if(generation!==chatGeneration.current)return;
     if(data.limitReached||data.remaining===0)setHudhudRemaining(0);
     if(!response.ok){
-      if(data.limitReached){setMessages(prev=>[...prev,{id:nextId.current++,role:"hudhud",text:data.error||"Your free HudHud preview is complete.",links:[{title:"Make HudHud yours with Unlocked",href:"/unlocked"}]}]);return;}
+      if(data.limitReached){setMessages(prev=>[...prev,{id:nextId.current++,role:"hudhud",text:data.error||"HudHud exploration complete for now.",links:[{title:"Continue searching",href:"/search"}]}]);return;}
       throw Error(data.error||"HudHud could not respond.");
     }
     if(typeof data.remaining==="number")setHudhudRemaining(data.remaining);
     if(data.unlocked)setHudhudUnlocked(true);
     const links=(Array.isArray(data.matches)?data.matches:[]).filter((m:{href?:string})=>typeof m.href==="string"&&m.href.startsWith("/")&&!m.href.startsWith("//")).slice(0,3)
       .map((m:{title:string;href:string})=>({title:m.title,href:m.href}));
-    setMessages(prev=>[...prev,{id:nextId.current++,role:"hudhud",text:String(data.reply||""),links},
-      ...(data.limitReached&&!data.unlocked?[{id:nextId.current++,role:"hudhud" as const,text:"That was your third free HudHud reply. To keep HudHud with you across all of 1Muslim, activate 1Muslim Unlocked.",links:[{title:"Make HudHud yours · 1Muslim Unlocked",href:"/unlocked"}]}]:[])]);
+    setMessages(prev=>[...prev,{id:nextId.current++,role:"hudhud",text:String(data.reply||""),links}]);
     window.dispatchEvent(new CustomEvent("1muslim:action-success"));
   }catch(error){if(generation===chatGeneration.current)setMessages(prev=>[...prev,{id:nextId.current++,role:"hudhud",text:error instanceof Error?error.message:"HudHud could not answer. Please retry."}]);}
   finally{if(generation===chatGeneration.current){setHudhudSending(false);chatRequest.current=null;}}

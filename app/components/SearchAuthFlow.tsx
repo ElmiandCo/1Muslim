@@ -95,7 +95,7 @@ export default function SearchAuthFlow({mode,setMode,onClose,onSignedIn,returnTo
    const check=await fetch("/api/auth/id-access",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"check",identifier:cleanId(handle)}),cache:"no-store"});
    if(!check.ok||(await check.json()).available!==true)throw Error("This 1Muslim ID is no longer available. Go back and choose another.");
    const callback=new URL("/auth/callback",window.location.origin);
-   callback.searchParams.set("next","/search?auth=shahada");
+   callback.searchParams.set("next","/search?auth=shahada"+(returnTo!=="/search"?"&next="+encodeURIComponent(returnTo):""));
    const {data,error}=await createClient().auth.signUp({
     email:email.trim().toLowerCase(),password:pass,
     options:{data:{full_name:fullName.trim(),display_name:fullName.trim(),username:cleanId(handle)},emailRedirectTo:callback.toString()}
@@ -125,7 +125,7 @@ export default function SearchAuthFlow({mode,setMode,onClose,onSignedIn,returnTo
  async function google(){
   if(busy)return;setBusy(true);setMessage("");
   try{
-   const next=mode==="signup"?"/search?auth=shahada":returnTo;
+   const next=mode==="signup"?"/search?auth=shahada"+(returnTo!=="/search"?"&next="+encodeURIComponent(returnTo):""):returnTo;
    const callback=new URL("/auth/callback",window.location.origin);
    callback.searchParams.set("next",next);
    const {data,error}=await createClient().auth.signInWithOAuth({provider:"google",options:{redirectTo:callback.toString(),skipBrowserRedirect:true}});

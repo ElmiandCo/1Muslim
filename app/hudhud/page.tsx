@@ -1,10 +1,12 @@
 "use client";
 import "./hudhud.css";
+import HudHudOrb from "../components/HudHudOrb";
+import HudHudVerseCard from "../components/HudHudVerseCard";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {useCallback,useEffect,useRef,useState,type FormEvent} from "react";
 
-type Match={id:string;kind:string;title:string;href:string};
+type Match={id:string;kind:string;title:string;href:string;image?:string;description?:string};
 type Line={role:"user"|"assistant";content:string;matches?:Match[]};
 type Session={id:string;title:string;lines:Line[]};
 type RecognitionEvent={results:ArrayLike<{isFinal:boolean;0:{transcript:string}}>} ;
@@ -44,7 +46,10 @@ export default function HudHudPage(){
  const [menuOpen,setMenuOpen]=useState(false);
  const [settingsOpen,setSettingsOpen]=useState(false);
  const [actionsOpen,setActionsOpen]=useState(false);
- const [readAloud,setReadAloud]=useState(false);
+ const [readAloud,setReadAloud]=useState(true);
+ const [speaking,setSpeaking]=useState(false);
+ const [exiting,setExiting]=useState(false);
+ const [touchStart,setTouchStart]=useState<{x:number;y:number}|null>(null);
  const [stillOrb,setStillOrb]=useState(false);
  const [focused,setFocused]=useState(false);
  const [queryContext,setQueryContext]=useState("");
@@ -52,9 +57,13 @@ export default function HudHudPage(){
  const recognizer=useRef<Recognition|null>(null);
  const chatEnd=useRef<HTMLDivElement>(null);
  const input=useRef<HTMLInputElement>(null);
+ const voiceTranscript=useRef("");
+ const askRef=useRef<(message:string)=>void>(()=>{});
+ const originRef=useRef("/search");
+ const safeReturn=(s:string)=>s.startsWith("/")&&!s.startsWith("//")&&!s.startsWith("/\\")&&!s.includes("://")&&!s.startsWith("/hudhud")&&!s.startsWith("/auth")?s:"/search";
  const current=sessions.find(x=>x.id===activeId)||sessions[0];
  const lines=current.lines;
- const exhausted=!unlocked&&remaining===0;
+ const exhausted=remaining===0;
 
  const stopVoice=useCallback((abort=false)=>{
   const rec=recognizer.current;
@@ -66,6 +75,12 @@ export default function HudHudPage(){
   const controller=new AbortController();
   const params=new URLSearchParams(window.location.search);
   setQueryContext((params.get("q")||"").trim().slice(0,90));
+  let referring="/search";
+  try{const url=new URL(document.referrer);if(url.origin===window.location.origin)referring=url.pathname+url.search}catch{}
+  let remembered="";
+  try{remembered=sessionStorage.getItem("1muslim:hudhud:return")||""}catch{}
+  const source=params.get("from")||remembered||referring;
+  originRef.current=safeReturn(source);
   void fetch("/api/discover/ask",{cache:"no-store",signal:controller.signal})
    .then(async res=>{const data=await res.json();if(!res.ok)throw Error(data.error||"HudHud is unavailable");return data})
    .then(data=>{if(!controller.signal.aborted){setRemaining(typeof data.remaining==="number"?data.remaining:null);setUnlocked(Boolean(data.unlocked))}})
@@ -95,9 +110,9 @@ export default function HudHudPage(){
   setActiveId(id);setDraft("");setError("");setMenuOpen(false);setActionsOpen(false);
   input.current?.focus();
  };
- const ask=async(event:FormEvent)=>{
-  event.preventDefault();
-  const message=draft.trim();if(!message||busy||exhausted)return;
+ const ask=async(event?:FormEvent,spokenMessage?:string)=>{
+  event?.preventDefault();
+  const message=(spokenMessage||draft).trim();if(!message||busy||exhausted)return;
   stopVoice();
   const conversationId=activeId;
   const history=lines.slice(-6).map(x=>({role:x.role,content:x.content}));
@@ -115,7 +130,8 @@ export default function HudHudPage(){
    if(readAloud&&"speechSynthesis" in window){
     window.speechSynthesis.cancel();
     const speech=new SpeechSynthesisUtterance(reply);
-    speech.lang="en-US";speech.rate=1;
+    speech.lang="en-US";speech.rate=1.07;speech.volume=.8;
+    speech.onstart=()=>setSpeaking(true);speech.onend=()=>setSpeaking(false);speech.onerror=()=>setSpeaking(false);
     window.speechSynthesis.speak(speech);
    }
   }catch(caught){
@@ -124,52 +140,87 @@ export default function HudHudPage(){
    setError(caught instanceof Error?caught.message:"HudHud is unavailable. Please try again.");
   }finally{setBusy(false)}
  };
+ askRef.current=(message:string)=>{void ask(undefined,message)};
  const startVoice=()=>{
   if(listening){stopVoice();return;}
+  // Prevent the assistant from transcribing its own just-spoken reply.
+  window.speechSynthesis?.cancel();setSpeaking(false);
   setError("");setActionsOpen(false);
   const host=window as RecognitionWindow;
   const Voice=host.SpeechRecognition||host.webkitSpeechRecognition;
   if(!Voice){setError("Voice dictation is not supported in this browser. You can type your question instead.");return}
   try{
    const rec=new Voice();
-   const prefix=draft.trim();
+   const prefix=draft.trim();voiceTranscript.current="";
    rec.lang="en-US";rec.interimResults=true;rec.continuous=false;
    rec.onresult=event=>{
     let transcript="";
     for(let i=0;i<event.results.length;i++)transcript+=event.results[i][0].transcript+" ";
-    setDraft((prefix?prefix+" ":"")+transcript.trim());
+    voiceTranscript.current=(prefix?prefix+" ":"")+transcript.trim();
+    setDraft(voiceTranscript.current);
    };
    rec.onerror=event=>{
     recognizer.current=null;setListening(false);
     if(event.error!=="aborted"&&event.error!=="no-speech")setError(event.error==="not-allowed"?"Microphone permission was denied. Enable it in browser settings to dictate.":"Voice dictation stopped. Please try again.");
    };
-   rec.onend=()=>{recognizer.current=null;setListening(false)};
+   rec.onend=()=>{
+    recognizer.current=null;setListening(false);
+    const text=voiceTranscript.current.trim();
+    if(text.length>2)window.setTimeout(()=>askRef.current(text),190);
+   };
    rec.start();recognizer.current=rec;setListening(true);
   }catch{setListening(false);setError("Could not start the microphone. Check browser permissions and try again.")}
  };
  const close=()=>{
-  if(listening){stopVoice(true);return}
-  window.speechSynthesis?.cancel();
-  router.push("/search");
+  stopVoice(true);window.speechSynthesis?.cancel();setSpeaking(false);setExiting(true);
+  window.setTimeout(()=>router.push(safeReturn(originRef.current)),180);
  };
 
- return <main className={"hudPage"+(focused?" hudTyping":"")+(stillOrb?" hudStill":"")+(listening?" hudListening":"")+(busy?" hudThinking":"")} style={viewport?{height:viewport.height,top:viewport.top}:undefined} aria-label="HudHud chat">
+ return <main onTouchStart={event=>{
+    const t=event.target as HTMLElement;
+    if(t.closest("input,.hudMessages,.hudMatches,.hudDrawer,.hudActionPop"))return;
+    setTouchStart({x:event.touches[0]?.clientX||0,y:event.touches[0]?.clientY||0});
+   }} onTouchEnd={event=>{
+    if(!touchStart)return;
+    const dx=(event.changedTouches[0]?.clientX||0)-touchStart.x;
+    const dy=(event.changedTouches[0]?.clientY||0)-touchStart.y;
+    setTouchStart(null);if(dx< -100&&Math.abs(dy)<65)close();
+   }} className={"hudPage"+(exiting?" hudExiting":"")+(speaking?" hudSpeaking":"")+(focused?" hudTyping":"")+(stillOrb?" hudStill":"")+(listening?" hudListening":"")+(busy?" hudThinking":"")} style={viewport?{height:viewport.height,top:viewport.top}:undefined} aria-label="HudHud chat">
   <header className="hudHeader">
-   <button className="hudCircle" type="button" aria-label="Open HudHud menu" aria-expanded={menuOpen} onClick={()=>{setMenuOpen(true);setSettingsOpen(false)}}><Glyph name="menu"/></button>
-   <div className="hudTitle" aria-label="HudHud — 1Muslim assistant">HudHud <span aria-hidden="true">⌄</span></div>
-   <button className="hudCircle" type="button" aria-label="HudHud settings" aria-expanded={settingsOpen} onClick={()=>{setSettingsOpen(!settingsOpen);setMenuOpen(false)}}><Glyph name="settings"/></button>
+   <button className="hudBackBrand" type="button" aria-label="Return to previous page" onClick={close}>One Muslim<span>.live</span></button>
+   <div className="hudTitle" aria-label="HudHud — One Muslim voice assistant">HudHud</div>
+   <div className="hudHeaderActions"><button className="hudCircle" type="button" aria-label={readAloud?"Mute HudHud voice":"Enable HudHud voice"} aria-pressed={readAloud} onClick={()=>{setReadAloud(v=>!v);window.speechSynthesis?.cancel();setSpeaking(false)}}>
+    <svg viewBox="0 0 24 24" width="19" height="19" stroke="currentColor" fill="none" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4"/>{readAloud?<path d="M16 8q4 4 0 8M18 5q7 7 0 14"/>:<path d="m16 9 5 6m0-6-5 6"/>}</svg>
+   </button><button className="hudCircle" type="button" aria-label="HudHud menu" aria-expanded={menuOpen} onClick={()=>{setMenuOpen(true);setSettingsOpen(false)}}><Glyph name="menu"/></button><button className="hudCircle" type="button" aria-label="HudHud settings" aria-expanded={settingsOpen} onClick={()=>{setSettingsOpen(!settingsOpen);setMenuOpen(false)}}><Glyph name="settings"/></button></div>
   </header>
 
   <section className={"hudMain"+(lines.length?" hudHasChat":"")} aria-label="Conversation">
    {lines.length===0&&<div className="hudOrbStage">
-     <div className="hudOrbGlow"><div className="hudOrb" role="img" aria-label={listening?"HudHud is listening":busy?"HudHud is thinking":"HudHud green assistant orb"}><span className="hudOrbCloud"/><span className="hudOrbShine"/></div></div>
-     <p>{listening?"Listening — tap the mic or X to stop":busy?"HudHud is thinking…":"Assalamu alaikum"}</p>
+     <HudHudOrb listening={listening} speaking={speaking} thinking={busy} quiet={stillOrb} onClick={()=>{if(listening)stopVoice(true);else if(!busy)startVoice()}}/>
+     <p aria-live="polite">{listening?"Listening…":busy?"One moment…":"As-salāmu ʿalaykum"}</p>
    </div>}
    {lines.length>0&&<div className="hudMessages">
      {lines.map((line,index)=><article key={current.id+"-"+index} className={"hudMessage "+(line.role==="user"?"hudUser":"hudAssistant")}>
        {line.role==="assistant"&&<span className="hudTinyOrb" aria-hidden="true"/>}
        <div className="hudMessageBody"><p>{line.content}</p>
-        {line.matches&&line.matches.length>0&&<div className="hudMatches">{line.matches.slice(0,3).map(item=><Link key={item.href} href={item.href}>{item.title}<span aria-hidden="true">↗</span></Link>)}</div>}
+        {line.matches&&line.matches.length>0&&<div className="hudMatches" role="list" aria-label="HudHud search suggestions">
+ {line.matches.slice(0,6).map(item=><div className="hudMatchCard" role="listitem" key={item.href}>
+  {item.kind==="Qur’an"&&/^\d{1,3}:\d{1,3}$/.test(item.id)
+   ?<HudHudVerseCard verseKey={item.id} href={item.href}/>
+   :<Link href={item.href}>
+    {item.image?.startsWith("https://")&&<img src={item.image} alt="" loading="lazy"/>}
+    <span className="hudMatchKind">{item.kind}</span>
+    <strong>{item.title}</strong>
+    {item.description&&<small>{item.description.slice(0,105)}</small>}
+    <em>View source ↗</em>
+   </Link>}
+  </div>)}
+ </div>}
+ {line.matches&&line.matches.length>0&&<div className="hudQuickChoices" aria-label="Follow-up suggestions">
+  <span>Explore these results?</span>
+  <button type="button" onClick={()=>{setDraft("Yes, show me more about these results.");input.current?.focus()}}>Yes</button>
+  <button type="button" onClick={()=>{setDraft("No, try another approach and explain why.");input.current?.focus()}}>No</button>
+ </div>}
        </div>
      </article>)}
      {busy&&<div className="hudPending" role="status"><span className="hudTinyOrb" aria-hidden="true"/> HudHud is thinking <span className="hudDots">•••</span></div>}
@@ -178,18 +229,18 @@ export default function HudHudPage(){
   </section>
 
   {error&&<p className="hudError" role="alert">{error}</p>}
-  {exhausted&&<aside className="hudUpgrade"><strong>You've used your three free HudHud replies.</strong><Link href="/unlocked">Continue with 1Muslim Unlocked ↗</Link></aside>}
+  {exhausted&&<aside className="hudUpgrade"><strong>Your HudHud exploration is complete for now.</strong><Link href="/search">Explore 1Muslim Search ↗</Link></aside>}
   <div className="hudComposerArea">
    {queryContext&&<span className="hudContext">Searching for: {queryContext}</span>}
    <form className="hudComposer" onSubmit={ask}>
     <div className="hudInputPill">
      <button className="hudPlus" type="button" aria-label="More HudHud actions" aria-expanded={actionsOpen} onClick={()=>setActionsOpen(!actionsOpen)}><Glyph name="plus"/></button>
-     <input ref={input} type="text" inputMode="text" value={draft} maxLength={900} autoComplete="off" aria-label="Ask HudHud" placeholder={exhausted?"Free replies completed":"Ask HudHud"} onFocus={()=>setFocused(true)} onBlur={()=>setFocused(false)} onChange={event=>setDraft(event.target.value)} disabled={busy||exhausted}/>
+     <input ref={input} type="text" inputMode="text" value={draft} maxLength={900} autoComplete="off" aria-label="Ask HudHud" placeholder={exhausted?"Explore search instead":"Ask HudHud"} onFocus={()=>setFocused(true)} onBlur={()=>setFocused(false)} onChange={event=>setDraft(event.target.value)} disabled={busy||exhausted}/>
     </div>
     {draft.trim()&&!exhausted?<button className="hudMic hudSend" aria-label="Send question" type="submit" disabled={busy}><Glyph name="send"/></button>:<button className={"hudMic"+(listening?" isActive":"")} type="button" aria-label={listening?"Stop listening":"Dictate question with microphone"} aria-pressed={listening} onClick={startVoice} disabled={busy||exhausted}><Glyph name="mic"/></button>}
-    <button className="hudEnd" type="button" aria-label={listening?"Stop microphone":"Close HudHud"} onClick={close}><Glyph name="close"/></button>
+    <button className="hudEnd" type="button" aria-label="Close HudHud" onClick={close}><Glyph name="close"/></button>
    </form>
-   <p className="hudQuota">{unlocked?"HudHud included with your 1Muslim membership":remaining===null?"HudHud · Ask thoughtfully":remaining+" of 3 free replies remaining"} <span aria-hidden="true">·</span> Verify important Islamic references.</p>
+   
   </div>
 
   {actionsOpen&&<div className="hudActionPop" role="menu" aria-label="HudHud shortcuts">
@@ -199,7 +250,7 @@ export default function HudHudPage(){
     <h2>HudHud settings</h2>
     <label><span>Read replies aloud<small>Uses your browser's voice</small></span><input type="checkbox" checked={readAloud} onChange={e=>{setReadAloud(e.target.checked);if(!e.target.checked)window.speechSynthesis?.cancel()}}/></label>
     <label><span>Reduce orb motion<small>Keep the emerald orb still</small></span><input type="checkbox" checked={stillOrb} onChange={e=>setStillOrb(e.target.checked)}/></label>
-    <p>Microphone activates only when you tap it. Chats in this view stay in memory until you leave the page.</p>
+    <p>Voice turns send when you finish speaking. You can mute spoken replies. Chats here are temporary.</p>
     <button type="button" onClick={()=>setSettingsOpen(false)}>Close settings</button>
    </div>}
   {menuOpen&&<div className="hudDrawerCover" onMouseDown={e=>{if(e.target===e.currentTarget)setMenuOpen(false)}}>

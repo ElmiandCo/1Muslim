@@ -28,7 +28,7 @@ export async function GET(request: Request) {
         const given = str(identity.given_name) || str(meta.given_name) || (fullName ? fullName.split(/\s+/)[0] : "");
         const family = str(identity.family_name) || str(meta.family_name) || (fullName.includes(" ") ? fullName.split(/\s+/).slice(1).join(" ") : "");
         const { data: profile } = await Promise.race([
-          supabase.from("profiles").select("gender,display_name,first_name,last_name,username").eq("id", user.id).maybeSingle(),
+          supabase.from("profiles").select("shahada_verified_at,display_name,first_name,last_name,username").eq("id", user.id).maybeSingle(),
           new Promise<{data:null}>(resolve => setTimeout(() => resolve({data:null}), 2500)),
         ]);
         const updates: Record<string,string> = {};
@@ -56,7 +56,12 @@ export async function GET(request: Request) {
           ]);
           if (profileError) console.warn("Google profile autofill skipped:", profileError.message);
         }
-        if (!profile?.gender) return NextResponse.redirect(`${origin}/search?auth=shahada`);
+        if (!profile?.shahada_verified_at){
+          const shahada=new URL("/search",origin);
+          shahada.searchParams.set("auth","shahada");
+          if(next!=="/search")shahada.searchParams.set("next",next);
+          return NextResponse.redirect(shahada);
+        }
       }
       return NextResponse.redirect(`${origin}${next}`);
     }
