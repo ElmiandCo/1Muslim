@@ -53,6 +53,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  const [arriving,setArriving]=useState(false);
  const [micPermission,setMicPermission]=useState<"checking"|"granted"|"needs-tap"|"denied"|"unsupported">("checking");
  const [listening,setListening]=useState(false);
+ const [pageVisible,setPageVisible]=useState(true);
  const [paused,setPaused]=useState(false);
  const [speaking,setSpeaking]=useState(false);
  const [spokenChars,setSpokenChars]=useState(0);
@@ -177,7 +178,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  useEffect(()=>{
   if(!member)return;
   void askMicPermission();
-  const onHide=()=>{if(document.hidden){stopRecognition();stopAudio()}};
+  const onHide=()=>{setPageVisible(!document.hidden);if(document.hidden){stopRecognition();stopAudio()}};
   document.addEventListener("visibilitychange",onHide);
   return()=>{
    document.removeEventListener("visibilitychange",onHide);
@@ -263,10 +264,10 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
   }catch{setPaused(true);setMicPermission("needs-tap");setVoiceError("Tap the microphone to start listening.");}
  };
  useEffect(()=>{
-  if(!member||paused||nameEditor||micPermission!=="granted"||listening||thinking||speaking||speechActive.current||focused||search.trim()||document.hidden)return;
+  if(!member||paused||nameEditor||!pageVisible||micPermission!=="granted"||listening||thinking||speaking||speechActive.current||focused||search.trim()||document.hidden)return;
   const timer=setTimeout(startRecognition,550);
   return()=>clearTimeout(timer);
- },[member?.id,paused,nameEditor,micPermission,listening,thinking,speaking,focused,search]);
+ },[member?.id,paused,nameEditor,pageVisible,micPermission,listening,thinking,speaking,focused,search]);
  const toggleMic=()=>{
   if(listening){setPaused(true);stopRecognition();return}
   setPaused(false);if(micPermission!=="granted"){void askMicPermission();return}
