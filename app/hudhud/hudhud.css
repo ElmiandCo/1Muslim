@@ -205,10 +205,6 @@
 .hudMatchKind{font-size:9px!important;letter-spacing:.07em;text-transform:uppercase;color:#418a67!important;font-weight:800}
 .hudVerseCard .hudVerseArabic{display:block;font-size:clamp(17px,3.3vw,22px);line-height:1.85;direction:rtl;width:100%;color:#25523b;animation:hudVerseReveal .34s ease-out both}
 .hudVerseCard .hudVerseEnglish{margin:0!important;line-height:1.6;font-size:11px;color:#425e4b;animation:hudVerseReveal .4s ease-out .2s both}
-.hudQuickChoices{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 0 4px;padding-top:5px}
-.hudQuickChoices span{font-size:10px;color:#8a9c90;margin-right:4px}
-.hudQuickChoices button{border:1px solid #e3ebe6;background:#fff;border-radius:14px;padding:8px 16px;color:#355b45;font-size:11px;font-weight:680}
-.hudQuickChoices button:active{transform:scale(.98)}
 .hudPage.hudSpeaking .hudTinyOrb{animation:hudTinySpeak 750ms ease-in-out infinite alternate}
 .hudUpgrade{background:#f4f9f5;border-color:#e5ede7;color:#43624b}
 @keyframes hudSlideAway{to{transform:translateX(-85%);opacity:0}}
@@ -248,9 +244,6 @@
 .hudVersePresentation .hudVerseHero .hudVerseEnglish span.hudWordSpoken{color:#096c4c;background:#c6f8df59}
 .hudVersePresentation .hudVerseHero small{font-size:11px;color:#637b6c}
 .hudVersePresentation .hudVerseHero em{font-style:normal;font-weight:700;font-size:12px;color:#0c7750}
-.hudAssistant .hudQuickChoices{margin-top:14px;padding:8px 0;gap:9px}
-.hudAssistant .hudQuickChoices button{min-height:42px;min-width:46px;border-radius:999px;font-size:12px}
-.hudAssistant .hudQuickChoices button:disabled{opacity:.4}
 @keyframes hudBrandArrival{from{opacity:0;transform:translateY(-50%) scale(.5)}to{opacity:1;transform:translateY(-50%) scale(1)}}
 @keyframes hudPresentationFade{from{opacity:0;transform:translateY(12px);filter:blur(3px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
 @media(max-width:520px){.hudBrandSlot{min-width:108px}.hudBrandOrb{left:-5px}.hudVersePresentation .hudVerseHero{padding:16px 0!important}.hudVersePresentation .hudVerseHero .hudVerseArabic{font-size:clamp(28px,8.2vw,42px)!important}}

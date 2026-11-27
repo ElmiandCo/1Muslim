@@ -308,11 +308,7 @@ export default function HudHudPage(){
    </Link>}
   </div>)}
  </div>}
- {line.role==="assistant"&&<div className="hudQuickChoices" aria-label="Follow-up suggestions">
-  <span>{line.presentation?.kind==="verse"?"Was this the verse you wanted?":"Was this helpful?"}</span>
-  <button type="button" disabled={busy||exhausted} onClick={()=>void ask(undefined,"Yes, thank you.")}>Yes</button>
-  <button type="button" disabled={busy||exhausted} onClick={()=>void ask(undefined,"No. Please try a different relevant explanation, with verified evidence and no unrelated cards.")}>No</button>
- </div>}
+
        </div>
      </article>)}
      {busy&&<div className="hudPending" role="status"><span className="hudTinyOrb" aria-hidden="true"/> HudHud is thinking <span className="hudDots">•••</span></div>}
