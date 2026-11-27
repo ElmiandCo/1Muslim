@@ -64,3 +64,41 @@
 @media(max-width:767px){
   .dsHomeMode .dsGuestAccount .dsGuestSignIn{width:40px;height:40px;min-height:40px;flex-basis:40px}
 }
+
+/* 27 Nov: true ONE-row carousel anchored near the bottom of the Home viewport.
+   Keep the search in its original position and retain scroll on short screens. */
+.dsPage.dsHomeMode{display:flex;flex-direction:column;min-height:100dvh}
+.dsPage.dsHomeMode:not(.dsInlineAuthOpen)>.dsContent{
+  flex:1 0 auto;min-height:0;display:flex;flex-direction:column;
+  justify-content:flex-end;padding-bottom:clamp(18px,3dvh,38px);
+}
+.dsHomeMode:not(.dsInlineAuthOpen) .dsHomeIntro{
+  flex:1 1 auto;display:flex;flex-direction:column;
+  min-height:clamp(110px,20dvh,300px);
+}
+.dsHomeMode .dsHomeFeatureBreathingSpace{height:0!important;flex:1 1 0}
+.dsHomeMode .dsExploreFeatureSection{
+  flex:0 0 auto;min-width:0;width:100%;
+  margin:0 0 0;padding:12px 0 0;
+}
+.dsHomeMode .dsFeatureRails{display:block!important;min-width:0}
+.dsHomeMode .dsFeatureRail{
+  display:flex!important;flex-flow:row nowrap!important;
+  align-items:stretch;gap:10px;width:100%;
+  overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;
+  scroll-padding-inline:4px;
+  padding:5px 3px 11px;margin:0;
+}
+.dsHomeMode .dsFeatureCard{
+  flex:0 0 clamp(150px,35vw,205px)!important;
+  width:clamp(150px,35vw,205px);
+  height:88px;min-width:0;
+  scroll-snap-align:start;
+}
+@media(max-width:767px){
+ .dsPage.dsHomeMode:not(.dsInlineAuthOpen)>.dsContent{padding-bottom:max(14px,env(safe-area-inset-bottom,0px))}
+ .dsHomeMode .dsFeatureRail{gap:8px}
+ .dsHomeMode .dsFeatureCard{flex-basis:clamp(145px,39vw,182px)!important;width:clamp(145px,39vw,182px);height:82px}
+ .dsHomeMode:not(.dsInlineAuthOpen) .dsHomeIntro{min-height:clamp(105px,19dvh,230px)}
+}
+@media(prefers-reduced-motion:reduce){.dsHomeMode .dsFeatureRail{scroll-behavior:auto!important}}
