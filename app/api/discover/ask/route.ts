@@ -148,7 +148,7 @@ export async function POST(req: NextRequest) {
     // The previous gpt-6 default was rejected by this project's API (404).
     // Honor model environment overrides, but choose stable API defaults.
     const preferredModel=process.env.HUDHUD_REASONING_MODEL||"gpt-4.1";
-    const fallbackModel=process.env.HUDHUD_FALLBACK_MODEL||"gpt-4o-mini";
+    const fallbackModel=process.env.HUDHUD_FALLBACK_MODEL||"gpt-4o";
     const attempts=[{model:preferredModel,timeout:20000},...(fallbackModel!==preferredModel?[{model:fallbackModel,timeout:12000}]:[])];
     let answer="";
     let modelUsed="";
