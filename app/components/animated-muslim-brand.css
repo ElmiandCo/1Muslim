@@ -1,0 +1,13 @@
+.omAnimatedBrand{display:inline-flex;align-items:baseline;justify-content:flex-start;max-width:100%;white-space:nowrap;vertical-align:baseline}
+.omAnimatedBrand>span{display:inline-block;font:inherit;line-height:inherit;letter-spacing:inherit;margin:0;padding:0;color:inherit;white-space:pre;overflow:hidden;vertical-align:baseline}
+.omAnimatedBrand .omBrandWordOne{max-width:4em;opacity:1;transform:translateX(0) scaleX(1);transform-origin:right center;transition:max-width .78s cubic-bezier(.22,.8,.24,1),opacity .5s ease,transform .78s cubic-bezier(.22,.8,.24,1)}
+.omAnimatedBrand .omBrandDigit{max-width:0;opacity:0;transform:translateX(-.48em) scale(.8);transform-origin:left center;transition:max-width .78s cubic-bezier(.22,.8,.24,1),opacity .6s ease,transform .78s cubic-bezier(.22,.8,.24,1)}
+.omAnimatedBrand .omBrandMuslim{transform:translateX(0);transition:transform .78s cubic-bezier(.22,.8,.24,1)}
+.omAnimatedBrandFinal .omBrandWordOne{max-width:0;opacity:0;transform:translateX(.8em) scaleX(.18)}
+.omAnimatedBrandFinal .omBrandDigit{max-width:.65em;opacity:1;transform:translateX(0) scale(1)}
+.omAnimatedBrandFinal .omBrandMuslim{transform:translateX(-.015em)}
+@media(prefers-reduced-motion:reduce){
+ .omAnimatedBrand .omBrandWordOne{max-width:0!important;opacity:0!important;transition:none!important}
+ .omAnimatedBrand .omBrandDigit{max-width:.65em!important;opacity:1!important;transform:none!important;transition:none!important}
+ .omAnimatedBrand .omBrandMuslim{transform:none!important;transition:none!important}
+}
