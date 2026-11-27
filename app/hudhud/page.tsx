@@ -47,6 +47,9 @@ export default function HudHudPage(){
  // Listening starts after microphone permission, as in the Shahada flow.
  // It can be paused at any time; mic audio is never stored by this page.
  const [autoListening,setAutoListening]=useState(true);
+ useEffect(()=>{
+  try{const on=localStorage.getItem("1muslim:hudhud:auto-listen")!=="off";setAutoListening(on);if(!on)setMicPaused(true)}catch{}
+ },[]);
  const [micPaused,setMicPaused]=useState(false);
  const [speechPending,setSpeechPending]=useState(false);
  const [pageVisible,setPageVisible]=useState(true);
@@ -419,12 +422,13 @@ export default function HudHudPage(){
   {settingsOpen&&<div className="hudSettings" role="dialog" aria-label="HudHud settings">
     <h2>HudHud settings</h2>
     <label><span>Read replies aloud<small>Uses your browser's voice</small></span><input type="checkbox" checked={readAloud} onChange={e=>saveVoice(e.target.checked)}/></label>
-    <label><span>Auto-listen<small>Start after permission; pauses while HudHud speaks or you type. Browser recognition may process audio; HudHud does not store raw audio.</small></span><input type="checkbox" checked={autoListening} onChange={e=>{setAutoListening(e.target.checked);setMicPaused(!e.target.checked);if(!e.target.checked)stopVoice(true)}}/></label>
+    <label><span>Auto-listen<small>Start after permission; pauses while HudHud speaks or you type. Browser recognition may process audio; HudHud does not store raw audio.</small></span><input type="checkbox" checked={autoListening} onChange={e=>{setAutoListening(e.target.checked);setMicPaused(!e.target.checked);try{localStorage.setItem("1muslim:hudhud:auto-listen",e.target.checked?"on":"off")}catch{}if(!e.target.checked)stopVoice(true)}}/></label>
     <div className="hudMicSettings"><span>Microphone access<small>{micAccess==="granted"?(autoListening&&!micPaused?"Allowed · auto-listening is on":"Allowed · tap microphone to speak"):micAccess==="checking"?"Checking browser permission…":"Not enabled · you can still type"}</small></span><button type="button" onClick={()=>void requestMicrophonePermission()}>Enable mic</button></div>
     {memorySignedIn?<><label><span>Remember conversations<small>Private to your account. Off by default.</small></span><input type="checkbox" checked={memoryEnabled} disabled={memoryPending} onChange={e=>void updateMemory(e.target.checked)}/></label>
       <button type="button" disabled={memoryPending} onClick={()=>void clearMemory()}>Clear saved conversations</button></>
       :<p>Sign in to enable private conversation memory. Guest chats are temporary.</p>}
-    <p>After microphone permission, HudHud listens automatically and sends completed questions. Tap the microphone to pause or resume.</p>
+    <Link href="/settings#hudhud-ai" className="hudSettingsControlLink">Open HudHud AI Control Center ↗</Link>
+    <p>With auto-listen enabled, HudHud can listen on this page after permission. Browser speech recognition does not guarantee persistent listening across other pages.</p>
     {memoryNotice&&<p role="status">{memoryNotice}</p>}
     <button type="button" onClick={()=>setSettingsOpen(false)}>Close settings</button>
    </div>}
