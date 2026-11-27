@@ -4,7 +4,7 @@ import {useEffect,useState,type CSSProperties} from "react";
 import {createClient} from "../../utils/supabase/client";
 import {readLocation} from "../components/LocationPreferences";
 import {ADHAN_SETTINGS_EVENT,fetchPrayerSchedule,fetchPrayerScheduleOnDate,
- locationClock,readAdhanPreferences,type AdhanLocation,type AdhanMethod,type PrayerSchedule} from "../lib/adhan";
+ locationClock,prayerMinute,readAdhanPreferences,type AdhanLocation,type AdhanMethod,type PrayerSchedule} from "../lib/adhan";
 import {prayerBrandProgress,shiftPrayerDate} from "../lib/prayer-brand-progress";
 
 type Place={city?:string|null;state?:string|null;country?:string|null};
@@ -99,8 +99,8 @@ export default function SearchPrayerWordmark({initialLocation,memberId,compact=f
  const priorKey=placeKey+"|"+priorDate;
  const followingKey=placeKey+"|"+followingDate;
  const clock=schedule?locationClock(schedule.timezone,now):null;
- const fajrMinute=schedule?Number(schedule.times.Fajr.slice(0,2))*60+Number(schedule.times.Fajr.slice(3,5)):0;
- const ishaMinute=schedule?Number(schedule.times.Isha.slice(0,2))*60+Number(schedule.times.Isha.slice(3,5)):1440;
+ const fajrMinute=schedule?(prayerMinute(schedule.times.Fajr)??0):0;
+ const ishaMinute=schedule?(prayerMinute(schedule.times.Isha)??1440):1440;
  const beforeFajr=!!clock&&clock.date===schedule?.date&&clock.minute+clock.second/60<fajrMinute;
  const afterIsha=!!clock&&clock.date===schedule?.date&&clock.minute+clock.second/60>=ishaMinute;
  useEffect(()=>{
