@@ -72,7 +72,7 @@ function verifyTranscript(transcript: string, language: Language) {
 const SHAHADA_RECORD_SECONDS = 10;
 const SHAHADA_HOLD_DELAY_MS = 320;
 
-export default function OnboardingPage() {
+export default function OnboardingPage({embedded=false,onComplete}:{embedded?:boolean;onComplete?:()=>void}={}) {
   const router = useRouter();
   const [step, setStep] = useState<"shahada" | "gender">("shahada");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -196,7 +196,7 @@ export default function OnboardingPage() {
       if (!user) { const method=new URLSearchParams(window.location.search).get("method");router.replace("/auth?shahada=1&method="+(method==="declaration"?"declaration":"audio")); return; }
       const { data: p } = await s.from("profiles").select("gender,shahada_verified_at,shahada_language").eq("id", user.id).single();
       if(p?.gender==="male"||p?.gender==="female")setGender(p.gender);
-      if (p?.gender && p?.shahada_verified_at) { router.replace(new URLSearchParams(window.location.search).get("return")==="profile"?"/profile":"/search"); return; }
+      if (p?.gender && p?.shahada_verified_at) { if(embedded){onComplete?.();return;} router.replace(new URLSearchParams(window.location.search).get("return")==="profile"?"/profile":"/search"); return; }
       if (p?.shahada_verified_at) setStep("gender");
       if (p?.shahada_language === "en" || p?.shahada_language === "ar") setLanguage(p.shahada_language);
       setChecking(false);
@@ -509,12 +509,13 @@ export default function OnboardingPage() {
     });
     if (badgeError) { setMessage("Your Shahada was saved, but the badge could not be awarded. Please try again."); setSaving(false); return; }
     try { sessionStorage.setItem("1muslim:shahada-welcome", "yes"); } catch {}
+    if(embedded){onComplete?.();return;}
     router.replace(new URLSearchParams(window.location.search).get("return")==="profile"?"/profile":"/search");
   };
 
-  if (checking) return <main className="onboardingPage"><FirstVisitGuide area="shahada"/><section className="onboardingCard"><span className="eyebrow">1MUSLIM</span><h1>Preparing your profile…</h1></section></main>;
+  if (checking) return <main className={"onboardingPage"+(embedded?" onEmbedded":"")}>{!embedded&&<FirstVisitGuide area="shahada"/>}<section className="onboardingCard"><span className="eyebrow">1MUSLIM</span><h1>Preparing your profile…</h1></section></main>;
 
-  return <main className="onboardingPage"><style>{`
+  return <main className={"onboardingPage"+(embedded?" onEmbedded":"")}><style>{`
 .onboardingPage .studioVoiceCompact{position:relative;max-width:560px;width:100%;margin:12px auto;padding:18px 22px 20px!important;border:1px solid #8cba9b75!important;border-radius:30px!important;background:radial-gradient(ellipse at 50% 36%,#104a3b99,#061511 75%)!important;box-shadow:inset 0 1px 0 #e0ffdc4a,0 15px 45px #0006!important;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;overflow:hidden}
 .onboardingPage .studioVoiceCompact .securityGuardianHeader{width:100%;margin-bottom:0}
 .onboardingPage .studioVoiceCompact>.eyebrow{display:none}
