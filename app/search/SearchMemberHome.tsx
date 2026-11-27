@@ -176,6 +176,8 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
   stopAudio();
   const words=text.trim().slice(0,2500);
   const utterance=new SpeechSynthesisUtterance(words);
+  // Hold the microphone before speech starts, not after the browser emits onstart.
+  speechActive.current=true;setSpeaking(true);
   utterance.lang="en-US";utterance.rate=.99;utterance.volume=.88;
   let finished=false;
   const finish=()=>{if(finished)return;finished=true;speechActive.current=false;setSpeaking(false);
