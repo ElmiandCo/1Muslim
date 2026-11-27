@@ -9,7 +9,7 @@ import RisingEnergyOrbs from "../components/RisingEnergyOrbs";
 import homeStyles from "../home-hub.module.css";
 import CelestialOrb from "../components/CelestialOrb";
 import AdmissionJourney from "../components/AdmissionJourney";
-import SeamlessEntry from "../components/SeamlessEntry";
+
 
 const safeNext = () => {
   const p = new URLSearchParams(window.location.search).get("next");
@@ -47,15 +47,17 @@ export default function AuthPage() {
 
 
   useEffect(() => {
-    // First-time guests see the real homepage before a sign-in screen.
-    // Explicit sign-in, signup, OAuth and protected-route redirects remain available.
+    // Authentication now takes place IN the public Search Home where the
+    // search pill seamlessly becomes a progressive sign-in or join form.
+    // Keep the original guided Shahada route available as a safe fallback.
     const params=new URLSearchParams(window.location.search);
-    const explicit=params.has("next")||params.has("shahada")||params.has("method")||params.has("login")||params.has("error");
-    try {
-      if(!explicit&&sessionStorage.getItem("1muslim:homepage-visited-v1")!=="yes"){
-        window.location.replace("/");
-      }
-    } catch {}
+    if(params.has("shahada")||params.has("method"))return;
+    const requestedSignup=params.get("mode")==="signup"||params.get("signup")==="1";
+    const next=safeNext();
+    const search=new URL("/search",window.location.origin);
+    search.searchParams.set("auth",requestedSignup?"signup":"signin");
+    if(next!=="/search")search.searchParams.set("next",next);
+    window.location.replace(search.pathname+search.search);
   },[]);
 
   useEffect(() => {
@@ -129,9 +131,7 @@ export default function AuthPage() {
   const authParams=typeof window!=="undefined"?new URLSearchParams(window.location.search):null;
   const guidedShahada=authParams?.has("shahada")||authParams?.has("method");
   if(entryReady&&!guidedShahada){
-    const destination=safeNext();
-    const requestedSignup=authParams?.get("mode")==="signup"||authParams?.get("signup")==="1";
-    return <main style={{minHeight:"100dvh",background:"#f7f9f8"}}><SeamlessEntry initialStage={requestedSignup?"signup":"signin"} returnTo={destination} onClose={()=>window.location.assign("/")}/></main>;
+    return <main style={{minHeight:"100dvh",background:"#fff"}} aria-label="Opening 1Muslim secure sign in"/>;
   }
   const embedded=typeof window!=="undefined"&&new URLSearchParams(window.location.search).has("embedded");
   if(entryStage!=="auth")return <main className={"authPreview "+(day?"authPreviewDay":"")+" authEntryShell"+(embedded?" authEntryEmbedded":"")}>
