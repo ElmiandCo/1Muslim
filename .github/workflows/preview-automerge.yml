@@ -1,0 +1,87 @@
+name: Auto-merge after successful preview
+
+# The workflow lives on main and never executes untrusted PR code.
+# Vercel's check_run completion triggers an immediate reevaluation.
+on:
+  check_run:
+    types: [completed]
+  deployment_status:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+  statuses: read
+  deployments: read
+
+concurrency:
+  group: auto-merge-preview
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    if: github.event_name != 'deployment_status' || github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Merge eligible PRs after successful Vercel preview
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const {owner, repo} = context.repo;
+            const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+            // Always re-read live PR/check state. No PR-controlled scripts or checkouts.
+            const {data: pulls} = await github.rest.pulls.list({
+              owner, repo, state: 'open', base: 'main', per_page: 100
+            });
+            for (const candidate of pulls) {
+              if (candidate.draft || candidate.head.repo?.full_name !== `${owner}/${repo}`) continue;
+              const prNumber = candidate.number;
+              // For PR events, only evaluate the changed PR; for Vercel events
+              // use the matching commit (when present) or inspect all open PRs.
+              if (context.eventName === 'pull_request_target' && prNumber !== context.payload.pull_request?.number) continue;
+              if (context.eventName === 'check_run' && context.payload.check_run?.head_sha !== candidate.head.sha) continue;
+              if (context.eventName === 'deployment_status' && context.payload.deployment?.sha && context.payload.deployment.sha !== candidate.head.sha) continue;
+              let merged = false;
+              for (let attempt = 0; attempt < 7; attempt++) {
+                const {data: pr} = await github.rest.pulls.get({owner, repo, pull_number: prNumber});
+                if (pr.state !== 'open' || pr.draft || pr.head.sha !== candidate.head.sha) break;
+                const sha = pr.head.sha;
+                const {data: checkData} = await github.rest.checks.listForRef({owner, repo, ref: sha, per_page: 100});
+                const checks = checkData.check_runs.filter(c => c.app?.slug !== 'github-actions' || c.name !== 'merge');
+                const vercel = checks.filter(c => c.app?.slug === 'vercel' || /vercel/i.test(c.name));
+                const {data: statusData} = await github.rest.repos.getCombinedStatusForRef({owner, repo, ref: sha});
+                const statuses = Object.values(Object.groupBy(statusData.statuses, s => s.context))
+                  .map(items => items.sort((a,b) => new Date(b.created_at) - new Date(a.created_at))[0]);
+                const vercelStatuses = statuses.filter(s => /vercel/i.test(s.context));
+                const hasVercel = vercel.length > 0 || vercelStatuses.length > 0;
+                const previewSuccess = [...vercel].some(c => c.status === 'completed' && c.conclusion === 'success')
+                  || vercelStatuses.some(s => s.state === 'success');
+                const badCheck = checks.some(c => c.status === 'completed' && !['success','neutral','skipped'].includes(c.conclusion));
+                const pendingCheck = checks.some(c => c.status !== 'completed');
+                const badStatus = statuses.some(s => ['failure','error'].includes(s.state));
+                const pendingStatus = statuses.some(s => s.state === 'pending');
+                if (badCheck || badStatus) {
+                  core.warning(`PR #${prNumber}: failing check/status; no merge`);
+                  break;
+                }
+                if (hasVercel && previewSuccess && !pendingCheck && !pendingStatus) {
+                  try {
+                    const result = await github.rest.pulls.merge({
+                      owner, repo, pull_number: prNumber, merge_method: 'squash', sha
+                    });
+                    core.info(`Merged PR #${prNumber}: ${result.data.sha}`);
+                    merged = true;
+                  } catch (error) {
+                    core.warning(`PR #${prNumber}: merge blocked: ${error.message}`);
+                  }
+                  break;
+                }
+                if (attempt < 6) await sleep(10000);
+              }
+              if (!merged) core.info(`PR #${prNumber}: waiting for passing Vercel preview and all checks`);
+            }
