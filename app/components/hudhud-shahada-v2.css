@@ -1,0 +1,40 @@
+/* Search-first HudHud Shahada. Shared identity with One Muslim.live, no dark panel. */
+.hudV2Shahada{--v2-ink:#24352e;--v2-mute:#829188;--v2-border:#e8eeea;min-height:100dvh;position:relative;display:flex;flex-direction:column;align-items:center;background:#fff;color:var(--v2-ink);font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;isolation:isolate;overflow-x:hidden}
+.hudV2Shahada.isEmbedded{min-height:clamp(320px,65dvh,570px);width:100%;background:transparent;overflow:visible}
+.hudV2Brand{width:100%;padding:clamp(22px,4vw,48px) 15px;text-align:center}
+.hudV2Brand button{border:0;background:transparent;cursor:pointer;font-size:clamp(29px,5vw,56px);font-weight:720;letter-spacing:-.065em;color:#293136}
+.hudV2Brand button span{font-size:.4em;color:#a88b67;font-weight:550}
+.hudV2ShahadaBody{width:min(680px,calc(100% - 28px));margin:clamp(20px,5vh,60px) auto 0;display:flex;flex-direction:column;align-items:center;text-align:center;gap:11px}
+.isEmbedded .hudV2ShahadaBody{margin:0 auto}
+.hudV2Shahada h1{margin:0;font-size:clamp(26px,5vw,42px);font-weight:670;line-height:1.14;letter-spacing:-.045em;color:#283630;animation:hudV2Heading .45s ease-out both}
+.hudV2OrbZone{display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:clamp(150px,24vh,205px);padding-top:6px;gap:0;position:relative}
+.hudV2OrbZone .hudV2Orb{width:clamp(108px,26vw,155px);height:clamp(108px,26vw,155px);margin:0}
+.hudV2ListeningPulse{color:#577367;font-size:11px;font-weight:630;letter-spacing:.035em;margin-top:7px}
+.hudV2ShahadaStatus{min-height:33px;max-width:390px;margin:3px 0 0;font-size:13px;line-height:1.55;color:#60756a}
+.hudV2Gentle{max-width:390px;color:#926e55;font-size:11px;line-height:1.5}
+.hudV2ShahadaActions{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;margin:5px auto}
+.hudV2ShahadaActions button,.hudV2HelpActions button{min-height:38px;padding:7px 15px;border:1px solid #e1e8e4;background:#fff;color:#4b6756;border-radius:999px;font-weight:660;font-size:12px;cursor:pointer}
+.hudV2ShahadaActions .hudV2Primary,.hudV2HelpActions .isPrimary{border-color:#225546;background:#225546;color:#fff}
+.hudV2ShahadaActions button:disabled,.hudV2HelpActions button:disabled{opacity:.45;cursor:not-allowed}
+.hudV2Language{display:flex;gap:5px;border:1px solid #edf1ed;background:#f8faf9;border-radius:999px;padding:3px;margin:10px auto}
+.hudV2Language button{min-height:33px;padding:5px 17px;border:0;background:transparent;color:#75867a;font-size:12px;border-radius:999px;cursor:pointer}
+.hudV2Language button[aria-pressed=true]{background:#fff;color:#244b36;box-shadow:0 2px 8px #1d382618;font-weight:680}
+.hudV2ShahadaExit{position:absolute;top:10px;right:15px;display:grid;place-items:center;width:34px;height:34px;background:#fff;border:1px solid #e5ebe6;border-radius:50%;font-size:12px;color:#697b70;cursor:pointer}
+.hudV2Help{display:grid;gap:12px;justify-items:center;width:min(590px,100%);text-align:center;margin:15px auto}
+.hudV2Help p{font-size:13px;line-height:1.75;color:#66796c;margin:0;max-width:540px}
+.hudV2Help .hudV2Arabic{direction:rtl;color:#1d4130;font-size:clamp(19px,4.8vw,31px);line-height:1.9;margin:8px 0 0;font-family:"Noto Naskh Arabic","Geeza Pro",serif}
+.hudV2Help .hudV2Check{display:flex;align-items:flex-start;gap:11px;text-align:left;width:100%;max-width:520px;padding:9px 13px;border:1px solid #e7ede8;border-radius:15px;background:#fafffb;font-size:12px;color:#536f5e;line-height:1.5}
+.hudV2Help .hudV2Check input{accent-color:#265d45;margin-top:3px;min-width:17px;height:17px}
+.hudV2Help .hudV2Check a{color:#20603b;text-decoration:underline}
+.hudV2HelpActions{display:flex;gap:9px;justify-content:center;min-width:min(280px,100%)}
+.hudV2HelpActions button{min-width:110px}
+@keyframes hudV2Heading{from{opacity:.4;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:540px){
+ .hudV2Shahada.isEmbedded{min-height:460px}
+ .hudV2ShahadaBody{margin-top:8vh;gap:8px}
+ .isEmbedded .hudV2ShahadaBody{margin-top:0}
+ .hudV2OrbZone{min-height:160px}
+ .hudV2ShahadaActions button{min-height:35px;padding:6px 12px}
+ .hudV2Help{max-height:59dvh;overflow:auto;overscroll-behavior:contain;padding:3px 5px}
+}
+@media(prefers-reduced-motion:reduce){.hudV2Shahada h1{animation:none!important}}
