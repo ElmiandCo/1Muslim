@@ -71,7 +71,7 @@ test("visitors can search without signing in, while private account controls are
   assert.match(css,/\.dsResultsNight \.dsGuestAccount/);
 });
 
-test("personalized Search Profile keeps real search, own-post rail and all original editor panels",()=>{
+test("personalized Search Profile keeps immersive search but relegates own posts to full profile",()=>{
  const profile=read("app/profile/page.tsx");
  const home=read("app/profile/ProfileSearchHome.tsx");
  const css=read("app/profile/profile-search-home.css");
@@ -80,12 +80,13 @@ test("personalized Search Profile keeps real search, own-post rail and all origi
  assert.match(profile,/<ProfileSearchHome profile=\{profile\}/);
  assert.match(profile,/<ProfileSocialHub profile=\{profile\}/);
  assert.match(profile,/\(searchProfileExpanded\|\|editing\)/);
- assert.match(home,/ProfileCinematicPosts profileId=\{profile\.id\} feedMode="own"/);
+ assert.doesNotMatch(home,/ProfileCinematicPosts|profileSearchStoryRail|Your posts/);
+ assert.match(home,/onClick=\{expanded\|\|editing\?onCollapse:onExpand\}/);
  assert.match(home,/runStage\("search",search\)/);
  assert.match(home,/<ProfileImmersiveStage request=\{stageRequest\}\/>/);
  assert.doesNotMatch(home,/router\.push\("\/search\?q="/);
  assert.match(home,/onSettings=|onSettings\}/);
- assert.match(home,/onEdit\}/);
+ assert.match(profile,/<ProfileSocialHub profile=\{profile\}/);
  assert.match(home,/onSignOut\}/);
  assert.match(home,/SearchFeatureRails/);
  assert.match(home,/hide_1muslim_id/);
