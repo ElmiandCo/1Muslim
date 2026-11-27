@@ -29,7 +29,7 @@ const suggestedTopic=(p:Post):Exclude<Topic,"All">=>{
 };
 // Avoid mounting dozens of individual comment fetchers and autoplay decoders at once.
 // Near-viewport cards become interactive before the user actually reaches them.
-function VisiblePostEngagement({postId,mediaUrl,mediaType,youtube}:{postId:string;mediaUrl:string|null;mediaType:string|null;youtube:string|null}){
+function VisiblePostEngagement({postId,mediaUrl,mediaType,youtube,night}:{postId:string;mediaUrl:string|null;mediaType:string|null;youtube:string|null;night:boolean}){
  const container=useRef<HTMLDivElement|null>(null);
  const content=useRef<HTMLDivElement|null>(null);
  const [near,setNear]=useState(false);
@@ -318,7 +318,7 @@ export default function PublicPostsSocial(){
  </div>
  {editingId===p.id&&<div className={styles.feedEditBox}><textarea aria-label="Edit post text" value={editText} maxLength={2000} onChange={e=>setEditText(e.target.value)}/><div><button type="button" disabled={actionBusy} onClick={()=>setEditingId(null)}>Cancel</button><button type="button" disabled={actionBusy||!editText.trim()} onClick={async()=>{setActionBusy(true);setActionError("");try{const r=await fetch("/api/community-posts",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,text:editText})});if(!r.ok)throw Error((await r.json()).error||"Could not save post");setPosts(old=>old.map(x=>x.id===p.id?{...x,body:editText.trim()}:x));setEditingId(null)}catch(e){setActionError(e instanceof Error?e.message:"Save failed")}finally{setActionBusy(false)}}}>Save changes</button></div></div>}
  
- <div className={styles.feedPostEngagement}><VisiblePostEngagement postId={p.id} mediaUrl={p.media_url} mediaType={p.media_type} youtube={video}/></div>
+ <div className={styles.feedPostEngagement}><VisiblePostEngagement postId={p.id} mediaUrl={p.media_url} mediaType={p.media_type} youtube={video} night={night}/></div>
  
  <div className={styles.feedPostBottom}>
   {index<filtered.length-1?<button type="button" className={styles.feedNext} onClick={()=>moveDeck(index,index+1)} aria-label="Go to next Ummah post">◇&nbsp; Swipe up for next post &nbsp;⌄</button>:<span>You're all caught up ✧</span>}
