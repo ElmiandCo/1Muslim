@@ -57,9 +57,15 @@ export default function LocationOnboarding() {
         setPhase("idle"); setVisible(false); setError(""); setSaved(false);
       }
       if (!id || phaseRef.current !== "idle" || decided.current.has(id)) return;
+      // Defer optional location until Shahada is complete and the person is settled.
+      if(new URLSearchParams(window.location.search).has("auth")||window.location.pathname==="/onboarding")return;
+      const {data:profile}=await db.from("profiles").select("shahada_verified_at").eq("id",id).maybeSingle();
+      if(!profile?.shahada_verified_at)return;
       const { data, error: readError } = await db.from("profile_location_prompts").select("decision").eq("user_id", id).maybeSingle();
       if (active && current === checking.current && account.current === id && phaseRef.current === "idle" && !decided.current.has(id) && !readError) {
-        setVisible(shouldPromptForLocation(data));
+        if(shouldPromptForLocation(data)){
+          window.setTimeout(()=>{if(active&&phaseRef.current==="idle"&&!new URLSearchParams(window.location.search).has("auth"))setVisible(true)},9000);
+        }else setVisible(false);
       }
     };
     void check();
@@ -70,9 +76,8 @@ export default function LocationOnboarding() {
 
   useEffect(() => {
     if (!visible) return;
-    previousFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    dialog.current?.querySelector<HTMLElement>("button")?.focus();
-    return () => { previousFocus.current?.focus(); };
+    // Optional white cue never hijacks focus or blocks search/reading.
+    return () => {};
   }, [visible]);
 
   useEffect(() => {
@@ -139,8 +144,8 @@ export default function LocationOnboarding() {
   };
 
   return <>
-    {visible && <div className="locationConsentBackdrop" onClick={event => { if (event.target === event.currentTarget) void decline(); }}>
-      <section ref={dialog} role="dialog" aria-modal="true" aria-labelledby="locationConsentTitle" className="locationConsentCard" onKeyDown={event => {
+    {visible && <div className="locationConsentBackdrop">
+      <section ref={dialog} role="region" aria-labelledby="locationConsentTitle" className="locationConsentCard" onKeyDown={event => {
         if (event.key === "Escape") { event.preventDefault(); void decline(); }
         if (event.key !== "Tab") return;
         const items = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled), summary, a[href]'));
@@ -162,6 +167,15 @@ export default function LocationOnboarding() {
       .locationConsentBackdrop{position:fixed;inset:0;z-index:2147482000;display:flex;align-items:flex-end;justify-content:center;background:rgba(6,12,19,.42);backdrop-filter:blur(5px);padding:16px 16px max(16px,env(safe-area-inset-bottom))}
       .locationConsentCard{width:min(430px,100%);max-height:75dvh;overflow:auto;box-sizing:border-box;border:1px solid rgba(255,255,255,.3);border-radius:24px;padding:18px;background:rgba(28,33,39,.88);color:#fff;box-shadow:0 20px 60px #0005;backdrop-filter:blur(24px)}
       .locationConsentCard h2{font-size:19px;line-height:1.2;margin:0 0 6px}.locationConsentCard p{font-size:14px;line-height:1.4;margin:0 0 8px}.locationConsentCard details{font-size:13px;color:#e1e4e8}.locationConsentCard summary{cursor:pointer;min-height:30px}.locationConsentCard details p{margin:4px 0 10px}.locationConsentActions{display:flex;gap:10px;margin-top:8px}.locationConsentActions button{min-height:46px;flex:1;border:0;border-radius:14px;background:#fff;color:#20262b;font-weight:700}.locationConsentActions button+button{background:rgba(255,255,255,.14);color:#fff}.locationConsentCard button:focus-visible,.locationConsentCard summary:focus-visible,.locationConsentStatus button:focus-visible{outline:3px solid #fff;outline-offset:2px}.locationConsentCard button:disabled{opacity:.6}.locationConsentError{color:#ffd1d1}.locationConsentStatus{position:fixed;z-index:2147482000;bottom:max(18px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);padding:12px 16px;border-radius:16px;background:#252b30;color:white;box-shadow:0 8px 24px #0004;font-size:14px}.locationConsentStatus button{margin-left:12px;min-height:36px;border:0;background:transparent;color:white;text-decoration:underline}
+
+      /* Premium white Search Home: only a small, optional location cue. */
+      .locationConsentBackdrop{inset:auto!important;top:calc(92px + env(safe-area-inset-top))!important;right:12px!important;bottom:auto!important;left:auto!important;display:block!important;padding:0!important;width:min(335px,calc(100vw - 24px));background:none!important;backdrop-filter:none!important;pointer-events:none!important}
+      .locationConsentCard{pointer-events:auto!important;border:1px solid #e2e9e5!important;border-radius:21px!important;padding:15px 17px!important;background:#fff!important;color:#24372b!important;box-shadow:0 14px 40px #17362b1c!important;backdrop-filter:none!important;width:100%!important;max-height:unset!important}
+      .locationConsentCard h2{font-size:15px!important;font-weight:690!important;letter-spacing:-.025em}.locationConsentCard p{font-size:12px!important;color:#708176!important}.locationConsentCard details{color:#62776a!important;font-size:11px!important}
+      .locationConsentActions{margin-top:13px!important}.locationConsentActions button{min-height:38px!important;border-radius:999px!important;background:#20483b!important;color:#fff!important;font-size:12px!important}.locationConsentActions button+button{border:1px solid #e2e8e5!important;background:#fff!important;color:#657b6d!important}
+      .locationConsentStatus{background:#fff!important;color:#254332!important;border:1px solid #e5ebe6!important;box-shadow:0 10px 35px #1433291c!important;font-size:12px!important}
+      .locationConsentStatus button{color:#365e4a!important}
+      @media(max-width:500px){.locationConsentBackdrop{top:calc(82px + env(safe-area-inset-top))!important;right:10px!important;left:10px!important;width:auto!important}}
     `}</style>
   </>;
 }
