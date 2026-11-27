@@ -13,7 +13,8 @@ test("profile home moves search left and wordmark into small header",()=>{
  assert.match(home,/className="profileSearchField"/);
  assert.match(home,/runStage\("search",search\)/);
  assert.match(home,/<ProfileImmersiveStage request=\{stageRequest\}\/>/);
- assert.match(home,/ProfileCinematicPosts profileId=\{profile\.id\}/);
+ assert.doesNotMatch(home,/ProfileCinematicPosts|Your posts/);
+ assert.match(home,/onClick=\{expanded\|\|editing\?onCollapse:onExpand\}/);
  assert.match(home,/SearchFeatureRails/);
  assert.doesNotMatch(home,/router\.push\("\/search\?q="/);
  assert.match(css,/\.profileSearchHome \.profileSearchUtilities \.profileSearchBrand/);
