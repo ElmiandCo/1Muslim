@@ -63,7 +63,7 @@ function useVisibleMedia(){
 }
 function VisiblePostVideo({postId,mediaUrl,active}:{postId:string;mediaUrl:string|null;active:boolean}){
  const {node,visible}=useVisibleMedia();
- return <div ref={node} className={styles.feedVideoStage}>{active&&visible?<OneMuslimVideo videoKey={"public-post:"+postId} src={mediaUrl||""} title="Ummah video"/>:<div className={styles.feedVideoPlaceholder}><span aria-hidden="true">▶</span><small>Video ready to play</small></div>}</div>;
+ return <div ref={node} className={styles.feedVideoStage}>{active&&visible?<OneMuslimVideo videoKey={"public-post:"+postId} src={mediaUrl||""} title="Ummah video" feedMode/>:<div className={styles.feedVideoPlaceholder}><span aria-hidden="true">▶</span><small>Video ready to play</small></div>}</div>;
 }
 
 function PostMediaGallery({items,active}:{items:PostMedia[];active:boolean}){
