@@ -1,0 +1,159 @@
+/* Signed-in Search Home uses the same white editorial language and real Explore rail. */
+.smhPage.dsPage.dsHomeMode{
+ --smh-ink:#2b3539;--smh-muted:#8f9b9f;display:flex;flex-direction:column;
+ min-height:100dvh;width:100%;padding:0!important;background:#fff!important;
+ color:var(--smh-ink);overflow-x:clip;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+}
+.smhPage *{box-sizing:border-box}
+.smhPage button,.smhPage input{font:inherit}
+.smhPage button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.smhPage :is(button,a,input):focus-visible{outline:2px solid #b59a6d;outline-offset:3px}
+.smhHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
+ padding:calc(16px + env(safe-area-inset-top,0px)) clamp(14px,3vw,52px) 0;
+ width:100%;min-height:69px;position:relative;z-index:4}
+.smhLogo{display:flex;align-items:baseline;white-space:nowrap;color:#30383b!important;font-size:clamp(20px,2.8vw,35px);
+ text-decoration:none!important;font-weight:730;letter-spacing:-.065em;line-height:1.1}
+.smhLogo .omAnimatedBrand{font-size:inherit!important;line-height:inherit!important;letter-spacing:inherit!important;margin:0!important}
+.smhLogoLive{font-size:.46em;letter-spacing:-.04em;color:#a28962}
+.smhUtilities{display:flex;align-items:center;gap:8px;margin-top:-2px}
+.smhOrb{display:grid;place-items:center;width:43px;height:43px;flex:0 0 43px;min-height:43px;
+ padding:0;border:0;border-radius:50%;background:#fff;color:#56636a;
+ text-decoration:none!important;box-shadow:0 5px 17px #1025250f,0 1px 3px #10252508;
+ transition:transform .18s ease,box-shadow .18s ease}
+.smhOrb svg{display:block;width:19px;height:19px}
+.smhOrb:active{transform:scale(.92)}
+.smhPlus{font-size:25px!important;font-weight:320!important}
+.smhWelcome{width:min(860px,100%);margin:clamp(18px,3.8vh,56px) auto 0;
+ padding:0 clamp(14px,3vw,28px);position:relative;z-index:3}
+.smhIdentity{display:flex;align-items:baseline;justify-content:center;gap:13px;min-height:clamp(40px,7vw,77px);
+ margin:0 0 clamp(16px,2.3vh,28px);max-width:100%}
+.smhName{background:none;border:0;padding:0;color:#2b3337;text-align:center;font-weight:730;
+ letter-spacing:-.058em;line-height:1.13;font-size:clamp(28px,6.5vw,65px);overflow-wrap:anywhere;
+ transition:opacity .25s ease}
+.smhName:active{opacity:.7}
+.smhWithHudHud{font-size:clamp(12px,1.65vw,18px);color:#a28e69;font-weight:500;white-space:nowrap;
+ opacity:0;transform:translateY(12px);transition:opacity .75s ease,transform .75s ease;pointer-events:none}
+.smhWithHudHud.smhWithVisible{opacity:1;transform:translateY(0)}
+.smhSearchForm{position:relative;display:flex;align-items:center;gap:8px;width:100%;max-width:800px;
+ min-height:53px;padding:5px 7px 5px 60px;margin:0 auto;
+ border:1px solid #e5e8e6;border-radius:999px;background:rgba(255,255,255,.97);
+ box-shadow:0 8px 28px rgba(23,38,35,.08),0 1px 4px rgba(23,38,35,.03);
+ transition:box-shadow .18s ease,border-color .18s ease;-webkit-tap-highlight-color:transparent}
+.smhSearchForm:focus-within{box-shadow:0 9px 29px #152a2716;border-color:#d6d6ce}
+.smhAvatar{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:40px;height:40px;
+ overflow:hidden;border-radius:50%;display:grid;place-items:center;box-shadow:0 2px 8px #172c2c12;
+ background:#f1f3f2}
+.smhAvatar img{display:block;width:100%;height:100%;object-fit:cover;border-radius:50%}
+.smhInputWrap{position:relative;flex:1;min-width:0;min-height:40px;display:flex;align-items:center}
+.smhInputWrap input{min-width:0;width:100%;min-height:40px;color:#2a383f;background:transparent!important;
+ border:0!important;outline:none!important;box-shadow:none!important;font-size:clamp(13px,1.5vw,16px)}
+.smhInputWrap input::-webkit-search-cancel-button{-webkit-appearance:none}
+.smhTypewriter{position:absolute;inset-inline-start:0;top:50%;transform:translateY(-50%);
+ display:flex;align-items:center;white-space:nowrap;max-width:100%;overflow:hidden;
+ font-size:clamp(12px,1.5vw,16px);font-weight:470;color:#949da1;pointer-events:none}
+.smhTypewriter span{white-space:pre}
+.smhTypewriter i{display:inline-block;flex:0 0 1px;height:17px;width:1px;background:#657a79;
+ animation:smhCaretBlink .68s steps(1,end) infinite}
+.smhTypewriter i.smhCaretOff{animation:none;opacity:0}
+@keyframes smhCaretBlink{50%{opacity:0}}
+.smhMic,.smhSubmit{display:grid;place-items:center;flex:0 0 35px;width:35px;height:35px;
+ border-radius:50%;border:0;background:transparent;color:#697a7c;transition:background .2s ease,transform .2s ease}
+.smhMic svg{width:20px;height:20px}
+.smhMic.isListening{color:#248663;background:#e4f5ec}
+.smhMic.isListening:after{content:"";position:absolute;right:54px;width:6px;height:6px;
+ border-radius:50%;background:#19ae73;box-shadow:0 0 0 3px #19ae7322}
+.smhMic:active,.smhSubmit:active{transform:scale(.91)}
+.smhSubmit{font-size:22px!important;color:#9f8a62}
+.smhSubmit:disabled{opacity:.3;cursor:default}
+.smhVoiceLine{display:flex;justify-content:center;align-items:center;min-height:32px;gap:13px;
+ font-size:11px;font-weight:620;color:#82928e;padding:6px 0 0;flex-wrap:wrap}
+.smhVoiceLine button{padding:2px 4px;border:0;background:transparent;color:#5b7d6d;font-size:11px}
+.smhVoiceLine .smhVoiceToggle{color:#929995}
+.smhListening{display:inline-flex;gap:7px;align-items:center;color:#32876c}
+.smhListening i{width:6px;height:6px;border-radius:50%;background:#16b478;animation:smhPulse 1.7s ease-in-out infinite}
+@keyframes smhPulse{50%{box-shadow:0 0 0 6px #16b47826}}
+.smhError{text-align:center;color:#a35647;margin:3px auto 0;font-size:11px}
+.smhResponseSpace{flex:1 0 auto;width:100%;max-width:none;min-height:clamp(300px,48dvh,680px);
+ position:relative;display:flex;flex-direction:column;margin:0 auto;padding:6px clamp(12px,3vw,35px)}
+.smhResponseSpace .profileHudFocusRegion{position:relative;width:100%;max-width:1100px;
+ height:auto;min-height:clamp(300px,43dvh,600px);flex:1;margin:0 auto;overflow:visible;background:transparent}
+.smhResponseSpace .profileHudFocusRegion>.hudFocusSurface{height:100%;width:100%;padding:18px 4px!important}
+.smhResponseSpace .hudFocusCard{margin:0 auto!important;max-width:900px!important;width:100%;
+ padding:clamp(12px,2.4vw,26px)!important;border:0!important;border-radius:0!important;
+ box-shadow:none!important;background:transparent!important}
+.smhResponseSpace .hudFocusCard:before,.smhResponseSpace .hudFocusCard:after{display:none!important;content:none!important}
+.smhResponseSpace .hudNarratedReply{font-size:clamp(20px,3.3vw,38px);line-height:1.5;letter-spacing:-.02em}
+.smhResponseSpace .hudReplyXL{font-size:clamp(30px,5.5vw,48px)!important;line-height:1.32}
+.smhResponseSpace .hudReplyL{font-size:clamp(24px,4vw,39px)!important}
+.smhResponseSpace .hudFocusContent{max-width:900px;margin:0 auto}
+.smhResponseSpace .hudVersePresentation{max-width:100%;margin:0 auto}
+.smhResponseSpace .profileHudFocusRegion .hudFocusLoadingLine{background:#c1a471}
+.smhAllResults{align-self:flex-end;margin:auto 6px 0;font-size:11px;
+ text-decoration:none!important;color:#838d89!important;padding:4px}
+.smhExplore{width:100%;max-width:none;margin-top:auto;padding:0 clamp(8px,2vw,24px) calc(9px + env(safe-area-inset-bottom,0px))}
+.smhExplore .dsExploreFeatureSection{width:100%;max-width:none;margin-top:0;padding-top:8px}
+.smhExplore .dsFeatureRail{width:100%;max-width:none}
+.smhExplore .dsFeatureCard{flex-basis:clamp(150px,17vw,192px)}
+.smhDialogBackdrop{position:fixed;inset:0;z-index:5000;background:#09171965;backdrop-filter:blur(6px);
+ display:flex;align-items:center;justify-content:center;padding:18px}
+.smhNameDialog{background:#fff;padding:24px;width:min(430px,100%);border-radius:22px;
+ box-shadow:0 22px 70px #0a18203a;display:flex;flex-direction:column;gap:13px}
+.smhNameDialog label{font-size:18px;font-weight:730;color:#2e373b}
+.smhNameDialog input{border:1px solid #dce2e2;border-radius:12px;padding:13px 14px;
+ width:100%;min-height:46px;font-size:16px;color:#182b31;background:#fff}
+.smhNameDialog p{color:#b04640;margin:0;font-size:12px}
+.smhNameDialog>div{display:flex;justify-content:flex-end;gap:9px}
+.smhNameDialog>div button{min-height:43px;border-radius:999px;border:1px solid #dce2e2;
+ padding:10px 17px;background:#fff;color:#2d3d44;font-size:13px}
+.smhNameDialog>div button[type=submit]{background:#293c3c;color:#fff;border-color:#293c3c}
+.smhArriving .smhLogo{animation:smhLogoRise 1.3s cubic-bezier(.2,.75,.25,1) both}
+.smhArriving .smhSearchForm .smhAvatar{animation:smhAvatarTravel 1.45s cubic-bezier(.18,.75,.2,1) 300ms both}
+.smhArriving .smhWelcome{animation:smhWelcomeIn .9s cubic-bezier(.2,.76,.2,1) both}
+@keyframes smhLogoRise{0%{transform:translate(28vw,17vh) scale(1.75);opacity:.8}100%{transform:none;opacity:1}}
+@keyframes smhAvatarTravel{0%{left:calc(100% - 49px);transform:translateY(-50%) scale(1.14)}
+ 100%{left:9px;transform:translateY(-50%) scale(1)}}
+@keyframes smhWelcomeIn{0%{opacity:0;transform:translateY(28px)}100%{opacity:1;transform:none}}
+@media(max-width:650px){
+ .smhHeader{padding:calc(12px + env(safe-area-inset-top,0px)) 13px 0;gap:8px;min-height:58px}
+ .smhLogo{font-size:clamp(17px,4.5vw,25px)}
+ .smhUtilities{gap:4px}
+ .smhOrb{width:36px;height:36px;min-height:36px;flex-basis:36px;box-shadow:none}
+ .smhOrb svg{width:18px;height:18px}
+ .smhPlus{font-size:23px!important}
+ .smhWelcome{margin-top:clamp(20px,5vh,46px);padding:0 13px}
+ .smhIdentity{min-height:46px;margin-bottom:18px;gap:8px}
+ .smhName{font-size:clamp(27px,7.4vw,42px)}
+ .smhWithHudHud{font-size:11px}
+ .smhSearchForm{min-height:48px;padding:4px 5px 4px 51px;gap:3px}
+ .smhAvatar{width:34px;height:34px}
+ .smhInputWrap input{min-height:37px;font-size:15px}
+ .smhTypewriter{font-size:12px}
+ .smhMic,.smhSubmit{flex-basis:30px;width:30px;height:33px}
+ .smhMic svg{width:19px;height:19px}
+ .smhVoiceLine{min-height:34px}
+ .smhResponseSpace{min-height:38dvh;padding:0 9px}
+ .smhResponseSpace .profileHudFocusRegion{min-height:35dvh}
+ .smhResponseSpace .hudFocusCard{padding:8px 4px!important}
+ .smhExplore{padding:0 7px calc(9px + env(safe-area-inset-bottom,0px))}
+ .smhExplore .dsFeatureCard{flex-basis:clamp(132px,39vw,173px)}
+}
+@media(prefers-reduced-motion:reduce){
+ .smhPage *, .smhPage *:before,.smhPage *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+html[data-one-chrome="night"] .smhPage.dsPage.dsHomeMode,.smhPage.dsPage.dsHomeMode.smhNight{background:#111719!important;color:#f1f4f2!important}
+html[data-one-chrome="night"] .smhName,html[data-one-chrome="night"] .smhLogo{color:#f4f5f2!important}
+html[data-one-chrome="night"] .smhSearchForm{background:#1b272a;border-color:#3f4c4b;box-shadow:none}
+html[data-one-chrome="night"] .smhInputWrap input{color:#fff}
+html[data-one-chrome="night"] .smhOrb{background:#1f2a2c;color:#e2eae8}
+html[data-one-chrome="night"] .smhResponseSpace .hudNarratedReply{color:#edf1ef}
+html[data-one-chrome="night"] .smhExplore .dsFeatureCard{background:#1d2a2b;color:#e5e9e6}
+html[data-one-chrome="night"] .smhExplore .dsFeatureCopy strong{color:#e6ece8}
+
+/* Theme applies even when a browser restored the Search Home before its UI chrome was repainted. */
+.smhPage.smhNight .smhName,.smhPage.smhNight .smhLogo{color:#f4f5f2!important}
+.smhPage.smhNight .smhSearchForm{background:#1b272a;border-color:#3f4c4b;box-shadow:none}
+.smhPage.smhNight .smhInputWrap input{color:#fff}
+.smhPage.smhNight .smhOrb{background:#1f2a2c;color:#e2eae8}
+.smhPage.smhNight .smhResponseSpace .hudNarratedReply{color:#edf1ef}
+.smhPage.smhNight .smhExplore .dsFeatureCard{background:#1d2a2b}
+.smhPage.smhNight .smhExplore .dsFeatureCopy strong{color:#e6ece8}
