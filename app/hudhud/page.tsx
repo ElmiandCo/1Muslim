@@ -1,10 +1,12 @@
 "use client";
 import "./hudhud.css";
+import HudHudOrb from "../components/HudHudOrb";
+import HudHudVerseCard from "../components/HudHudVerseCard";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {useCallback,useEffect,useRef,useState,type FormEvent} from "react";
 
-type Match={id:string;kind:string;title:string;href:string};
+type Match={id:string;kind:string;title:string;href:string;image?:string;description?:string};
 type Line={role:"user"|"assistant";content:string;matches?:Match[]};
 type Session={id:string;title:string;lines:Line[]};
 type RecognitionEvent={results:ArrayLike<{isFinal:boolean;0:{transcript:string}}>} ;
@@ -44,7 +46,10 @@ export default function HudHudPage(){
  const [menuOpen,setMenuOpen]=useState(false);
  const [settingsOpen,setSettingsOpen]=useState(false);
  const [actionsOpen,setActionsOpen]=useState(false);
- const [readAloud,setReadAloud]=useState(false);
+ const [readAloud,setReadAloud]=useState(true);
+ const [speaking,setSpeaking]=useState(false);
+ const [exiting,setExiting]=useState(false);
+ const [touchStart,setTouchStart]=useState<{x:number;y:number}|null>(null);
  const [stillOrb,setStillOrb]=useState(false);
  const [focused,setFocused]=useState(false);
  const [queryContext,setQueryContext]=useState("");
@@ -52,6 +57,10 @@ export default function HudHudPage(){
  const recognizer=useRef<Recognition|null>(null);
  const chatEnd=useRef<HTMLDivElement>(null);
  const input=useRef<HTMLInputElement>(null);
+ const voiceTranscript=useRef("");
+ const askRef=useRef<(message:string)=>void>(()=>{});
+ const originRef=useRef("/search");
+ const safeReturn=(s:string)=>s.startsWith("/")&&!s.startsWith("//")&&!s.includes("://")&&!s.startsWith("/hudhud")?s:"/search";
  const current=sessions.find(x=>x.id===activeId)||sessions[0];
  const lines=current.lines;
  const exhausted=!unlocked&&remaining===0;
@@ -66,6 +75,8 @@ export default function HudHudPage(){
   const controller=new AbortController();
   const params=new URLSearchParams(window.location.search);
   setQueryContext((params.get("q")||"").trim().slice(0,90));
+  const source=params.get("from")||sessionStorage.getItem("1muslim:hudhud:return")||"/search";
+  originRef.current=safeReturn(source);
   void fetch("/api/discover/ask",{cache:"no-store",signal:controller.signal})
    .then(async res=>{const data=await res.json();if(!res.ok)throw Error(data.error||"HudHud is unavailable");return data})
    .then(data=>{if(!controller.signal.aborted){setRemaining(typeof data.remaining==="number"?data.remaining:null);setUnlocked(Boolean(data.unlocked))}})
@@ -95,9 +106,9 @@ export default function HudHudPage(){
   setActiveId(id);setDraft("");setError("");setMenuOpen(false);setActionsOpen(false);
   input.current?.focus();
  };
- const ask=async(event:FormEvent)=>{
-  event.preventDefault();
-  const message=draft.trim();if(!message||busy||exhausted)return;
+ const ask=async(event?:FormEvent,spokenMessage?:string)=>{
+  event?.preventDefault();
+  const message=(spokenMessage||draft).trim();if(!message||busy||exhausted)return;
   stopVoice();
   const conversationId=activeId;
   const history=lines.slice(-6).map(x=>({role:x.role,content:x.content}));
@@ -115,7 +126,8 @@ export default function HudHudPage(){
    if(readAloud&&"speechSynthesis" in window){
     window.speechSynthesis.cancel();
     const speech=new SpeechSynthesisUtterance(reply);
-    speech.lang="en-US";speech.rate=1;
+    speech.lang="en-US";speech.rate=1.07;speech.volume=.8;
+    speech.onstart=()=>setSpeaking(true);speech.onend=()=>setSpeaking(false);speech.onerror=()=>setSpeaking(false);
     window.speechSynthesis.speak(speech);
    }
   }catch(caught){
@@ -124,6 +136,7 @@ export default function HudHudPage(){
    setError(caught instanceof Error?caught.message:"HudHud is unavailable. Please try again.");
   }finally{setBusy(false)}
  };
+ askRef.current=(message:string)=>{void ask(undefined,message)};
  const startVoice=()=>{
   if(listening){stopVoice();return;}
   setError("");setActionsOpen(false);
@@ -132,25 +145,29 @@ export default function HudHudPage(){
   if(!Voice){setError("Voice dictation is not supported in this browser. You can type your question instead.");return}
   try{
    const rec=new Voice();
-   const prefix=draft.trim();
+   const prefix=draft.trim();voiceTranscript.current="";
    rec.lang="en-US";rec.interimResults=true;rec.continuous=false;
    rec.onresult=event=>{
     let transcript="";
     for(let i=0;i<event.results.length;i++)transcript+=event.results[i][0].transcript+" ";
-    setDraft((prefix?prefix+" ":"")+transcript.trim());
+    voiceTranscript.current=(prefix?prefix+" ":"")+transcript.trim();
+    setDraft(voiceTranscript.current);
    };
    rec.onerror=event=>{
     recognizer.current=null;setListening(false);
     if(event.error!=="aborted"&&event.error!=="no-speech")setError(event.error==="not-allowed"?"Microphone permission was denied. Enable it in browser settings to dictate.":"Voice dictation stopped. Please try again.");
    };
-   rec.onend=()=>{recognizer.current=null;setListening(false)};
+   rec.onend=()=>{
+    recognizer.current=null;setListening(false);
+    const text=voiceTranscript.current.trim();
+    if(text.length>2)window.setTimeout(()=>askRef.current(text),190);
+   };
    rec.start();recognizer.current=rec;setListening(true);
   }catch{setListening(false);setError("Could not start the microphone. Check browser permissions and try again.")}
  };
  const close=()=>{
-  if(listening){stopVoice(true);return}
-  window.speechSynthesis?.cancel();
-  router.push("/search");
+  stopVoice(true);window.speechSynthesis?.cancel();setSpeaking(false);setExiting(true);
+  window.setTimeout(()=>router.push(safeReturn(originRef.current)),180);
  };
 
  return <main className={"hudPage"+(focused?" hudTyping":"")+(stillOrb?" hudStill":"")+(listening?" hudListening":"")+(busy?" hudThinking":"")} style={viewport?{height:viewport.height,top:viewport.top}:undefined} aria-label="HudHud chat">
