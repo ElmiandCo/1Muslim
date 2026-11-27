@@ -907,7 +907,7 @@ const [avatarPage,setAvatarPage]=useState(0);
      const savedConfig=savedProfile?.avatar_config as Record<string,unknown>|null;
      if(savedConfig?.profileCoverUrl!==url)throw new Error("Cover uploaded but the saved profile did not confirm the new image.");
      await new Promise<void>((resolve,reject)=>{const check=new Image();check.onload=()=>resolve();check.onerror=()=>reject(new Error("Cover uploaded but the public image cannot be loaded. Check avatars bucket access."));check.src=url;});
-     update({avatar_config:savedConfig,profile_background_image_url:url});setCoverFile(null);setCoverPreview(null);setMessage("Cover image saved to your profile.");setTab("profile");setEditing(false);window.dispatchEvent(new CustomEvent("1muslim:profile-cover-changed",{detail:{userId:user.id,url}}));window.dispatchEvent(new Event("1muslim:profile-saved"));window.requestAnimationFrame(()=>window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"})));
+     update({avatar_config:savedConfig,profile_background_image_url:url});setCoverFile(null);setCoverPreview(null);setMessage("Cover image saved to your profile.");if(!embeddedEditorTab){setTab("profile");setEditing(false)}window.dispatchEvent(new CustomEvent("1muslim:profile-cover-changed",{detail:{userId:user.id,url}}));window.dispatchEvent(new Event("1muslim:profile-saved"));if(!embeddedEditorTab)window.requestAnimationFrame(()=>window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"})));
     }finally{URL.revokeObjectURL(src)}
    }catch(e){setMessage(e instanceof Error?e.message:"Could not upload cover image.")}finally{setCoverUploading(false)}
   };
@@ -997,7 +997,7 @@ const [avatarPage,setAvatarPage]=useState(0);
       setUsernameStatus("idle");setUsernameError("");
       setMessage(displayChanged||usernameChanged?"Profile identity updated.":"Profile saved.");
       window.dispatchEvent(new Event("1muslim:profile-saved"));
-      setEditing(false);
+      if(!embeddedEditorTab)setEditing(false);
     }finally{setSaving(false)}
   };
 
