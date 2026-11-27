@@ -3,6 +3,7 @@ import "./hudhud.css";
 import AnimatedMuslimBrand from "../components/AnimatedMuslimBrand";
 import HudHudFocusStage,{type HudHudLine} from "./HudHudFocusStage";
 import {normalizeSpokenHudHudQuestion} from "../lib/hudhud-speech";
+import {createHudHudAiVoicePlayer} from "../lib/hudhud-ai-voice-player";
 import {getHudHudTopWebResult} from "../lib/hudhud-top-web";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
@@ -52,12 +53,16 @@ export default function HudHudPage(){
  },[]);
  const [micPaused,setMicPaused]=useState(false);
  const [speechPending,setSpeechPending]=useState(false);
+ const [audioCooldown,setAudioCooldown]=useState(false);
  const [pageVisible,setPageVisible]=useState(true);
  const [micAccess,setMicAccess]=useState<"checking"|"granted"|"denied"|"needs-tap"|"unavailable">("checking");
  const [menuOpen,setMenuOpen]=useState(false);
  const [settingsOpen,setSettingsOpen]=useState(false);
  const [actionsOpen,setActionsOpen]=useState(false);
  const [readAloud,setReadAloud]=useState(true);
+ const voicePlayer=useRef<ReturnType<typeof createHudHudAiVoicePlayer>|null>(null);
+ const voiceEpoch=useRef(0);
+ const audioCooldownTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  useEffect(()=>{
   const read=()=>{try{setReadAloud(localStorage.getItem("1muslim:hudhud:voice-read-aloud")!=="off")}catch{}};
   read();window.addEventListener("1muslim:hudhud-voice-preference",read);
@@ -66,7 +71,7 @@ export default function HudHudPage(){
  const saveVoice= (next:boolean)=>{
   setReadAloud(next);
   try{localStorage.setItem("1muslim:hudhud:voice-read-aloud",next?"on":"off")}catch{}
-  if(!next){window.speechSynthesis?.cancel();setSpeaking(false);setSpeechPending(false)}
+  if(!next){voiceEpoch.current++;voicePlayer.current?.stop();setSpeaking(false);setSpeakingAt(null);setSpeechPending(false)}
  };
  const [memoryEnabled,setMemoryEnabled]=useState(false);
  const [memorySignedIn,setMemorySignedIn]=useState(false);
@@ -83,7 +88,6 @@ export default function HudHudPage(){
  const [queryContext,setQueryContext]=useState("");
  const [viewport,setViewport]=useState<{height:number;top:number}|null>(null);
  const recognizer=useRef<Recognition|null>(null);
- const speechPendingTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const micPermissionRequest=useRef(0);
  const input=useRef<HTMLInputElement>(null);
  const voiceTranscript=useRef("");
@@ -205,16 +209,16 @@ export default function HudHudPage(){
  useEffect(()=>{
   const onHidden=()=>{
    setPageVisible(!document.hidden);
-   if(document.hidden){stopVoice(true);window.speechSynthesis?.cancel();setSpeaking(false);setSpeechPending(false)}
+   if(document.hidden){stopVoice(true);voiceEpoch.current++;voicePlayer.current?.stop();setSpeaking(false);setSpeakingAt(null);setSpeechPending(false)}
   };
   const onKey=(event:KeyboardEvent)=>{if(event.key==="Escape"){setMenuOpen(false);setSettingsOpen(false);setActionsOpen(false);stopVoice(true)}};
   document.addEventListener("visibilitychange",onHidden);window.addEventListener("keydown",onKey);
-  return()=>{document.removeEventListener("visibilitychange",onHidden);window.removeEventListener("keydown",onKey);stopVoice(true);window.speechSynthesis?.cancel();if(voiceBeatTimer.current)clearTimeout(voiceBeatTimer.current);if(speechPendingTimer.current)clearTimeout(speechPendingTimer.current)};
+  return()=>{document.removeEventListener("visibilitychange",onHidden);window.removeEventListener("keydown",onKey);stopVoice(true);voiceEpoch.current++;voicePlayer.current?.stop();if(voiceBeatTimer.current)clearTimeout(voiceBeatTimer.current);if(audioCooldownTimer.current)clearTimeout(audioCooldownTimer.current)};
  },[stopVoice]);
 
  const newChat=()=>{
   if(busy)return;
-  stopVoice(true);window.speechSynthesis?.cancel();setSpeaking(false);setSpeakingAt(null);setSpeechPending(false);
+  stopVoice(true);voiceEpoch.current++;voicePlayer.current?.stop();setSpeaking(false);setSpeakingAt(null);setSpeechPending(false);
   const id="chat-"+Date.now();
   setSessions(old=>[{id,title:"New chat",lines:[]},...old].slice(0,20));
   setActiveId(id);setDraft("");setError("");setMenuOpen(false);setActionsOpen(false);
@@ -223,7 +227,7 @@ export default function HudHudPage(){
  const ask=async(event?:FormEvent,spokenMessage?:string)=>{
   event?.preventDefault();
   const message=(spokenMessage||draft).trim();if(!message||busy||exhausted)return;
-  stopVoice(true);window.speechSynthesis?.cancel();setSpeaking(false);setSpeakingAt(null);setSpeechPending(false);
+  stopVoice(true);voiceEpoch.current++;voicePlayer.current?.stop();setSpeaking(false);setSpeakingAt(null);setSpeechPending(false);
   const conversationId=activeId;
   const history=lines.slice(-6).map(x=>({role:x.role,content:x.content}));
   setSessions(old=>old.map(s=>s.id===conversationId?{...s,title:s.lines.length?s.title:message.slice(0,40),lines:[...s.lines,{role:"user",content:message}]}:s));
@@ -254,36 +258,25 @@ export default function HudHudPage(){
       }));
     }).catch(()=>{});
    }
-   if(readAloud&&"speechSynthesis" in window){
-    setSpeechPending(true);
-    if(speechPendingTimer.current)clearTimeout(speechPendingTimer.current);
-    // Browser TTS is not guaranteed to start on iOS. Don't keep the mic
-    // disabled indefinitely when Safari silently refuses playback.
-    speechPendingTimer.current=setTimeout(()=>{
-      window.speechSynthesis?.cancel();
-      setSpeechPending(false);
-    },4500);
-    window.speechSynthesis.cancel();
-    const speech=new SpeechSynthesisUtterance(reply);
-    speech.lang="en-US";speech.rate=1.07;speech.volume=.8;
+   if(readAloud){
+    // Suspend recognition BEFORE audio generation; release only after playback
+    // and a 1.4s acoustic tail, so HudHud cannot answer its own voice.
+    stopVoice(true);
+    const epoch=++voiceEpoch.current;
     const target={sessionId:conversationId,index:lines.length+1};
-    speech.onstart=()=>{
-     if(speechPendingTimer.current)clearTimeout(speechPendingTimer.current);
+    setSpeechPending(true);setSpeaking(false);setSpeakingAt(null);
+    const player=voicePlayer.current||(voicePlayer.current=createHudHudAiVoicePlayer());
+    void player.play(reply,()=>{
+     if(epoch!==voiceEpoch.current)return;
      setSpeechPending(false);setSpeaking(true);setSpeakingAt(target);setSpeechChar(0);
-    };
-    speech.onboundary=e=>{
-      if(typeof e.charIndex==="number")setSpeechChar(e.charIndex);
-      setVoiceBeat(true);
-      if(voiceBeatTimer.current)clearTimeout(voiceBeatTimer.current);
-      voiceBeatTimer.current=setTimeout(()=>setVoiceBeat(false),170);
-    };
-    const endSpeech=()=>{
-     if(speechPendingTimer.current)clearTimeout(speechPendingTimer.current);
+    }).then(played=>{
+     if(epoch!==voiceEpoch.current)return;
      setSpeechPending(false);setSpeaking(false);setSpeakingAt(null);setVoiceBeat(false);
-    };
-    speech.onpause=()=>setVoiceBeat(false);speech.onresume=()=>setVoiceBeat(true);
-    speech.onend=endSpeech;speech.onerror=endSpeech;
-    window.speechSynthesis.speak(speech);
+     setAudioCooldown(true);
+     if(audioCooldownTimer.current)clearTimeout(audioCooldownTimer.current);
+     audioCooldownTimer.current=setTimeout(()=>setAudioCooldown(false),1400);
+     if(!played)setError("HudHud's AI voice is temporarily unavailable. You can still read the answer.");
+    });
    }
   }catch(caught){
    setSpeechPending(false);
@@ -298,7 +291,7 @@ export default function HudHudPage(){
   // with permission, while the page is visible and no voice reply is active.
   if(recognizer.current){if(mode==="manual"){setMicPaused(true);stopVoice(true)}return}
   if(mode==="manual")setMicPaused(false);
-  if(busy||exhausted||focused||speaking||speechPending||document.hidden)return;
+  if(busy||exhausted||focused||speaking||speechPending||audioCooldown||document.hidden)return;
   const host=window as RecognitionWindow;
   const Voice=host.SpeechRecognition||host.webkitSpeechRecognition;
   if(!Voice){
@@ -361,15 +354,15 @@ export default function HudHudPage(){
   }
  },[busy,exhausted,focused,speaking,speechPending,draft,stopVoice]);
  useEffect(()=>{
-  if(!autoListening||micPaused||micAccess!=="granted"||!pageVisible||
+  if(!autoListening||micPaused||micAccess!=="granted"||audioCooldown||!pageVisible||
      listening||busy||speaking||speechPending||exhausted||focused||exiting||
      menuOpen||settingsOpen||draft.trim()||recognizer.current)return;
   const timer=setTimeout(()=>startVoice("auto"),350);
   return()=>clearTimeout(timer);
- },[autoListening,micPaused,micAccess,pageVisible,listening,busy,speaking,speechPending,
+ },[autoListening,micPaused,micAccess,audioCooldown,pageVisible,listening,busy,speaking,speechPending,
     exhausted,focused,exiting,menuOpen,settingsOpen,draft,startVoice]);
  const close=()=>{
-  setMicPaused(true);stopVoice(true);window.speechSynthesis?.cancel();setSpeaking(false);setSpeakingAt(null);setSpeechPending(false);setExiting(true);
+  setMicPaused(true);stopVoice(true);voiceEpoch.current++;voicePlayer.current?.stop();setSpeaking(false);setSpeakingAt(null);setSpeechPending(false);setExiting(true);
   window.setTimeout(()=>router.push(safeReturn(originRef.current)),180);
  };
 
