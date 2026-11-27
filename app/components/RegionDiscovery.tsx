@@ -6,9 +6,8 @@ import {COUNTRY_POINTS,STATE_POINTS} from "./admin-region-points";
 import "./RegionDiscovery.css";
 
 import {canonicalCountry} from "../../lib/member-region-country";
+export {canonicalUsState} from "../../lib/member-region-state";
 export {canonicalCountry} from "../../lib/member-region-country";
-const usStates:Record<string,string>=Object.fromEntries(("AL:Alabama,AK:Alaska,AZ:Arizona,AR:Arkansas,CA:California,CO:Colorado,CT:Connecticut,DE:Delaware,FL:Florida,GA:Georgia,HI:Hawaii,ID:Idaho,IL:Illinois,IN:Indiana,IA:Iowa,KS:Kansas,KY:Kentucky,LA:Louisiana,ME:Maine,MD:Maryland,MA:Massachusetts,MI:Michigan,MN:Minnesota,MS:Mississippi,MO:Missouri,MT:Montana,NE:Nebraska,NV:Nevada,NH:New Hampshire,NJ:New Jersey,NM:New Mexico,NY:New York,NC:North Carolina,ND:North Dakota,OH:Ohio,OK:Oklahoma,OR:Oregon,PA:Pennsylvania,RI:Rhode Island,SC:South Carolina,SD:South Dakota,TN:Tennessee,TX:Texas,UT:Utah,VT:Vermont,VA:Virginia,WA:Washington,WV:West Virginia,WI:Wisconsin,WY:Wyoming,DC:District of Columbia").split(",").map(x=>x.split(":")));
-export function canonicalUsState(value:string|null|undefined){const raw=(value||"").trim();return usStates[raw.toUpperCase()]||Object.values(usStates).find(name=>name.toLowerCase()===raw.toLowerCase())||raw}
 type Stats={countries:{name:string;count:number}[];states:{name:string;count:number}[];optedIn:number;recorded:number;unplaced:number;usCount:number;updatedAt:string;limited:boolean};
 type Mode="world"|"us";
 type MapPerson={id:string;name:string;username:string|null;avatar:string;joinedAt:string};
@@ -17,14 +16,17 @@ const clamp=(n:number,min:number,max:number)=>Math.max(min,Math.min(max,n));
 const bound=(zoom:number,x:number,y:number)=>({x:clamp(x,720*(1-zoom),0),y:clamp(y,360*(1-zoom),0)});
 const centerView={zoom:1.06,x:-21.6,y:-10.8};
 const kaabaPoint:[number,number]=[439.7,137.2]; // Makkah, approximate equirectangular map position; never a member location.
+const localMode=(country:string|null):Mode=>{const name=canonicalCountry(country);return !name||name==="United States"?"us":"world"};
+const localView=(country:string|null)=>{const name=canonicalCountry(country),point=COUNTRY_POINTS[name];if(!point||name==="United States")return centerView;const zoom=1.5;return {zoom,...bound(zoom,360-point[0]*zoom,180-point[1]*zoom)}};
 
 export default function RegionDiscovery({currentCountry,userId,selected,selectedState="",onSelect,onSelectState,onSaved,onOpenMember,backgroundImage="/assets/profile-backgrounds/obsidian.PNG"}:Props){
  const [stats,setStats]=useState<Stats|null>(null),[fetchError,setFetchError]=useState("");
- const [mode,setMode]=useState<Mode>("world"),[editing,setEditing]=useState(false),[expanded,setExpanded]=useState(false);
+ const [mode,setMode]=useState<Mode>(()=>localMode(currentCountry)),[editing,setEditing]=useState(false),[expanded,setExpanded]=useState(false);
+ const modeTouched=useRef(false);
  const [country,setCountry]=useState(canonicalCountry(currentCountry)),[state,setState]=useState(""),[city,setCity]=useState("");
  const [saving,setSaving]=useState(false),[locating,setLocating]=useState(false),[message,setMessage]=useState("");
  const [consent,setConsent]=useState(false),[directoryVisible,setDirectoryVisible]=useState(false),[optedIn,setOptedIn]=useState(false),[permissionKnown,setPermissionKnown]=useState(false),[browseOnly,setBrowseOnly]=useState(false);
- const [view,setViewState]=useState(centerView),[dragging,setDragging]=useState(false);
+ const [view,setViewState]=useState(()=>localView(currentCountry)),[dragging,setDragging]=useState(false);
  const pointerPositions=useRef(new Map<number,{x:number;y:number}>());
  const lastPinch=useRef<number|null>(null),lastTap=useRef({at:0,x:0,y:0}),ignoreClick=useRef(false);
  const dragRef=useRef<{id:number;x:number;y:number;moving:boolean}|null>(null);
@@ -34,6 +36,8 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
  const [people,setPeople]=useState<MapPerson[]>([]),[peopleLoading,setPeopleLoading]=useState(false),[peopleError,setPeopleError]=useState("");
  const fullStageRef=useRef<HTMLDivElement|null>(null);
  useEffect(()=>{setCountry(canonicalCountry(currentCountry))},[currentCountry]);
+ // Follow the account country when first loaded; manual map navigation takes precedence.
+ useEffect(()=>{if(modeTouched.current)return;setMode(localMode(currentCountry));setViewState(localView(currentCountry))},[currentCountry]);
  useEffect(()=>{
   let mounted=true;setPermissionKnown(false);
   void createClient().from("member_region_preferences").select("user_id,directory_visible").eq("user_id",userId).maybeSingle().then(({data,error})=>{
@@ -75,6 +79,8 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
  const pins=useMemo(()=>rows.map(({name,count})=>({name,count,point:lookup[name]})).filter(p=>Array.isArray(p.point)),[rows,lookup]);
  const focusName=mode==="world"?selected:selectedState;
  const chosen=rows.find(r=>r.name===focusName);
+ const usStateCount=(stats?.states||[]).reduce((total,row)=>total+row.count,0);
+ const usWithoutState=Math.max(0,(stats?.usCount||0)-usStateCount);
  const studioResults=rows.filter(r=>r.name.toLowerCase().includes(studioSearch.toLowerCase().trim())).slice(0,8);
  useEffect(()=>{
   const name=mode==="world"&&expanded?selected:"";
@@ -108,8 +114,8 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
   pointerPositions.current.clear();lastPinch.current=null;dragRef.current=null;
   // Begin where the Ummah is actually represented, not over an empty ocean.
   // The Kaaba remains a dedicated landmark in the guided tour.
-  const point=mode==="world"?(COUNTRY_POINTS[selected]||pins[0]?.point||kaabaPoint):(STATE_POINTS[selectedState]||pins[0]?.point||[360,180]);
-  const z=selected||selectedState?1.7:pins.length?1.42:1.18;
+  const point: [number,number]=mode==="world"?(COUNTRY_POINTS[selected]||COUNTRY_POINTS[canonicalCountry(currentCountry)]||pins[0]?.point||kaabaPoint):(STATE_POINTS[selectedState]||[360,180]);
+  const z=mode==="us"&&!selectedState?1.12:selected||selectedState?1.7:pins.length?1.42:1.18;
   setViewState({zoom:z,x:360-point[0]*z,y:Math.min(0,180-point[1]*z)});
   setMakkahFocus(false);setStudioSearch("");
   setExpanded(true);
@@ -119,22 +125,22 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
   const centers:Record<typeof name,[number,number]>={
    World:[360,175],Africa:[378,177],Europe:[387,88],Asia:[520,142],Americas:[211,159]
   };
-  setMode("world");onSelect("");onSelectState?.("");setMakkahFocus(false);setStudioSearch("");setStudioSearchOpen(false);
+  modeTouched.current=true;setMode("world");onSelect("");onSelectState?.("");setMakkahFocus(false);setStudioSearch("");setStudioSearchOpen(false);
   flyTo(centers[name],name==="World"?1.13:1.48);
  };
  const focusMakkah=()=>{
-  setMode("world");onSelect("");onSelectState?.("");setStudioSearch("");setMakkahFocus(true);flyTo(kaabaPoint,1.7);
+  modeTouched.current=true;setMode("world");onSelect("");onSelectState?.("");setStudioSearch("");setMakkahFocus(true);flyTo(kaabaPoint,1.7);
  };
  const focusNamedRegion=(name:string,point?:[number,number])=>{
   setMakkahFocus(false);setStudioSearchOpen(false);setStudioSearch("");
   selectRegion(name,point);
  };
  const switchMode=(next:Mode)=>{
-  setMode(next);setMakkahFocus(false);setStudioSearch("");setStudioSearchOpen(false);
-  onSelectState?.("");if(next==="world")onSelect("");else onSelect("United States");
-  const p: [number,number]=next==="world"?kaabaPoint:[360,180];
-  if(expanded){const z=1.1;setViewState({zoom:z,x:360-p[0]*z,y:Math.min(0,180-p[1]*z)})}
-  else setViewState(centerView);
+  if(next===mode)return;
+  modeTouched.current=true;setMode(next);setMakkahFocus(false);setStudioSearch("");setStudioSearchOpen(false);
+  // Changing map views does not silently apply a member-directory filter.
+  onSelect("");onSelectState?.("");
+  setViewState(next==="us"?centerView:localView(currentCountry));
  };
  const zoomAt=(factor:number,anchorX=360,anchorY=180)=>{
   setViewState(prev=>{
@@ -143,7 +149,7 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
    return {zoom:z,...constrain(z,anchorX-(anchorX-prev.x)*ratio,anchorY-(anchorY-prev.y)*ratio)};
   });
  };
- const resetView=()=>{if(expanded)flyTo(mode==="world"?kaabaPoint:[360,180],1.12);else setViewState(centerView)};
+ const resetView=()=>{setViewState(mode==="us"?centerView:localView(currentCountry))};
  const mapPoint=(svg:SVGSVGElement,clientX:number,clientY:number)=>{
   const pt=svg.createSVGPoint();pt.x=clientX;pt.y=clientY;
   const ctm=svg.getScreenCTM();if(!ctm)return {x:360,y:180};
@@ -244,6 +250,7 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
    if(profileError)throw Error("Could not save your region: "+profileError.message);
    const {error:consentError}=await db.from("member_region_preferences").upsert({user_id:userId,region_level:city.trim()?"city":state.trim()?"state":"country",directory_visible:directoryVisible,consented_at:new Date().toISOString()},{onConflict:"user_id"});
    if(consentError)throw Error("Region saved privately, but map sharing did not complete. Please retry.");
+   modeTouched.current=false;setMode(localMode(normalized));setViewState(localView(normalized));
    onSaved(normalized);onSelect(normalized);onSelectState?.("");
    setOptedIn(true);setPermissionKnown(true);setBrowseOnly(true);setEditing(false);
    setMessage("✓ You are now part of the Ummah map.");
@@ -305,15 +312,17 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
   {!full&&<div className="atlasFloatTools">
    <button type="button" aria-label="Expand map studio" title="Full map" onClick={openStudio}>⤢</button>
   </div>}
-  {!full&&chosen&&<div className="atlasPlace" role="status"><div><strong>{chosen.name}</strong><small>{chosen.count} {chosen.count===1?"Muslim":"Muslims"} shared this region</small></div><button type="button" onClick={openStudio}>See members ↗</button></div>}
+  {!full&&chosen&&<div className="atlasPlace" role="status"><div><strong>{chosen.name}</strong><small>{chosen.count} {chosen.count===1?"Muslim":"Muslims"} shared this region</small></div><button type="button" onClick={openStudio}>Explore ↗</button></div>}
+  {!full&&mode==="us"&&!chosen&&stats&&<div className="atlasPlace atlasOverview" role="status"><div><strong>United States</strong><small>{stats.usCount} {stats.usCount===1?"member":"members"} opted in · {stats.states.length} {stats.states.length===1?"state":"states"} shown{usWithoutState>0?` · ${usWithoutState} country-only`:""}</small></div><button type="button" onClick={openStudio}>Explore ↗</button></div>}
   {permissionKnown&&!optedIn&&!browseOnly&&!full&&<div className="atlasInvitation"><strong>Connect with Muslims around the world</strong><span>📍 Add your region to help grow the Ummah map.</span><div><button type="button" onClick={openEditor}>Add my region</button><button type="button" onClick={()=>setBrowseOnly(true)}>Explore without sharing</button></div></div>}
-  {!full&&!chosen&&<div className="atlasTouchHint" aria-hidden="true">Pinch · drag · tap a dot</div>}
+  {!full&&!chosen&&mode!=="us"&&<div className="atlasTouchHint" aria-hidden="true">Pinch · drag · tap a dot</div>}
  </div>;
  return <section className="muslimeenRegionPanel ummahAtlas" aria-label="Community map">
   <div className="atlasHead">
-   <div><span className="atlasEyebrow">1MUSLIM · CONNECTING THE UMMAH</span><h2>Muslims around the world <span aria-hidden="true">✧</span></h2></div>
+   <div><span className="atlasEyebrow">1MUSLIM · CONNECTING THE UMMAH</span><h2>{mode==="us"?"Muslims across the United States":"Muslims around the world"} <span aria-hidden="true">✧</span></h2></div>
    <button type="button" className="atlasEdit" title="Add or update my region" aria-label="Add or update my region" onClick={openEditor}>⌖</button>
   </div>
+  <div className="atlasModes" role="group" aria-label="Map region"><button type="button" aria-pressed={mode==="us"} onClick={()=>switchMode("us")}>⌖ U.S. states</button><button type="button" aria-pressed={mode==="world"} onClick={()=>switchMode("world")}>◎ World</button></div>
   {mapCanvas()}
   {fetchError&&<p role="alert" className="atlasError">{fetchError} <button type="button" onClick={()=>void load()}>Retry</button></p>}
   {message&&!editing&&<p role="status" className="atlasMessage">{message}</p>}
@@ -326,7 +335,7 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
    <label>Country<input list="ummah-atlas-countries" value={country} onChange={e=>setCountry(e.target.value)} placeholder="Country" maxLength={80}/></label>
    <datalist id="ummah-atlas-countries">{Array.from(new Set([...(stats?.countries||[]).map(r=>r.name),"United States","Canada","United Kingdom","Somalia","Türkiye","Kenya","Nigeria","Pakistan","Saudi Arabia","Australia"])).map(name=><option key={name} value={name}/>)}</datalist>
    <div className="atlasEditorFields"><label>State / province <small>Optional</small><input value={state} onChange={e=>setState(e.target.value)} placeholder="State or province" maxLength={80}/></label><label>City <small>Optional</small><input value={city} onChange={e=>setCity(e.target.value)} placeholder="City" maxLength={80}/></label></div>
-   <label className="atlasConsent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/><span>I choose to add my country to the Ummah map's aggregate member counts. State and city, if entered, are public profile fields. I can stop sharing at any time.</span></label>
+   <label className="atlasConsent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/><span>I choose to include my country and any U.S. state I provide in aggregate Ummah map counts. State and city, if entered, are public profile fields. I can stop sharing at any time.</span></label>
    <label className="atlasConsent atlasDirectoryConsent"><input type="checkbox" checked={directoryVisible} onChange={e=>setDirectoryVisible(e.target.checked)}/><span><strong>Optional:</strong> Show my public avatar and name when signed-in Muslims explore my country. This does not disclose my city or exact location.</span></label>
    <div className="atlasEditorButtons"><button type="button" disabled={saving||locating||!country.trim()||!consent} onClick={()=>void save()}>{saving?"Saving…":"Save and join the map"}</button>{optedIn&&<button type="button" className="atlasRemove" disabled={saving} onClick={()=>void removeFromMap()}>Stop sharing on map</button>}</div>
    {message&&<p role="status" className="atlasMessage">{message}</p>}
@@ -390,7 +399,7 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
         <p>A point of unity for Muslims across the world. Explore the map to meet our Ummah.</p>
        </div>:<div className="atlasStudioMission" aria-live="polite">
         <small>ONE UMMAH · MANY PLACES</small><h2>Distance ends where connection begins.</h2>
-        <p>Tap a glowing pin to discover members who chose to share their country.</p>
+        <p>Tap a glowing pin to explore regions members chose to share.</p>
         {rows.length>0&&<div className="atlasStudioPopular" aria-label="Places with community members">
          {rows.slice(0,5).map(row=><button type="button" key={row.name}
           onClick={()=>focusNamedRegion(row.name,lookup[row.name])}>{row.name} <span>{row.count}</span></button>)}
