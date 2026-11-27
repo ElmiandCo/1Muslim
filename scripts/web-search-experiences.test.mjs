@@ -80,7 +80,8 @@ test("search results have accessible dark/light Google-inspired SERP layout with
   const page=source("app/search/page.tsx");
   const css=source("app/search/search-results.css");
   const panel=source("app/components/WebSearchPanel.tsx");
-  assert.match(page,/DirectoryResultList items=\{topMatches\.slice\(0,7\)\}/);
+  assert.doesNotMatch(page,/DirectoryResultList|topMatches\.slice\(/);
+  assert.match(page,/Separate from independent web results/);
   assert.match(page,/dsResultsNight/);
   assert.match(page,/Switch search results to light mode/);
   assert.match(css,/\.dsResultsNight/);
@@ -97,4 +98,44 @@ test("Search APIs do not expose provider keys in browser bundles",()=>{
   assert.doesNotMatch(panel,/BRAVE_SEARCH_API_KEY|OPENAI_API_KEY/);
   assert.match(web,/Too many searches/);
   assert.match(images,/Too many image searches/);
+});
+
+test("Islamic searches retain independent provider rank: neither Muslim sites nor 1Muslim get a boost",async()=>{
+ const beforeKey=process.env.BRAVE_SEARCH_API_KEY;
+ const beforeFetch=globalThis.fetch;
+ process.env.BRAVE_SEARCH_API_KEY="ci-placeholder";
+ const urls=[
+  "https://independent.example.com/history",
+  "https://quran.com/112",
+  "https://1muslim.live/learn",
+  "https://example.org/islamic-culture"
+ ];
+ globalThis.fetch=async()=>({ok:true,status:200,json:async()=>({
+  web:{results:urls.map((url,index)=>({
+   url,title:index===1?"Quran explanation":index===2?"1Muslim explanation":"World history and religion",
+   description:"Islam and Muslim traditions and Qur'an commentary"
+  }))}
+ })});
+ try{
+  const query="islamic-culture-fair-ranking-20261127";
+  const result=await searchWholeWeb(query,"web");
+  assert.deepEqual(result.results.map(x=>x.url),urls);
+  assert.deepEqual(result.results.map(x=>x.score),[100,98,96,94]);
+  assert.equal(result.provider,"Brave Search");
+  const backend=source("lib/server/one-muslim-web-search.ts");
+  assert.doesNotMatch(backend,/const muslimDomains|const islamicTopic|const boost/);
+ }finally{
+  globalThis.fetch=beforeFetch;
+  if(beforeKey===undefined)delete process.env.BRAVE_SEARCH_API_KEY;
+  else process.env.BRAVE_SEARCH_API_KEY=beforeKey;
+ }
+});
+
+test("Islamic overview can cite the Qur'an but may not promote 1Muslim web links",()=>{
+ const route=source("app/api/web-search/summary/route.ts");
+ const panel=source("app/components/WebSearchPanel.tsx");
+ assert.match(route,/quranContext=getQuranSearchPerspective\(query\)/);
+ assert.match(route,/sources=found.results.slice\(0,8\)/);
+ assert.match(panel,/summary\.sources\.map/);
+ assert.doesNotMatch(route,/site:1muslim|1muslim\.live.*boost|prioritize 1Muslim/);
 });
