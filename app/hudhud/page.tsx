@@ -143,6 +143,8 @@ export default function HudHudPage(){
  askRef.current=(message:string)=>{void ask(undefined,message)};
  const startVoice=()=>{
   if(listening){stopVoice();return;}
+  // Prevent the assistant from transcribing its own just-spoken reply.
+  window.speechSynthesis?.cancel();setSpeaking(false);
   setError("");setActionsOpen(false);
   const host=window as RecognitionWindow;
   const Voice=host.SpeechRecognition||host.webkitSpeechRecognition;
