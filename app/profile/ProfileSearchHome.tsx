@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import {useRouter} from "next/navigation";
-import {useEffect,useRef,useState} from "react";
+import {useEffect,useRef,useState,type FormEvent} from "react";
 import AnimatedMuslimBrand from "../components/AnimatedMuslimBrand";
 import ProfileCinematicPosts from "../components/ProfileCinematicPosts";
 import SearchFeatureRails from "../search/SearchFeatureRails";
@@ -39,7 +39,7 @@ export default function ProfileSearchHome({profile,postCount,expanded,editing,on
   const touchStart=useRef<number|null>(null);
   useEffect(()=>{
     let fresh=false;
-    try{fresh=sessionStorage.getItem("1muslim:profile-arrival")==="1";sessionStorage.removeItem("1muslim:profile-arrival")}catch{}
+    try{fresh=sessionStorage.getItem("1muslim:profile-arrival")==="1"||new URLSearchParams(window.location.search).get("arrival")==="1";sessionStorage.removeItem("1muslim:profile-arrival");if(new URLSearchParams(window.location.search).has("arrival"))window.history.replaceState(null,"","/profile")}catch{}
     if(!fresh||reducedMotion())return;
     setArrival(true);
     const id=window.setTimeout(()=>setArrival(false),800);
@@ -56,13 +56,13 @@ export default function ProfileSearchHome({profile,postCount,expanded,editing,on
     },3500);
     return()=>window.clearInterval(id);
   },[expanded,editing]);
-  const submit=(event:React.FormEvent<HTMLFormElement>)=>{
+  const submit=(event:FormEvent<HTMLFormElement>)=>{
     event.preventDefault();
     if(search.trim())router.push("/search?q="+encodeURIComponent(search.trim()));
     else router.push("/search");
   };
   const location=[profile.city,profile.state,profile.country].filter(Boolean).join(", ");
-  return <section className={"profileSearchHome"+(arrival?" isArriving":"")+(expanded||editing?" hasOpenPanel":"")} aria-label="Your personalized One Muslim Search Home">
+  return <section className={"profileSearchHome dsHomeMode"+(arrival?" isArriving":"")+(expanded||editing?" hasOpenPanel":"")} aria-label="Your personalized One Muslim Search Home">
     <div className="profileSearchUtilities" aria-label="Account controls">
       <button type="button" className="profileSearchOrb profileSearchAccountOrb" onClick={expanded||editing?onCollapse:()=>setDetailsOpen(o=>!o)} aria-label={expanded||editing?"Return to your profile search home":detailsOpen?"Collapse profile details":"Show profile details"} title="My profile">
         <img src={avatarFor(profile)} alt=""/>
