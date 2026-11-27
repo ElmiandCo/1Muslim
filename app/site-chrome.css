@@ -1,0 +1,37 @@
+/* Shared appearance boundary: white through top/bottom safe areas in day
+   mode, charcoal in night mode. Feature pages keep their own contrast tokens. */
+:root{--one-chrome-surface:#fff;--one-chrome-ink:#1e292d;background:#fff;color-scheme:light}
+:root[data-one-chrome-theme="day"]{--one-chrome-surface:#fff;--one-chrome-ink:#1e292d;background:#fff;color-scheme:light}
+:root[data-one-chrome-theme="night"]{--one-chrome-surface:#0d1013;--one-chrome-ink:#e9f0ed;background:#0d1013;color-scheme:dark}
+html[data-one-chrome-theme] body{background:var(--one-chrome-surface)}
+html[data-one-chrome-theme] body::selection{background:#85cdb5}
+@media(max-width:767px){
+  /* The existing fixed site navigation already handles iPhone bottom insets.
+     Its panel must match the current route theme rather than stay hardcoded white. */
+  html[data-one-chrome-theme="night"] .oneGlobalNav:not(.oneGlobalNavQuran),
+  html.profileDockThemed[data-one-chrome-theme="night"] .oneGlobalNav:not(.oneGlobalNavQuran){
+    background:#11151a!important;color:#e8edf0!important;
+    border-top:1px solid #2c343a!important;
+    box-shadow:0 -2px 15px #0004!important;
+  }
+  html[data-one-chrome-theme="night"] .oneGlobalNav:not(.oneGlobalNavQuran) .oneGlobalNavRailShell{
+    background:#11151a!important;
+  }
+  html[data-one-chrome-theme="night"] .oneGlobalNav:not(.oneGlobalNavQuran) .oneGlobalNavItem>button{
+    color:#cbd4d8!important;
+  }
+  html[data-one-chrome-theme="night"] .oneGlobalNav:not(.oneGlobalNavQuran) .oneGlobalNavItem>button[aria-current=page]{
+    color:#fff!important;
+  }
+  html[data-one-chrome-theme="night"] .oneGlobalNav:not(.oneGlobalNavQuran) .oneGlobalNavItem>button:active{
+    background:#263039!important;
+  }
+  html[data-one-chrome-theme="day"] .oneGlobalNav:not(.oneGlobalNavQuran),
+  html.profileDockThemed[data-one-chrome-theme="day"] .oneGlobalNav:not(.oneGlobalNavQuran){
+    background:#fff!important;color:#636b70!important;
+    border-top:1px solid #e4e8e9!important;
+  }
+  html[data-one-chrome-theme="day"] .oneGlobalNav:not(.oneGlobalNavQuran) .oneGlobalNavRailShell{
+    background:#fff!important;
+  }
+}
