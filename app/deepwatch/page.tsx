@@ -11,7 +11,7 @@ import {videoRegistry,isKidsVideo,type RegisteredVideo} from "../components/vide
 import "./deepwatch.css";
 import "./deepwatch-platform.css";
 import DeepWatchVideoFeed,{isDeepWatchShort} from "./DeepWatchVideoFeed";
-import {useDeepWatchSolarTheme} from "./useDeepWatchSolarTheme";
+import {useDeepWatchSolarTheme,setDeepWatchThemeMode} from "./useDeepWatchSolarTheme";
 import {prepareMedia} from "../../lib/smart-media";
 import {watchHeroPreview} from "./hero-preview";
 
@@ -466,9 +466,9 @@ export default function DeepWatch(){
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.6"/><path d="m16 16 5 5"/></svg>
       <input id="dw-platform-search" type="search" aria-label="Search DeepWatch videos" placeholder="Search videos" value={search} onChange={e=>setSearch(e.target.value)} />
      </label>
-     <Link href="/settings#deepwatch-appearance" className="dwPlatformTool" aria-label={"DeepWatch appearance settings. "+deepWatchThemeDetail} title={"Appearance: "+(deepWatchMode==="auto"?"Auto · sunrise/sunset":deepWatchMode)}>
+     <button type="button" className="dwPlatformTool" onClick={()=>setDeepWatchThemeMode(deepWatchNight?"day":"night")} aria-label={deepWatchNight?"Switch DeepWatch to day mode":"Switch DeepWatch to night mode"} title={deepWatchNight?"Day mode":"Night mode"}>
       {deepWatchNight?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z"/></svg>:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 1.5v3m0 15v3M1.5 12h3m15 0h3M4.6 4.6l2.2 2.2m10.4 10.4 2.2 2.2M19.4 4.6l-2.2 2.2M6.8 17.2l-2.2 2.2"/></svg>}
-     </Link>
+     </button>
      <Link href="/settings#notifications" className="dwPlatformTool" aria-label="Notification settings" title="Notifications">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M18 8a6 6 0 1 0-12 0c0 7-2 7-2 9h16c0-2-2-2-2-9M10 21h4"/></svg>
      </Link>
