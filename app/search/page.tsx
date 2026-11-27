@@ -143,7 +143,7 @@ export default function SearchHub() {
       const {data:profile}=await db.from("profiles").select("shahada_verified_at").eq("id",user.id).maybeSingle();
       if(!active)return;
       if(!profile?.shahada_verified_at){setAuthMode("shahada");return}
-      if(authReturn!=="/search"){try{sessionStorage.setItem("1muslim:profile-arrival","1")}catch{};router.replace(authReturn);return}
+      if(authReturn!=="/search"){try{sessionStorage.setItem("1muslim:member-home-arrival","1")}catch{};router.replace(authReturn);return}
       closeAuth();
     })();
     return()=>{active=false};
@@ -216,7 +216,7 @@ export default function SearchHub() {
     setAccount("member");setAuthLeaving(true);
     try{sessionStorage.removeItem("1muslim:shahada-pending")}catch{}
     const next=authReturn;
-    try{sessionStorage.setItem("1muslim:profile-arrival","1")}catch{}
+    try{sessionStorage.setItem("1muslim:member-home-arrival","1")}catch{}
     if(next!=="/search"&&next.startsWith("/")&&!next.startsWith("//")&&!next.includes("://")){
       window.setTimeout(()=>router.replace(next),240);
       return;
