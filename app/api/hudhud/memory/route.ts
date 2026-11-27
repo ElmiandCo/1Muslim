@@ -19,7 +19,7 @@ export async function GET(){
    .select("enabled").eq("user_id",user.id).maybeSingle();
   if(prefError)throw prefError;
   if(!preference?.enabled)return reply({signedIn:true,enabled:false,sessions:[]});
-  const {data:rows,error:sessionError}=await db.from("hudhud_conversations")
+  const {data:rows,error:sessionError}=await db.from("hudhud_ai_chat_sessions")
    .select("id,title,lines").eq("user_id",user.id)
    .order("updated_at",{ascending:false}).limit(20);
   if(sessionError)throw sessionError;
@@ -40,7 +40,7 @@ export async function POST(req:NextRequest){
    return reply({enabled:body.enabled});
   }
   if(body.action==="clear"){
-   const {error:deleteError}=await db.from("hudhud_conversations").delete().eq("user_id",user.id);
+   const {error:deleteError}=await db.from("hudhud_ai_chat_sessions").delete().eq("user_id",user.id);
    if(deleteError)throw deleteError;
    const {error:disableError}=await db.from("hudhud_memory_preferences")
     .upsert({user_id:user.id,enabled:false,updated_at:new Date().toISOString()},{onConflict:"user_id"});
@@ -76,17 +76,17 @@ export async function POST(req:NextRequest){
    return safe;
   });
   if(lines.some(x=>x===null))return reply({error:"Invalid conversation history"},400);
-  const {count,error:countError}=await db.from("hudhud_conversations")
+  const {count,error:countError}=await db.from("hudhud_ai_chat_sessions")
    .select("id",{head:true,count:"exact"}).eq("user_id",user.id);
   if(countError)throw countError;
-  const {data:existing,error:existingError}=await db.from("hudhud_conversations")
+  const {data:existing,error:existingError}=await db.from("hudhud_ai_chat_sessions")
    .select("id").eq("user_id",user.id).eq("id",body.id).maybeSingle();
   if(existingError)throw existingError;
   if(!existing&&(count||0)>=20)return reply({error:"Memory is full. Clear an older chat before saving a new one."},409);
   const title=body.title.trim()||"New chat";
   const payload=JSON.stringify(lines);
   if(payload.length>45000)return reply({error:"Conversation too long to remember"},400);
-  const {error:writeError}=await db.from("hudhud_conversations")
+  const {error:writeError}=await db.from("hudhud_ai_chat_sessions")
    .upsert({user_id:user.id,id:body.id,title,lines,updated_at:new Date().toISOString()},{onConflict:"user_id,id"});
   if(writeError)throw writeError;
   return reply({saved:true});
