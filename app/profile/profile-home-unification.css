@@ -1,0 +1,74 @@
+/* Profile reflects the white One Muslim home and guest landing without
+   hiding any social/profile actions or changing profile business logic. */
+.profileCommandPage{
+ --profile-home-surface:#fff;
+ background:#fff!important;
+ color:#1d302a;
+}
+.profileCommandPage .profileProfessional,
+.profileCommandPage .profileFullAccent{
+ background:#fff;
+}
+.profileCommandPage .profileOverviewSection,
+.profileCommandPage .profileProfessionalSummary,
+.profileCommandPage .profileProfessionalWorkspace,
+.profileCommandPage .profileProfessionalQuickMenu,
+.profileCommandPage .profileHero{
+ background:transparent!important;
+ border:0!important;
+ box-shadow:none!important;
+}
+.profileCommandPage .profileFullAccent .profileCommandBar{
+ background:rgba(255,255,255,.72)!important;
+ border:0!important;
+ box-shadow:none!important;
+ backdrop-filter:blur(14px);
+ -webkit-backdrop-filter:blur(14px);
+}
+.profileCommandPage .profileProfessionalInner,
+.profileCommandPage .profileProfessionalStatGrid>div,
+.profileCommandPage .profileProfessionalQuickGrid>a,
+.profileCommandPage .profileProfessionalQuickGrid>button{
+ background:transparent!important;
+ border:0!important;
+ box-shadow:none!important;
+}
+.profileCommandPage .profileProfessionalQuickGrid>a,
+.profileCommandPage .profileProfessionalQuickGrid>button{
+ transition:transform .24s ease,background .24s ease,opacity .24s ease;
+ min-height:46px;
+}
+.profileCommandPage .profileProfessionalQuickGrid>a:is(:hover,:focus-visible),
+.profileCommandPage .profileProfessionalQuickGrid>button:is(:hover,:focus-visible){
+ background:#f0f6f2!important;transform:translateY(-2px);
+}
+.profileCommandPage .profileProfessionalStatGrid>div{
+ padding:12px 8px!important;
+}
+.profileCommandPage .profileFullAccent .profileSocialActions .profileAction:not(.profileSocialPrimary),
+.profileCommandPage .profileFullAccent .profileCommandBar .profilePremiumTabs{
+ background:transparent!important;
+ border:0!important;
+ box-shadow:none!important;
+}
+.profileCommandPage .profileProfessionalCover{
+ border:0!important;
+ box-shadow:none!important;
+}
+.profileCommandPage #profile-panel-content{
+ animation:oneMuslimProfilePresent .35s cubic-bezier(.22,.72,.23,1) both;
+}
+@keyframes oneMuslimProfilePresent{
+ from{opacity:.72;transform:translateY(7px)}
+ to{opacity:1;transform:translateY(0)}
+}
+@media(max-width:600px){
+ .profileCommandPage .profileProfessionalSummary,
+ .profileCommandPage .profileProfessionalWorkspace{padding:14px 12px!important}
+ .profileCommandPage .profileFullAccent .profileCommandBar{padding:8px 0!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .profileCommandPage #profile-panel-content{animation:none!important}
+ .profileCommandPage .profileProfessionalQuickGrid>a,
+ .profileCommandPage .profileProfessionalQuickGrid>button{transition:none!important}
+}
