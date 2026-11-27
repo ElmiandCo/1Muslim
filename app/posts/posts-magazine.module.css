@@ -693,3 +693,48 @@
  .igUmmah .igExploreGrid{gap:1px}
 }
 @media(prefers-reduced-motion:reduce){.igUmmah .igExploreTile img,.igUmmah .igTopActions a{transition:none!important}}
+
+/* Ummah portrait-first feed: Instagram-style edge-to-edge playback with the
+   video's *actual* aspect ratio; no hardcoded wide 16:9 player or heavy bar. */
+.igUmmah .feedPostStage:has(.feedVideoStage){background:var(--ig-paper)!important}
+.igUmmah .feedVideoStage:has(:global(.omVideoFeed)){
+ position:relative;min-height:0!important;display:block!important;
+ width:100%;overflow:visible!important;background:var(--ig-paper)!important;
+}
+.igUmmah .feedVideoStage :global(.omVideoFeed){
+ width:100%!important;max-width:100%;
+ background:#090b0c;
+}
+.igUmmah .feedVideoStage :global(.omVideoFeed .omVideoStage){
+ width:100%!important;min-height:0!important;
+ background:#090b0c!important;border:0!important;border-radius:0!important;
+}
+.igUmmah .feedVideoStage :global(.omVideoFeed .omVideoStage video){
+ width:100%!important;height:100%!important;object-fit:contain!important;
+ display:block;background:#090b0c!important;
+}
+.igUmmah .feedVideoStage :global(.omVideoTools){
+ position:absolute!important;right:11px;top:12px;bottom:auto;z-index:5;
+ display:flex;align-items:center;gap:7px;
+ background:rgba(8,12,14,.54)!important;color:white!important;
+ border:1px solid rgba(255,255,255,.20)!important;border-radius:999px!important;
+ padding:3px 8px!important;font-size:10px!important;
+ backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+.igUmmah .feedVideoStage :global(.omVideoTools button){
+ min-width:42px;min-height:35px;padding:6px!important;
+ color:white!important;font-size:10px!important;
+}
+.igUmmah .feedVideoStage :global(.omVideoConversation){
+ background:var(--ig-paper);color:var(--ig-ink);padding:10px 14px!important;
+}
+.igUmmah .feedPostEngagement :global(.socialActionBar){
+ padding:4px 0 5px!important;
+}
+@media(max-width:720px){
+ .igUmmah .feedPostStage:has(.feedVideoStage){margin:0!important;padding:0!important}
+ .igUmmah .feedVideoStage :global(.omVideoTools){right:9px;top:9px}
+}
+@media(prefers-reduced-motion:reduce){
+ .igUmmah .feedVideoStage :global(.omVideoFeed .omVideoStage){transition:none!important}
+}
