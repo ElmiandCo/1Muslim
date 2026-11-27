@@ -40,18 +40,18 @@ test("one-second in-place Search Home reveal is quiet, repeat-safe and motion-sa
   assert.doesNotMatch(page.slice(page.indexOf("const [introStage"),page.indexOf("// The same Search Home renders")),/setTimeout\(\(\)=>router\.(?:push|replace)/);
 });
 
-test("auth defaults to Search Home but preserves explicit deep links",()=>{
+test("auth routes verified sign-ins to personalized Search Profile and preserves explicit deep links",()=>{
   const auth=read("app/auth/page.tsx");
   assert.match(auth,/const safeNext =/);
-  assert.match(auth,/return "\/search";/);
+  assert.match(auth,/return "\/profile";/);
   assert.match(auth,/return match \? `\/profile\?member=/);
   assert.match(auth,/window\.location\.assign\(safeNext\(\)\)/);
   assert.match(auth,/const destination = isShahadaSignup \? "\/onboarding\?method="/);
   const callback=read("app/auth/callback/route.ts");
-  assert.match(callback,/searchParams\.get\("next"\) \?\? "\/search"/);
-  assert.match(callback,/next = "\/search";/);
+  assert.match(callback,/searchParams\.get\("next"\) \?\? "\/profile"/);
+  assert.match(callback,/next = "\/profile";/);
   assert.match(callback,/return NextResponse\.redirect\(/);
-  assert.match(callback,/\$\{origin\}\$\{next\}/);
+  assert.match(callback,/\$\{origin\}\$\{next === "\/profile" \? "\/profile\?arrival=1" : next\}/);
 });
 
 test("visitors can search without signing in, while private account controls are gated",()=>{
@@ -62,8 +62,8 @@ test("visitors can search without signing in, while private account controls are
   assert.match(page,/const \[account,setAccount\]=useState<"checking"\|"guest"\|"member">\("checking"\)/);
   assert.match(page,/account==="guest"\?<div className="dsGuestAccount"/);
   assert.match(page,/account==="member"\?<>/);
-  assert.match(page,/href="\/auth\?next=%2Fsearch&login=1"/);
-  assert.match(page,/href="\/auth\?next=%2Fsearch&mode=signup"/);
+  assert.match(page,/href="\/auth\?next=%2Fprofile&login=1"/);
+  assert.match(page,/href="\/auth\?next=%2Fprofile&mode=signup"/);
   assert.match(page,/\/api\/discover\/search/);
   assert.match(page,/<WebSearchPanel query=\{submitted\}/);
   assert.match(webSearch,/\/api\/web-search\?q=/);
@@ -71,6 +71,28 @@ test("visitors can search without signing in, while private account controls are
   assert.match(css,/\.dsResultsNight \.dsGuestAccount/);
 });
 
+test("personalized Search Profile keeps real search, own-post rail and all original editor panels",()=>{
+ const profile=read("app/profile/page.tsx");
+ const home=read("app/profile/ProfileSearchHome.tsx");
+ const css=read("app/profile/profile-search-home.css");
+ const search=read("app/search/page.tsx");
+ const rail=read("app/search/search-feature-rails.css");
+ assert.match(profile,/<ProfileSearchHome profile=\{profile\}/);
+ assert.match(profile,/<ProfileSocialHub profile=\{profile\}/);
+ assert.match(profile,/\(searchProfileExpanded\|\|editing\)/);
+ assert.match(home,/ProfileCinematicPosts profileId=\{profile\.id\} feedMode="own"/);
+ assert.match(home,/router\.push\("\/search\?q="/);
+ assert.match(home,/onSettings=|onSettings\}/);
+ assert.match(home,/onEdit\}/);
+ assert.match(home,/onSignOut\}/);
+ assert.match(home,/SearchFeatureRails/);
+ assert.match(home,/hide_1muslim_id/);
+ assert.match(home,/prefers-reduced-motion: reduce/);
+ assert.match(css,/profileCinematicGrid\{display:flex!important/);
+ assert.match(css,/border-radius:50%!important/);
+ assert.match(rail,/\.dsPage\.dsHomeMode \.dsContent\{width:100%;max-width:none\}/);
+ assert.match(search,/setAuthReturn\]=useState\("\/profile"\)/);
+});
 test("Shahada admission returns directly to prior work without forcing profile gender",()=>{
  const onboard=read("app/components/HudHudShahadaV2.tsx");
  const route=read("app/onboarding/page.tsx");
