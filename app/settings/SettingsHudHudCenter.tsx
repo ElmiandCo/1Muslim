@@ -8,6 +8,7 @@ type SavedSession={id:string;title:string;lines:ChatLine[]};
 type MemoryState={signedIn:boolean;enabled:boolean;sessions:SavedSession[]};
 
 const VOICE_KEY="1muslim:hudhud:voice-read-aloud";
+const AUTO_KEY="1muslim:hudhud:auto-listen";
 export default function SettingsHudHudCenter(){
  const [memory,setMemory]=useState<MemoryState>({signedIn:false,enabled:false,sessions:[]});
  const [loading,setLoading]=useState(true);
@@ -16,9 +17,10 @@ export default function SettingsHudHudCenter(){
  const [status,setStatus]=useState("");
  const [search,setSearch]=useState("");
  const [voice,setVoice]=useState(true);
+ const [autoListen,setAutoListen]=useState(true);
  useEffect(()=>{
   let active=true;
-  try{setVoice(localStorage.getItem(VOICE_KEY)!=="off")}catch{}
+  try{setVoice(localStorage.getItem(VOICE_KEY)!=="off");setAutoListen(localStorage.getItem(AUTO_KEY)!=="off")}catch{}
   void fetch("/api/hudhud/memory",{cache:"no-store"}).then(async response=>{
    const data=await response.json().catch(()=>({}));
    if(!response.ok)throw Error(typeof data.error==="string"?data.error:"Could not load your memory settings");
@@ -78,6 +80,11 @@ export default function SettingsHudHudCenter(){
   window.setTimeout(()=>URL.revokeObjectURL(url),1000);
   setStatus("Your saved conversation export was prepared on this device.");
  };
+ const switchAutoListen=(value:boolean)=>{
+  setAutoListen(value);
+  try{localStorage.setItem(AUTO_KEY,value?"on":"off")}catch{}
+  setStatus(value?"Auto-listen will be on when you next open HudHud.":"Auto-listen disabled for HudHud. You can still tap the microphone to speak.");
+ };
  const switchVoice=(value:boolean)=>{
   setVoice(value);
   try{localStorage.setItem(VOICE_KEY,value?"on":"off")}catch{}
@@ -119,7 +126,9 @@ export default function SettingsHudHudCenter(){
      <span className="scAiEyebrow">03 · VOICE & ACCESS</span>
      <div className="scAiControls"><div><h3>Read replies aloud</h3><p>HudHud speaks its answers using your browser.</p></div>
       <button type="button" className="scAiSwitch" aria-label="HudHud spoken replies" aria-pressed={voice} onClick={()=>switchVoice(!voice)}>{voice?"ON":"OFF"}</button></div>
-     <div className="scAiNotice"><strong>Microphone access</strong><br/>Your browser controls permission. Voice dictation currently starts when you tap the microphone inside HudHud. Always-on, across-page listening is not enabled here yet.</div>
+     <div className="scAiControls"><div><h3>Auto-listen in HudHud</h3><p>Automatically start when HudHud opens and the browser grants permission. Pauses during speech and typing.</p></div>
+      <button type="button" className="scAiSwitch" aria-label="Automatically listen on HudHud page" aria-pressed={autoListen} onClick={()=>switchAutoListen(!autoListen)}>{autoListen?"ON":"OFF"}</button></div>
+     <div className="scAiNotice"><strong>Microphone access</strong><br/>Your browser controls permission and speech recognition. Auto-listening works on HudHud’s own page; continuous listening across other 1Muslim pages is not yet available.</div>
      <div className="scAiActions"><Link href="/hudhud">Open microphone controls ↗</Link></div>
     </section>
    </div>
