@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import {useRouter} from "next/navigation";
 import {useEffect,useRef,useState,type FormEvent} from "react";
 import AnimatedMuslimBrand from "../components/AnimatedMuslimBrand";
 import ProfileCinematicPosts from "../components/ProfileCinematicPosts";
@@ -40,7 +39,6 @@ type ProfileSpeechRecognition={
 type ProfileVoiceWindow=Window&{SpeechRecognition?:new()=>ProfileSpeechRecognition;webkitSpeechRecognition?:new()=>ProfileSpeechRecognition};
 
 export default function ProfileSearchHome({profile,postCount,expanded,editing,onExpand,onCollapse,onEdit,onSettings,onPosts,onSignOut}:Props){
-  const router=useRouter();
   const [search,setSearch]=useState("");
   const [detailsOpen,setDetailsOpen]=useState(false);
   const [stageRequest,setStageRequest]=useState<ProfileSearchRequest|null>(null);
