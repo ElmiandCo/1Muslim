@@ -89,12 +89,13 @@ export default function SearchHub() {
     setQuery("");setSubmitted("");setTab("All");setAuthLeaving(false);setAuthMode(mode);
     try{window.history.replaceState({}, "", "/search?auth="+mode);}catch{}
   };
-  const closeAuth=()=>{
+  const closeAuth=(toMemberHome=false)=>{
     setAuthLeaving(true);
     window.setTimeout(()=>{
       setAuthMode(null);setAuthLeaving(false);
-      try{window.history.replaceState({}, "", authQuery?"/search?q="+encodeURIComponent(authQuery):"/search");}catch{}
-      if(authQuery){setQuery(authQuery);setSubmitted(authQuery)}
+      const restore=toMemberHome?"":authQuery;
+      try{window.history.replaceState({}, "", restore?"/search?q="+encodeURIComponent(restore):"/search");}catch{}
+      setQuery(restore);setSubmitted(restore);setAuthQuery("");setTab("All");
     },220);
   };
   const [resultsNight,setResultsNight]=useState(true);
@@ -144,7 +145,7 @@ export default function SearchHub() {
       if(!active)return;
       if(!profile?.shahada_verified_at){setAuthMode("shahada");return}
       if(authReturn!=="/search"){try{sessionStorage.setItem("1muslim:member-home-arrival","1")}catch{};router.replace(authReturn);return}
-      closeAuth();
+      closeAuth(true);
     })();
     return()=>{active=false};
   },[account,authMode,authReturn,router]);
@@ -221,7 +222,7 @@ export default function SearchHub() {
       window.setTimeout(()=>router.replace(next),240);
       return;
     }
-    closeAuth();
+    closeAuth(true);
   };
   const signOut=async()=>{
     if(signoutBusy)return;
