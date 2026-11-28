@@ -41,6 +41,7 @@ jobs:
           scripts/hudhud-voice-authorization.test.mjs
           scripts/hudhud-website-intent.test.mjs
           scripts/hudhud-tab-navigation.test.mjs
+          scripts/hudhud-verse-display.test.mjs
           scripts/release-receipt.test.mjs
       - name: TypeScript validation
         run: npx tsc --noEmit

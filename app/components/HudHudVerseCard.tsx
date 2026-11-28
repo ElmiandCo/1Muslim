@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useState} from "react";
 import Link from "next/link";
+import "./hudhud-verse-presentation.css";
 
 type Verse={key:string;arabic:string;english:string;translation:string;source?:string};
 export default function HudHudVerseCard({verseKey,href,verseData,featured=false,spokenChars}:{verseKey:string;href:string;verseData?:Verse;featured?:boolean;spokenChars?:number}){
@@ -15,7 +16,7 @@ export default function HudHudVerseCard({verseKey,href,verseData,featured=false,
   return()=>controller.abort();
  },[verseKey,verseData]);
  return <Link href={href} className={"hudVerseCard"+(featured?" hudVerseHero":"")}>
-  <span className="hudMatchKind">THE QUR’AN · {verseKey}</span>
+  <span className={featured?"hudVerseAccessLabel":"hudMatchKind"}>THE QUR’AN · {verseKey}</span>
   {loaded?<><strong className="hudVerseArabic" lang="ar" dir="rtl">{loaded.arabic}</strong>
     <p className="hudVerseEnglish" lang="en">{spokenChars===undefined?loaded.english:(()=>{
       let offset=0;
@@ -24,7 +25,7 @@ export default function HudHudVerseCard({verseKey,href,verseData,featured=false,
         return <span key={i} className={part.trim()&&spokenChars>=start?"hudWordSpoken":""}>{part}</span>;
       });
     })()}</p>
-    <small>English translation: {loaded.translation}</small></>
+    <small className="hudVerseTranslationCredit">English translation: {loaded.translation}</small></>
     :<small>The verified text is temporarily unavailable. Open the Qur’an Reader to try again.</small>}
   <em>Read in Qur’an Library ↗</em>
  </Link>;
