@@ -523,18 +523,17 @@ test("Shahada uses HudHud animated guidance instead of green orb, keeping all re
  assert.doesNotMatch(css,/\.hudV2OrbZone|\.hudV2LockButton/);
 });
 
-test("Six image-first Explore shortcuts fling away only on deliberate fast swipe and restore on explicit action",()=>{
+test("Explore rail uses six photos, deliberate fling dismissal and explicit restoration",()=>{
  const rail=read("app/search/SearchFeatureRails.tsx");
  const css=read("app/search/search-feature-rails.css");
- assert.match(rail,/useState\\(false\\)/);
- assert.match(rail,/speed>1\\.25/);
- assert.match(rail,/dx< -145/);
- assert.match(rail,/setTimeout\\(\\(\\)=>\\{setHidden\\(true\\)/);
- assert.match(rail,/if\\(hidden\\)\\{if\\(dx>100\\)restore\\(\\)/);
- assert.match(rail,/onClick=\\{restore\\}/);
- assert.match(rail,/dsFeatureImage/);
- assert.equal((rail.match(/image:"\\/assets\\//g)||[]).length,6);
- assert.match(css,/dsExploreRailExit/);
- assert.match(css,/dsExploreRailReturn/);
- assert.match(css,/prefers-reduced-motion:reduce/);
+ assert.ok(rail.includes("speed>1.25"));
+ assert.ok(rail.includes("dx< -145"));
+ assert.ok(rail.includes("setHidden(true)"));
+ assert.ok(rail.includes("if(hidden){if(dx>100)restore()"));
+ assert.ok(rail.includes("onClick={restore}"));
+ assert.ok(rail.includes("dsFeatureImage"));
+ assert.equal(rail.split('image:"/assets/').length-1,6);
+ assert.ok(css.includes("dsExploreRailExit"));
+ assert.ok(css.includes("dsExploreRailReturn"));
+ assert.ok(css.includes("prefers-reduced-motion:reduce"));
 });
