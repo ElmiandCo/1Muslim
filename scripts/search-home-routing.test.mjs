@@ -485,3 +485,33 @@ test("signed-in Search Home removes the microphone from the search pill but reta
  assert.doesNotMatch(css,/\.smhMic/);
  assert.match(css,/\.smhSubmit\{/);
 });
+
+test("Shahada uses HudHud animated guidance instead of green orb, keeping all recording and accessibility controls",()=>{
+ const shahada=read("app/components/HudHudShahadaV2.tsx");
+ const guide=read("app/components/HudHudShahadaGuide.tsx");
+ const css=read("app/components/hudhud-shahada-v2.css");
+ assert.match(shahada,/import HudHudShahadaGuide/);
+ assert.doesNotMatch(shahada,/HudHudOrb|HudHudOrb compact|hudV2LockButton/);
+ assert.match(shahada,/<HudHudShahadaGuide/);
+ assert.match(shahada,/<h1>Shahada<\/h1>/);
+ assert.match(shahada,/Start recording/);
+ assert.match(shahada,/Pause<\/button>/);
+ assert.match(shahada,/>Help<\/button>/);
+ assert.match(shahada,/\{muted\?"Unmute":"Mute"\}/);
+ assert.match(shahada,/>العربية<\/button>/);
+ assert.match(shahada,/>English<\/button>/);
+ assert.match(shahada,/getUserMedia/);
+ assert.match(shahada,/MediaRecorder/);
+ assert.match(shahada,/hasShahada/);
+ assert.match(shahada,/60-elapsed/);
+ assert.match(shahada,/shahada-safe-vault/);
+ assert.match(shahada,/speechSynthesis/);
+ assert.match(guide,/role="status"/);
+ assert.match(guide,/aria-live="polite"/);
+ assert.match(guide,/Recording · \{seconds\}s/);
+ assert.match(guide,/prefers-reduced-motion/);
+ assert.doesNotMatch(guide,/<input|<form/);
+ assert.match(css,/\.hudV2GuideCard/);
+ assert.match(css,/\.hudV2GuideTypewriter/);
+ assert.doesNotMatch(css,/\.hudV2OrbZone|\.hudV2LockButton/);
+});
