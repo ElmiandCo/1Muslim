@@ -176,8 +176,12 @@ test("Search Home places every Explore destination in one bottom-anchored swipab
   assert.match(rail,/const destinations: Destination\[\]/);
   assert.match(rail,/destinations\.map\(item=>/);
   assert.doesNotMatch(rail,/rows\.map|const rows:/);
-  assert.match(rail,/href:"\/profile\?compass=1"/);
-  assert.match(profile,/get\("compass"\)==="1"/);
+  assert.match(rail,/href:"\\/deepwatch"/);
+  assert.match(rail,/href:"\\/posts"/);
+  assert.match(rail,/href:"\\/streaming"/);
+  assert.match(rail,/href:"\\/profile\\?section=muslimeen"/);
+  assert.match(rail,/href:"\\/notifications"/);
+  assert.match(rail,/href:"\\/settings"/);
   assert.match(railCss,/scroll-snap-type:x mandatory/);
   assert.match(railCss,/overflow-x:auto/);
   assert.match(railCss,/border:0/);
@@ -517,4 +521,20 @@ test("Shahada uses HudHud animated guidance instead of green orb, keeping all re
  assert.match(css,/\.hudV2GuideCard/);
  assert.match(css,/\.hudV2GuideTypewriter/);
  assert.doesNotMatch(css,/\.hudV2OrbZone|\.hudV2LockButton/);
+});
+
+test("Six image-first Explore shortcuts fling away only on deliberate fast swipe and restore on explicit action",()=>{
+ const rail=read("app/search/SearchFeatureRails.tsx");
+ const css=read("app/search/search-feature-rails.css");
+ assert.match(rail,/useState\\(false\\)/);
+ assert.match(rail,/speed>1\\.25/);
+ assert.match(rail,/dx< -145/);
+ assert.match(rail,/setTimeout\\(\\(\\)=>\\{setHidden\\(true\\)/);
+ assert.match(rail,/if\\(hidden\\)\\{if\\(dx>100\\)restore\\(\\)/);
+ assert.match(rail,/onClick=\\{restore\\}/);
+ assert.match(rail,/dsFeatureImage/);
+ assert.equal((rail.match(/image:"\\/assets\\//g)||[]).length,6);
+ assert.match(css,/dsExploreRailExit/);
+ assert.match(css,/dsExploreRailReturn/);
+ assert.match(css,/prefers-reduced-motion:reduce/);
 });
