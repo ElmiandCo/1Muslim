@@ -59,6 +59,8 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  const [pageVisible,setPageVisible]=useState(true);
  const [paused,setPaused]=useState(false);
  const [speaking,setSpeaking]=useState(false);
+ const [speechPending,setSpeechPending]=useState(false);
+ const [voiceNeedsTap,setVoiceNeedsTap]=useState(false);
  const [micCooldown,setMicCooldown]=useState(false);
  const [autoMicEnabled,setAutoMicEnabled]=useState(true);
  useEffect(()=>{const read=()=>{try{setAutoMicEnabled(localStorage.getItem("1muslim:hudhud:auto-listen")!=="off")}catch{}};read();window.addEventListener("1muslim:hudhud-mic-preference",read);window.addEventListener("storage",read);return()=>{window.removeEventListener("1muslim:hudhud-mic-preference",read);window.removeEventListener("storage",read)}},[]);
@@ -76,6 +78,12 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  const speechActive=useRef(false);
  const voiceOnRef=useRef(voiceOn);voiceOnRef.current=voiceOn;
  const lastSpokenText=useRef("");
+ // Prime WebAudio on a real user gesture before any asynchronous TTS request.
+ useEffect(()=>{
+  const prime=()=>{if(hudHudVoiceEnabled()){const player=voicePlayer.current||(voicePlayer.current=createHudHudAiVoicePlayer());player.prime()}};
+  document.addEventListener("pointerdown",prime,{capture:true,passive:true});document.addEventListener("keydown",prime,{capture:true});
+  return()=>{document.removeEventListener("pointerdown",prime,true);document.removeEventListener("keydown",prime,true);voicePlayer.current?.dispose();voicePlayer.current=null};
+ },[]);
  useEffect(()=>{const sync=()=>setVoiceOn(hudHudVoiceEnabled());sync();window.addEventListener("1muslim:hudhud-voice-preference",sync);window.addEventListener("storage",sync);return()=>{window.removeEventListener("1muslim:hudhud-voice-preference",sync);window.removeEventListener("storage",sync)}},[]);
  // Brief status notices disappear even when voice hardware fails.
  // Cleanup also prevents stale timers from updating an unmounted page.
@@ -179,7 +187,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
   audioEpoch.current++;
   voicePlayer.current?.stop();
   if(resumeTimer.current){window.clearTimeout(resumeTimer.current);resumeTimer.current=null}
-  speechActive.current=false;setSpeaking(false);setMicCooldown(false);
+  speechActive.current=false;setSpeaking(false);setSpeechPending(false);setMicCooldown(false);
  };
  // Listening requires browser permission and always has a visible pause control.
  const askMicPermission=async()=>{
@@ -212,13 +220,13 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
   stopRecognition();stopAudio();
   const epoch=++audioEpoch.current;
   const words=text.trim().slice(0,1800);
-  speechActive.current=true;setSpeaking(true);setSpokenChars(0);
+  speechActive.current=true;setSpeechPending(true);setSpeaking(false);setVoiceNeedsTap(false);setSpokenChars(0);
   const player=voicePlayer.current||(voicePlayer.current=createHudHudAiVoicePlayer());
-  void player.play(words).then(played=>{
+  void player.play(words,()=>{if(epoch!==audioEpoch.current)return;setSpeechPending(false);setSpeaking(true)}).then(played=>{
    if(epoch!==audioEpoch.current)return;
-   speechActive.current=false;setSpeaking(false);setSpokenChars(words.length);
-   if(!played)setVoiceError("HudHud's AI voice is unavailable. The reply is still here in text.");
-   else setVoiceError("");
+   speechActive.current=false;setSpeaking(false);setSpeechPending(false);setSpokenChars(words.length);
+   if(!played){setVoiceNeedsTap(true);setVoiceError("Tap to hear HudHud. If silent, check iPhone volume or Silent Mode.");}
+   else {setVoiceNeedsTap(false);setVoiceError("");}
    onEnd?.();
    // Give iPhone speakers and microphone hardware time to settle after audio.
    setMicCooldown(true);
@@ -241,6 +249,11 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
   userInput.current?.blur();setFocused(false);setSearch("");
   setVoiceError("");setThinking(true);
   setRequest({query:question,mode,token:++requestSequence.current});
+ };
+ const retryLastVoice=()=>{
+  if(!voiceOnRef.current||!lastSpokenText.current)return;
+  const player=voicePlayer.current||(voicePlayer.current=createHudHudAiVoicePlayer());player.prime();
+  say(lastSpokenText.current);
  };
  const onReply=(answer:string)=>{
   setThinking(false);
@@ -289,7 +302,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  const toggleVoice=()=>{
   const next=!voiceOnRef.current;
   voiceOnRef.current=next;setHudHudVoiceEnabled(next);setVoiceOn(next);
-  if(!next){stopAudio();setVoiceError(firstHudHudMuteNotice()?"HudHud voice is off. Tap the speaker to enable.":"");}
+  if(!next){stopAudio();setVoiceNeedsTap(false);setVoiceError(firstHudHudMuteNotice()?"HudHud voice is off. Tap the speaker to enable.":"");}
   else {setVoiceError("");if(lastSpokenText.current)window.setTimeout(()=>say(lastSpokenText.current),0)}
  };
  const toggleMic=()=>{
@@ -338,7 +351,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
       </div>
       <button className="smhSubmit" type="submit" disabled={!search.trim()||thinking} aria-label="Ask HudHud">↗</button>
     </form>
-    {(listening||speaking||thinking||paused||!autoMicEnabled||micPermission==="denied"||micPermission==="needs-tap"||micPermission==="unsupported")&&
+    {(listening||speaking||speechPending||thinking||paused||!autoMicEnabled||micPermission==="denied"||micPermission==="needs-tap"||micPermission==="unsupported")&&
      <div className="smhVoiceLine" aria-live="polite">
       {listening?<div className="smhListeningControls">
         <button className="smhListening smhListenControl" type="button" onClick={toggleMic}
@@ -348,6 +361,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
 
        </div>:
        speaking?<span>HudHud is speaking…</span>:
+       speechPending?<span>Preparing HudHud voice…</span>:
        thinking?<span>HudHud is thinking…</span>:
        micPermission==="denied"||micPermission==="needs-tap"
         ?<button className="smhResumeListening" type="button" onClick={toggleMic}>Enable microphone to speak</button>:
@@ -355,7 +369,8 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
         ?<button className="smhResumeListening" type="button" onClick={toggleMic}>Resume listening</button>:
        micPermission==="unsupported"?<span>Type to search. Voice unavailable.</span>:null}
      </div>}
-    {voiceError&&<button type="button" className={"smhError smhErrorAction"+(voiceOn?" smhErrorNeutral":"")} role="status" onClick={()=>{setVoiceError("");if(!voiceOnRef.current)toggleVoice();else if(lastSpokenText.current)void say(lastSpokenText.current);else toggleMic()}}>{voiceError}</button>}
+    {voiceNeedsTap&&voiceOn&&<button type="button" className="smhVoiceReplay" onClick={retryLastVoice} aria-label="Tap to hear HudHud reply">▶ Tap to hear HudHud</button>}
+    {voiceError&&!voiceNeedsTap&&<button type="button" className={"smhError smhErrorAction"+(voiceOn?" smhErrorNeutral":"")} role="status" onClick={()=>{setVoiceError("");if(!voiceOnRef.current)toggleVoice();else toggleMic()}}>{voiceError}</button>}
   </section>
   <div className="smhResponseSpace">
    <ProfileImmersiveStage request={request} onReply={onReply} onSettled={onSettled} persist={false} showEmpty={false} speaking={speaking} spokenChars={spokenChars}/>
