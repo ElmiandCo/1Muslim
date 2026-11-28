@@ -117,8 +117,10 @@ test("signed-in Search Home is the actual personalized experience, not the old P
  assert.match(member,/insert\("Search 1Muslim"/);
  assert.match(member,/insert\(" witg"/);
  assert.match(member,/insert\("1Muslim.Live"/);
- assert.match(member,/className="smhName"/);
- assert.match(member,/aria-label="Edit your display name"/);
+ const movable=read("app/search/SearchDraggableDisplayName.tsx");
+ assert.match(member,/<SearchDraggableDisplayName/);
+ assert.match(movable,/className={styles.nameButton}/);
+ assert.match(movable,/onEdit\(\)/);
  assert.match(member,/display_name:next/);
  assert.match(member,/href="\/create"/);
  assert.doesNotMatch(member,/ProfileCinematicPosts|Your posts/);
@@ -436,4 +438,29 @@ test("HudHud speech is AI-generated with a hard microphone playback barrier",()=
  assert.doesNotMatch(member,/speechSynthesis/);
  assert.doesNotMatch(hudhud,/speechSynthesis/);
  assert.doesNotMatch(window,/SpeechSynthesisUtterance/);
+});
+
+
+test("Search Home display name stays inside the upper safe band with bounded pointer and pinch gestures",()=>{
+ const member=read("app/search/SearchMemberHome.tsx");
+ const movable=read("app/search/SearchDraggableDisplayName.tsx");
+ const css=read("app/search/SearchDraggableDisplayName.module.css");
+ assert.match(member,/memberId=\{member\?\.id\|\|null\}/);
+ assert.match(member,/visibleName=\{displayedName\}/);
+ assert.match(member,/onEdit=\{\(\)=>\{stopRecognition\(\)/);
+ assert.match(member,/<SearchDraggableDisplayName[\s\S]+?<form className="smhSearchForm"/);
+ assert.match(movable,/const MIN_SIZE=16/);
+ assert.match(movable,/const MAX_SIZE=40/);
+ assert.match(movable,/setPointerCapture\(event\.pointerId\)/);
+ assert.match(movable,/current\.size\*distance\(a,b\)\/current\.distance/);
+ assert.match(movable,/event\.clientX-current\.origin\.x/);
+ assert.match(movable,/const edgeX=Math\.min\(\.5/);
+ assert.match(movable,/const edgeY=Math\.min\(\.5/);
+ assert.match(movable,/1muslim:home-name-layout:/);
+ assert.match(movable,/moved\.current\|\|loadedFor!==memberId/);
+ assert.match(movable,/case "ArrowLeft"/);
+ assert.match(css,/touch-action:none/);
+ assert.match(css,/overflow:hidden/);
+ assert.match(css,/width:min\(calc\(100vw - 24px\),1280px\)/);
+ assert.match(css,/max-height:calc\(100% - 12px\)/);
 });
