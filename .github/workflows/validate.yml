@@ -40,6 +40,7 @@ jobs:
           scripts/remove-symbol-appwide.test.mjs
           scripts/hudhud-voice-authorization.test.mjs
           scripts/hudhud-website-intent.test.mjs
+          scripts/hudhud-tab-navigation.test.mjs
           scripts/release-receipt.test.mjs
       - name: TypeScript validation
         run: npx tsc --noEmit
