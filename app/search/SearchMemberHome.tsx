@@ -234,12 +234,14 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
   });
  };
   const greet=()=>{
-  say("Assalamu Alaikum Wa Rahmatullahi Wa Barakatuh");
+  if(!member)return;
+  const name=nameOf(member).trim().slice(0,55);
+  say("As-salamu alaykum"+(name?", "+name:"")+". I'm HudHud. Welcome back.");
  };
  useEffect(()=>{
   if(!member||!pendingGreeting.current)return;
   pendingGreeting.current=false;
-  const timer=setTimeout(greet,1650);
+  const timer=setTimeout(greet,220);
   return()=>clearTimeout(timer);
  },[member?.id]);
  const runQuestion=(text:string,mode:"search"|"hudhud")=>{
