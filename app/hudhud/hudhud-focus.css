@@ -75,3 +75,69 @@
 @keyframes hudLeadInk{from{opacity:.2;filter:blur(4px);transform:translateY(5px)}to{opacity:1;filter:none;transform:none}}
 @media(max-width:600px){.hudFocusContent .hudReplyXL{font-size:clamp(29px,8.8vw,40px)!important}.hudFocusContent .hudReplyL{font-size:clamp(22px,6.5vw,32px)!important}.hudTopWebsite{gap:10px}}
 @media(prefers-reduced-motion:reduce){.hudNarratedLead{animation:none!important}}
+
+
+/* HudHud response scale: fill the available quiet canvas with short replies;
+   retain compact typography for paragraphs, history, cards and verse content. */
+.hudFocusCard:has(.hudReplyCentered){width:min(920px,100%);text-align:center}
+.hudFocusContent .hudNarratedReply.hudReplyCentered{
+ margin-inline:auto;max-width:100%;text-align:center;text-wrap:balance;line-height:1.24;
+}
+.hudFocusContent .hudNarratedReply.hudReplySolo{
+ font-size:clamp(92px,39vw,236px)!important;line-height:1.32!important;
+ font-weight:750!important;letter-spacing:-.065em;overflow-wrap:anywhere;
+}
+.hudFocusContent .hudNarratedReply.hudReplyXL{
+ font-size:clamp(38px,8.4vw,70px)!important;line-height:1.25!important;
+ font-weight:680!important;letter-spacing:-.05em;
+}
+.hudFocusContent .hudNarratedReply.hudReplyL{
+ font-size:clamp(30px,5.7vw,49px)!important;line-height:1.37!important;
+ font-weight:450!important;letter-spacing:-.036em;
+}
+.hudFocusContent .hudNarratedReply.hudReplyM{
+ font-size:clamp(21px,3.8vw,33px)!important;line-height:1.5!important;
+}
+.hudFocusContent .hudNarratedReply.hudReplyStandard{
+ font-size:clamp(16px,2.3vw,20px)!important;line-height:1.7!important;
+ font-weight:430!important;max-width:66ch;letter-spacing:-.012em;
+}
+/* Short-answer emphasis is stable for each message, never an animated hue
+   applied to sacred text. Accent follows the selected user color. */
+.hudFocusSurface{--hud-focus-accent:#285d42}
+.hudFocusSurface[data-accent="blue"]{--hud-focus-accent:#236caa}
+.hudFocusSurface[data-accent="gray"]{--hud-focus-accent:#566971}
+.hudFocusSurface[data-accent="yellow"]{--hud-focus-accent:#997006}
+.hudFocusSurface[data-accent="red"]{--hud-focus-accent:#b53242}
+.hudFocusContent .hudNarratedReply.hudReplyAccent{color:var(--hud-focus-accent)!important}
+.hudFocusContent .hudNarratedReply.hudReplyAccent span{color:inherit}
+.hudFocusContent .hudReplyCentered:not(.hudReplyAccent) .hudNarratedLead{color:#254333;font-weight:620}
+.hudFocusContent .hudReplyCentered:not(.hudReplyAccent) span:not(.hudNarratedLead){color:#84948a}
+.hudFocusCard:has(.hudReplySolo){overflow-y:hidden}
+.hudAccentOptions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 15px}
+.hudAccentOptions button{
+ height:40px;min-width:42px;padding:0 12px;border-radius:999px;
+ background:#f8faf9;border:1px solid #dce8df;color:#2a4535;font-size:12px;font-weight:650;
+}
+.hudAccentOptions button[aria-pressed="true"]{border:2px solid #224e37;box-shadow:0 0 0 2px #a3bbaa55}
+.hudAccentOptions button[data-accent="blue"]{background:#dcefff;color:#19598a}
+.hudAccentOptions button[data-accent="gray"]{background:#e6ecef;color:#344e5b}
+.hudAccentOptions button[data-accent="yellow"]{background:#fff0ba;color:#654900}
+.hudAccentOptions button[data-accent="red"]{background:#ffe2e5;color:#913039}
+@media(max-width:600px){
+ .hudFocusSurface{padding:14px 12px 20px}
+ .hudFocusCard:has(.hudReplyCentered){padding:9px 6px 18px;width:100%}
+ .hudFocusContent .hudNarratedReply.hudReplySolo{font-size:clamp(92px,39vw,178px)!important;line-height:1.25!important}
+ .hudFocusContent .hudNarratedReply.hudReplyXL{font-size:clamp(36px,8.4vw,56px)!important}
+ .hudFocusContent .hudNarratedReply.hudReplyL{font-size:clamp(27px,7.3vw,42px)!important}
+ .hudFocusContent .hudNarratedReply.hudReplyM{font-size:clamp(20px,5.6vw,30px)!important}
+ .hudFocusContent .hudNarratedReply.hudReplyStandard{font-size:clamp(16px,4.2vw,19px)!important}
+}
+@media(max-height:680px){
+ .hudFocusContent .hudNarratedReply.hudReplySolo{font-size:clamp(72px,29vw,144px)!important}
+ .hudFocusContent .hudNarratedReply.hudReplyXL{font-size:clamp(29px,7vw,48px)!important}
+ .hudFocusContent .hudNarratedReply.hudReplyL{font-size:clamp(24px,5.5vw,37px)!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .hudFocusContent .hudNarratedReply span{animation:none!important}
+}
