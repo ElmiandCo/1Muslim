@@ -1,4 +1,4 @@
-import {createClient} from "../../utils/supabase/server";
+import type {createClient} from "../../utils/supabase/server";
 
 type Db=Awaited<ReturnType<typeof createClient>>;
 export type HudHudNote={id:string;text:string;savedAt:string;source:"user"|"hudhud"};
@@ -93,7 +93,7 @@ export function hudHudPersonalPrompt(snapshot:HudHudMemberSnapshot):string{
  ].join("\n");
 }
 export function isHudHudIdentityQuestion(message:string):boolean{
- return /\b(?:do you (?:know|recognize|remember) me|who am i|what(?:'s| is) my name|tell me (?:what you know|about me)|what do you (?:know|remember) about me|are you aware of my profile)\b/i.test(message);
+ return /\b(?:do you (?:know|recognize|remember) me|do you know who i am|do you know anything about me|what (?:have you|did you) (?:saved|remembered) about me|who am i|what(?:'s| is) my name|tell me (?:what you know|about me)|what do you (?:know|remember) about me|are you aware of my profile)\b/i.test(message);
 }
 export function hudHudIdentityAnswer(snapshot:HudHudMemberSnapshot):string{
  if(!snapshot.signedIn||!snapshot.profile)return "I can't see an account profile because you're not signed in. You can sign in if you'd like a more personal experience.";
