@@ -417,3 +417,7 @@
 
 /* Mic/TTS interruptions are informational, not account or safety warnings. */
 .hudPage .hudError.hudErrorNeutral{background:#192425!important;color:#c6d9d5!important;border-color:transparent!important;box-shadow:none!important}
+
+
+.hudPage .hudInputPill:focus-within{border-color:#e5e9e6!important;box-shadow:none!important}
+.hudPage .hudInputPill input:focus-visible{outline:none!important;box-shadow:none!important}
