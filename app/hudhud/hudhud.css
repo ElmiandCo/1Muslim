@@ -417,3 +417,18 @@
 
 /* Mic/TTS interruptions are informational, not account or safety warnings. */
 .hudPage .hudError.hudErrorNeutral{background:#192425!important;color:#c6d9d5!important;border-color:transparent!important;box-shadow:none!important}
+
+
+/* Quiet HudHud voice companion caption appears only on the empty stage;
+   no border or glowing container to interrupt the existing presentation. */
+.hudCompanionNotice{
+ position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+ width:min(650px,calc(100% - 48px));max-height:50%;
+ display:grid;place-items:center;overflow:hidden;
+ margin:0;padding:15px 8px;text-align:center;text-wrap:balance;
+ font-size:clamp(19px,4.4vw,37px);line-height:1.32;font-weight:550;
+ letter-spacing:-.035em;color:#385f4d;background:transparent;border:0;
+ pointer-events:none;animation:hudCompanionFade .45s ease-out both;
+}
+@keyframes hudCompanionFade{from{opacity:0;transform:translate(-50%,-45%)}to{opacity:1;transform:translate(-50%,-50%)}}
+@media(prefers-reduced-motion:reduce){.hudCompanionNotice{animation:none}}
