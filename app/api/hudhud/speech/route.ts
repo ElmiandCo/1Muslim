@@ -8,7 +8,7 @@ const json=(body:unknown,status:number)=>NextResponse.json(body,{status,headers}
 // Use proven speech-style instructions rather than changing the model or
 // inserting words that are absent from the on-screen response.
 const voiceDirection=(spokenText:string)=>{
- const islamicContext=/\b(?:allah|islam|islamic|muslim|qur['’]?an|quran|sura[h]?|ayah|verse|prophets?|messenger|muhammad|hadith|salah|shahada|ramadan|sunnah|du['’]?a|sahaba)\b/i.test(spokenText);
+ const islamicContext=/\b(?:allah|islam|islamic|muslim|qur['’]?an|quran|sura[h]?|ayah|verse|prophets?|messenger|muhammad|hadith|salah|shahada|ramadan|sunnah|du['’]?a|sahaba|assalamu|salaam|salam|alaykum|bismillah|inshallah|mashaallah)\b/i.test(spokenText);
  return islamicContext
   ?"Express genuine warmth, joy and engaged curiosity about Islam and the prophets. Sound alive, uplifting and conversational, with natural variation in emphasis; never shout, imitate a sermon, or exaggerate. Always maintain reverence when speaking of Allah, the Qur'an and Prophet Muhammad. Pronounce Islamic names and Arabic words carefully. Read exactly the supplied words, without adding commentary."
   :"Warm, exceptionally natural North American feminine conversational speech with vivid but believable emotional color, spontaneous phrasing rhythm, gentle energy, subtle expressive emphasis and pauses only where meaningful. Sound like a thoughtful person speaking directly to a friend, never like a corporate narrator. Begin promptly. Read the supplied words exactly, without added introductions.";
