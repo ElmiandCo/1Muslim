@@ -219,7 +219,6 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
   });
  };
   const greet=()=>{
-  setGreetingFailed(false);
   say("Assalamu Alaikum Wa Rahmatullahi Wa Barakatuh");
  };
  useEffect(()=>{
