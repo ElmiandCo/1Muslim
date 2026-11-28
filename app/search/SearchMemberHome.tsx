@@ -62,7 +62,6 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  const [spokenChars,setSpokenChars]=useState(0);
  const [voiceOn,setVoiceOn]=useState(true);
  const [voiceError,setVoiceError]=useState("");
- const [greetingFailed,setGreetingFailed]=useState(false);
  const recognition=useRef<Recognition|null>(null);
  const requestSequence=useRef(0);
  const userInput=useRef<HTMLInputElement>(null);
@@ -73,6 +72,13 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  const initialised=useRef(false);
  const speechActive=useRef(false);
  const voiceOnRef=useRef(voiceOn);voiceOnRef.current=voiceOn;
+ // Brief status notices disappear even when voice hardware fails.
+ // Cleanup also prevents stale timers from updating an unmounted page.
+ useEffect(()=>{
+  if(!voiceError)return;
+  const timer=window.setTimeout(()=>setVoiceError(""),2000);
+  return()=>window.clearTimeout(timer);
+ },[voiceError]);
  useEffect(()=>{
   const device=window.matchMedia("(prefers-color-scheme: dark)");
   const update=()=>{
@@ -172,7 +178,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  };
  // Listening requires browser permission and always has a visible pause control.
  const askMicPermission=async()=>{
-  if(!navigator.mediaDevices?.getUserMedia){setMicPermission("unsupported");return}
+  if(!navigator.mediaDevices?.getUserMedia){setMicPermission("unsupported");setVoiceError("Voice is unavailable. You can still type.");return}
   try{
    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
    stream.getTracks().forEach(track=>track.stop());
@@ -204,8 +210,8 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
   void player.play(words).then(played=>{
    if(epoch!==audioEpoch.current)return;
    speechActive.current=false;setSpeaking(false);setSpokenChars(words.length);
-   if(!played){setGreetingFailed(true);setVoiceError("HudHud's AI voice is unavailable. The reply is still here in text.")}
-   else{setGreetingFailed(false);setVoiceError("")}
+   if(!played)setVoiceError("HudHud's AI voice is unavailable. The reply is still here in text.");
+   else setVoiceError("");
    onEnd?.();
    // Give iPhone speakers and microphone hardware time to settle after audio.
    setMicCooldown(true);
@@ -328,9 +334,14 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
     <div className="smhVoiceLine" aria-live="polite">
       {listening?<span className="smhListening"><i/>Listening…</span>:speaking?<span>HudHud is speaking…</span>:thinking?<span>HudHud is thinking…</span>:
       micPermission==="denied"||micPermission==="needs-tap"?<button type="button" onClick={()=>{setPaused(false);void askMicPermission()}}>Enable microphone to speak</button>:
-      micPermission==="unsupported"?<span>Type to ask HudHud. Voice recognition is unavailable.</span>:null}
-      {greetingFailed&&<button type="button" onClick={greet}>Hear the greeting</button>}
-      <button type="button" className="smhVoiceToggle" aria-pressed={voiceOn} onClick={()=>{setVoiceOn(old=>!old);if(voiceOn)stopAudio()}}>{voiceOn?"AI spoken replies on":"AI spoken replies off"}</button>
+      null}
+      <button type="button" className="smhVoiceToggle"
+       aria-label={voiceOn?"Turn spoken replies off":"Turn spoken replies on"}
+       title={voiceOn?"Spoken replies on":"Spoken replies off"}
+       aria-pressed={voiceOn}
+       onClick={()=>{setVoiceOn(old=>!old);setVoiceError("");if(voiceOn)stopAudio()}}>
+        <span className="smhVoiceDot" aria-hidden="true"/>
+      </button>
     </div>
     {voiceError&&<p className="smhError" role="status">{voiceError}</p>}
   </section>
