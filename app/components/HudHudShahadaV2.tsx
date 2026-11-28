@@ -2,7 +2,6 @@
 import {useCallback,useEffect,useRef,useState} from "react";
 import {useRouter} from "next/navigation";
 import {createClient} from "../../utils/supabase/client";
-import HudHudOrb from "./HudHudOrb";
 import {hasShahada,SHAHADA_ARABIC,SHAHADA_ENGLISH,type ShahadaLanguage} from "../lib/shahada-recognition";
 import "./hudhud-shahada-v2.css";
 
@@ -165,7 +164,7 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
     }
    };
    recorder.start(250);
-   setState("listening");setMessage("Say your Shahada whenever you're ready.");
+   setState("listening");setMessage("I’m here. Say your Shahada whenever you’re ready.");
    try{
     const AudioCtx=window.AudioContext;
     if(AudioCtx){
@@ -226,7 +225,7 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
     const elapsed=Math.floor((Date.now()-startedAt.current)/1000);
     setSeconds(Math.max(0,60-elapsed));
     if(elapsed>=60&&!done.current){
-     done.current=true;stop(false);setState("ready");setMessage("We'll try again. Tap HudHud when you're ready.");
+     done.current=true;stop(false);setState("ready");setMessage("You can try again whenever you’re ready. Tap the lock to restart.");
     }
    },300);
    reminders.current.push(setTimeout(()=>{
@@ -239,7 +238,7 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
    granted?.getTracks().forEach(track=>track.stop());
    active.current=false;setState("unavailable");
    const permission=e instanceof DOMException&&["NotAllowedError","PermissionDeniedError"].includes(e.name);
-   setMessage(permission?"Allow microphone access in your browser, then tap the orb to try again. You can also use Help.":"The microphone isn't ready. Tap HudHud to retry or open Help.");
+   setMessage(permission?"Allow microphone access in your browser, then tap the lock to try again. You can also use Help.":"The microphone isn’t ready. Tap the lock to retry or open Help.");
   }
  },[guide,language,stop,spoken]);
  voiceRef.current=begin;
@@ -272,7 +271,7 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
  return <section className={"hudV2Shahada "+(embedded?"isEmbedded":"")} aria-label="HudHud Shahada">
   {!embedded&&<header className="hudV2Brand"><button type="button" onClick={exit} aria-label="Back to 1Muslim Search Home">1Muslim<span>.live</span></button></header>}
   <div className="hudV2ShahadaBody">
-   <h1 aria-live="polite">{state==="recognized"||state==="complete"?"Shahada recognized":state==="saving"?"1Muslim":state==="help"?"Shahada":"Shahada"}</h1>
+   {state==="help"&&<h1>Shahada</h1>}
    {state==="help"?<div className="hudV2Help">
      <p>The Shahada is the declaration of belief in Allah and His Messenger. You can speak it in Arabic or English, or personally affirm it here if recording isn't possible.</p>
      <small className="hudV2PrivacyNote">Your browser may use its speech-recognition service to process voice. A recognized recording is stored only in our private Shahada vault. You can instead use the declaration below without recording.</small>
@@ -282,18 +281,26 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
      <label className="hudV2Check"><input type="checkbox" checked={terms} onChange={e=>setTerms(e.target.checked)}/> I agree to the <a href="/terms" target="_blank" rel="noopener noreferrer">community terms</a>.</label>
      <div className="hudV2HelpActions"><button onClick={back} type="button">← Back</button><button className="isPrimary" disabled={!manual||!terms||saved.current} onClick={completeManual} type="button">Continue →</button></div>
     </div>:<>
-    <div className="hudV2OrbZone">
-      <HudHudOrb compact listening={state==="listening"} thinking={state==="saving"||state==="permission"} speaking={speaking} level={level}
-       onClick={()=>{if(state==="ready"||state==="unavailable")void begin();else if(state==="listening"){stop(false);setState("ready");setMessage("Ready when you are.");}}} />
-      {state==="listening"&&<span className="hudV2ListeningPulse" aria-live="off">Listening · {seconds}s</span>}
-      {state==="permission"&&<span className="hudV2ListeningPulse">Allow microphone</span>}
+    <div className="hudV2LockZone">
+     <button type="button" className={"hudV2LockButton"+(state==="listening"?" isListening":"")+(state==="recognized"||state==="complete"?" isUnlocked":"")+(speaking?" isSpeaking":"")}
+      aria-label={state==="listening"?"Stop listening":state==="ready"||state==="unavailable"?"Start Shahada microphone":"Secure Shahada verification"}
+      disabled={state==="checking"||state==="permission"||state==="saving"||state==="recognized"||state==="complete"}
+      onClick={()=>{if(state==="ready"||state==="unavailable")void begin();else if(state==="listening"){stop(false);setState("ready");setMessage("I’m here when you’re ready. Tap the lock to start again.");}}}>
+      <span className="hudV2LockGlow" style={{opacity:0.25+level*.5}} aria-hidden="true"/>
+      <svg className="hudV2LockIcon" viewBox="0 0 80 90" fill="none" aria-hidden="true">
+       <path className="hudV2LockShackle" d={state==="recognized"||state==="complete"?"M25 39V23C25 10 35 6 44 8C54 10 57 19 57 25":"M24 39V26C24 13 32 8 40 8C48 8 56 13 56 26V39"} strokeWidth="6" strokeLinecap="round"/>
+       <rect x="15" y="36" width="50" height="43" rx="11" strokeWidth="3.5"/>
+       <circle cx="40" cy="55" r="4.5" fill="currentColor"/><path d="M40 59.5V65" strokeWidth="3.5" strokeLinecap="round"/>
+      </svg>
+     </button>
+     {state==="listening"&&<span className="hudV2ListeningPulse" aria-live="off">{seconds}s</span>}
     </div>
-    <p className="hudV2ShahadaStatus" role="status" aria-live="polite">{state==="checking"?"Preparing HudHud…":message|| (state==="ready"?"Allow microphone to begin":state==="listening"?"I'm listening.":state==="complete"?"Welcome to 1Muslim.":"")}</p>
-    {heardError&&state==="listening"&&<small className="hudV2Gentle">Your browser can't automatically recognize speech right now. Try Help.</small>}
+    <p className="hudV2ShahadaStatus" role="status" aria-live="polite">{state==="checking"?"I’m preparing your secure Shahada welcome…":message||(state==="ready"?"Tap the lock to begin whenever you’re ready.":state==="permission"?"Allow your microphone to begin.":state==="listening"?"I’m listening. Speak when you’re ready.":state==="complete"?"As-salamu alaykum. Welcome to 1Muslim.":"")}</p>
+    {heardError&&state==="listening"&&<small className="hudV2Gentle">Your browser cannot recognize speech right now. Help offers another way.</small>}
     <div className="hudV2ShahadaActions">
-     {(state==="ready"||state==="unavailable")&&<button type="button" className="hudV2Primary" onClick={()=>void begin()}>Enable microphone</button>}
-     <button type="button" className="hudV2QuietButton" onClick={openHelp} disabled={state==="saving"||state==="recognized"||state==="complete"}>Help</button>
-     <button type="button" className="hudV2QuietButton" aria-label={muted?"Unmute HudHud guidance":"Mute HudHud guidance"} aria-pressed={muted} onClick={()=>{setMuted(x=>!x);stopGuidance()}}>{muted?"Unmute":"Mute"}</button>
+     {(state==="ready"||state==="unavailable")&&<button type="button" className="hudV2CircleAction" onClick={()=>void begin()} aria-label="Start or restart microphone" title="Restart microphone">↻</button>}
+     <button type="button" className="hudV2CircleAction" aria-label="Shahada help" title="Help" onClick={openHelp} disabled={state==="saving"||state==="recognized"||state==="complete"}>?</button>
+     <button type="button" className="hudV2CircleAction" aria-label={muted?"Unmute HudHud guidance":"Mute HudHud guidance"} title={muted?"Unmute":"Mute"} aria-pressed={muted} onClick={()=>{setMuted(x=>!x);stopGuidance()}}>{muted?"◌":"◖"}</button>
     </div>
     </>}
    {state!=="help"&&state!=="recognized"&&state!=="complete"&&state!=="saving"&&<div className="hudV2Language" aria-label="Language preference">
