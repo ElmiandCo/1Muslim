@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import test from "node:test";
 import "./hudhud-voice-and-flat-settings.test.mjs";
+import "./hudhud-stream-first-voice.test.mjs";
 import "./search-member-voice-ui.test.mjs";
 import {passwordWarning} from "../app/lib/auth-password-policy.ts";
 import {hasShahada,SHAHADA_ARABIC,SHAHADA_ENGLISH} from "../app/lib/shahada-recognition.ts";
