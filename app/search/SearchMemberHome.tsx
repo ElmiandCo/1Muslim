@@ -4,6 +4,7 @@ import {useEffect,useRef,useState,type FormEvent} from "react";
 import {createClient} from "../../utils/supabase/client";
 import {normalizeSpokenHudHudQuestion} from "../lib/hudhud-speech";
 import {createHudHudAiVoicePlayer} from "../lib/hudhud-ai-voice-player";
+import {hudHudVoiceEnabled,setHudHudVoiceEnabled,firstHudHudMuteNotice} from "../lib/hudhud-voice-preference";
 import AnimatedMuslimBrand from "../components/AnimatedMuslimBrand";
 import SearchFeatureRails from "./SearchFeatureRails";
 import SearchDraggableDisplayName from "./SearchDraggableDisplayName";
@@ -59,6 +60,8 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  const [paused,setPaused]=useState(false);
  const [speaking,setSpeaking]=useState(false);
  const [micCooldown,setMicCooldown]=useState(false);
+ const [autoMicEnabled,setAutoMicEnabled]=useState(true);
+ useEffect(()=>{const read=()=>{try{setAutoMicEnabled(localStorage.getItem("1muslim:hudhud:auto-listen")!=="off")}catch{}};read();window.addEventListener("1muslim:hudhud-mic-preference",read);window.addEventListener("storage",read);return()=>{window.removeEventListener("1muslim:hudhud-mic-preference",read);window.removeEventListener("storage",read)}},[]);
  const [spokenChars,setSpokenChars]=useState(0);
  const [voiceOn,setVoiceOn]=useState(true);
  const [voiceError,setVoiceError]=useState("");
@@ -72,6 +75,8 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  const initialised=useRef(false);
  const speechActive=useRef(false);
  const voiceOnRef=useRef(voiceOn);voiceOnRef.current=voiceOn;
+ const lastSpokenText=useRef("");
+ useEffect(()=>{const sync=()=>setVoiceOn(hudHudVoiceEnabled());sync();window.addEventListener("1muslim:hudhud-voice-preference",sync);window.addEventListener("storage",sync);return()=>{window.removeEventListener("1muslim:hudhud-voice-preference",sync);window.removeEventListener("storage",sync)}},[]);
  // Brief status notices disappear even when voice hardware fails.
  // Cleanup also prevents stale timers from updating an unmounted page.
  useEffect(()=>{
@@ -178,29 +183,31 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  };
  // Listening requires browser permission and always has a visible pause control.
  const askMicPermission=async()=>{
-  if(!navigator.mediaDevices?.getUserMedia){setMicPermission("unsupported");setVoiceError("Voice is unavailable. You can still type.");return}
+  if(!navigator.mediaDevices?.getUserMedia){setMicPermission("unsupported");setVoiceError("Microphone unavailable. Tap to retry.");return false}
   try{
    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
    stream.getTracks().forEach(track=>track.stop());
-   setMicPermission("granted");setVoiceError("");
+   setMicPermission("granted");setVoiceError("");return true;
   }catch(err){
    const name=err instanceof Error?err.name:"";
    setMicPermission(name==="NotAllowedError"||name==="PermissionDeniedError"?"denied":"needs-tap");
+   return false;
   }
  };
  useEffect(()=>{
   if(!member)return;
-  void askMicPermission();
+  if(autoMicEnabled)void askMicPermission();
   const onHide=()=>{setPageVisible(!document.hidden);if(document.hidden){stopRecognition();stopAudio()}};
   document.addEventListener("visibilitychange",onHide);
   return()=>{
    document.removeEventListener("visibilitychange",onHide);
    stopRecognition();stopAudio();
   };
- },[member?.id]);
+ },[member?.id,autoMicEnabled]);
 
  const say=(text:string,onEnd?:()=>void)=>{
   if(!voiceOnRef.current){onEnd?.();return}
+  lastSpokenText.current=text;
   // Half duplex: the same microphone must NEVER recognize HudHud's own output.
   stopRecognition();stopAudio();
   const epoch=++audioEpoch.current;
@@ -263,7 +270,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
     if(event.error==="aborted"||event.error==="no-speech")return;
     setPaused(true);
     if(event.error==="not-allowed"||event.error==="service-not-allowed"){setMicPermission("needs-tap");setVoiceError("Tap the mic to allow listening.");}
-    else setVoiceError("Voice stopped. Tap the mic or type a question.");
+    else {setMicPermission("needs-tap");setVoiceError("Microphone interrupted. Tap to retry.");}
    };
    rec.onend=()=>{
     if(recognition.current!==rec)return;
@@ -275,13 +282,19 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
   }catch{setPaused(true);setMicPermission("needs-tap");setVoiceError("Tap the microphone to start listening.");}
  };
  useEffect(()=>{
-  if(!member||paused||nameEditor||!pageVisible||micPermission!=="granted"||listening||thinking||speaking||speechActive.current||micCooldown||focused||search.trim()||document.hidden)return;
+  if(!autoMicEnabled||!member||paused||nameEditor||!pageVisible||micPermission!=="granted"||listening||thinking||speaking||speechActive.current||micCooldown||focused||search.trim()||document.hidden)return;
   const timer=setTimeout(startRecognition,550);
   return()=>clearTimeout(timer);
- },[member?.id,paused,nameEditor,pageVisible,micPermission,listening,thinking,speaking,micCooldown,focused,search]);
+ },[autoMicEnabled,member?.id,paused,nameEditor,pageVisible,micPermission,listening,thinking,speaking,micCooldown,focused,search]);
+ const toggleVoice=()=>{
+  const next=!voiceOnRef.current;
+  voiceOnRef.current=next;setHudHudVoiceEnabled(next);setVoiceOn(next);
+  if(!next){stopAudio();setVoiceError(firstHudHudMuteNotice()?"HudHud voice is off. Tap the speaker to enable.":"");}
+  else {setVoiceError("");if(lastSpokenText.current)window.setTimeout(()=>say(lastSpokenText.current),0)}
+ };
  const toggleMic=()=>{
   if(listening){setPaused(true);stopRecognition();return}
-  setPaused(false);if(micPermission!=="granted"){void askMicPermission();return}
+  setPaused(false);if(micPermission!=="granted"){void askMicPermission().then(granted=>{if(granted)window.setTimeout(startRecognition,0)});return}
   // Voice needs a user gesture on some mobile browsers.
   window.setTimeout(startRecognition,0);
  };
@@ -301,7 +314,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  const displayName=nameOf(member);
  return <main className={"smhPage dsPage dsHomeMode"+(night?" smhNight":"")+(arriving?" smhArriving":"")} aria-label="Your One Muslim Search Home">
   <header className="smhHeader">
-   <Link className="smhLogo" href="/search" aria-label="One Muslim.Live home"><AnimatedMuslimBrand/><span className="smhLogoLive">.Live</span></Link>
+   <div className="smhHeaderLeft"><button type="button" className="smhHeaderSpeaker" aria-label={voiceOn?"Mute HudHud voice":"Enable HudHud voice"} title={voiceOn?"HudHud voice on":"HudHud voice off"} aria-pressed={voiceOn} onClick={toggleVoice}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4"/>{voiceOn?<><path d="M16 9a4 4 0 0 1 0 6"/><path d="M19 6a8 8 0 0 1 0 12"/></>:<path d="m17 9 5 6m0-6-5 6"/>}</svg></button><Link className="smhLogo" href="/search" aria-label="One Muslim.Live home"><AnimatedMuslimBrand/><span className="smhLogoLive">.Live</span></Link></div>
    <nav aria-label="Account shortcuts" className="smhUtilities">
     <Link className="smhOrb smhPlus" href="/create" aria-label="Open Creator Studio to add a post" title="Create">+</Link>
     <button className="smhOrb" aria-label="Settings" title="Settings" type="button" onClick={()=>window.dispatchEvent(new CustomEvent("1muslim:open-settings",{detail:{section:"home"}}))}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M10 2h4l.6 2.4 1.6.9 2.4-.7 2 3.5-1.8 1.7v1.9l1.8 1.7-2 3.5-2.4-.7-1.6.9L14 20h-4l-.6-2.4-1.6-.9-2.4.7-2-3.5 1.8-1.7v-1.9L3.4 8.6l2-3.5 2.4.7 1.6-.9L10 2Z"/></svg></button>
@@ -325,30 +338,24 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
       </div>
       <button className="smhSubmit" type="submit" disabled={!search.trim()||thinking} aria-label="Ask HudHud">↗</button>
     </form>
-    {(listening||speaking||thinking||paused||micPermission==="denied"||micPermission==="needs-tap"||micPermission==="unsupported")&&
+    {(listening||speaking||thinking||paused||!autoMicEnabled||micPermission==="denied"||micPermission==="needs-tap"||micPermission==="unsupported")&&
      <div className="smhVoiceLine" aria-live="polite">
       {listening?<div className="smhListeningControls">
         <button className="smhListening smhListenControl" type="button" onClick={toggleMic}
          aria-label="Pause HudHud microphone listening" title="Tap to pause listening">
          <i aria-hidden="true"/>Listening…
         </button>
-        <button type="button" className="smhVoiceToggle"
-         aria-label={voiceOn?"Turn spoken replies off":"Turn spoken replies on"}
-         title={voiceOn?"Spoken replies on":"Spoken replies off"}
-         aria-pressed={voiceOn}
-         onClick={()=>{setVoiceOn(old=>!old);setVoiceError("");if(voiceOn)stopAudio()}}>
-         <span className="smhVoiceDot" aria-hidden="true"/>
-        </button>
+
        </div>:
        speaking?<span>HudHud is speaking…</span>:
        thinking?<span>HudHud is thinking…</span>:
        micPermission==="denied"||micPermission==="needs-tap"
         ?<button className="smhResumeListening" type="button" onClick={toggleMic}>Enable microphone to speak</button>:
-       paused&&micPermission==="granted"
+       (paused||!autoMicEnabled)&&micPermission==="granted"
         ?<button className="smhResumeListening" type="button" onClick={toggleMic}>Resume listening</button>:
        micPermission==="unsupported"?<span>Type to search. Voice unavailable.</span>:null}
      </div>}
-    {voiceError&&<p className="smhError" role="status">{voiceError}</p>}
+    {voiceError&&<button type="button" className={"smhError smhErrorAction"+(voiceOn?" smhErrorNeutral":"")} role="status" onClick={()=>{setVoiceError("");if(!voiceOnRef.current)toggleVoice();else if(lastSpokenText.current)void say(lastSpokenText.current);else toggleMic()}}>{voiceError}</button>}
   </section>
   <div className="smhResponseSpace">
    <ProfileImmersiveStage request={request} onReply={onReply} onSettled={onSettled} persist={false} showEmpty={false} speaking={speaking} spokenChars={spokenChars}/>

@@ -1025,7 +1025,10 @@ const [avatarPage,setAvatarPage]=useState(0);
       setUsernameStatus("idle");setUsernameError("");
       setMessage(displayChanged||usernameChanged?"Profile identity updated.":"Profile saved.");
       window.dispatchEvent(new Event("1muslim:profile-saved"));
-      if(!embeddedEditorTab)setEditing(false);
+      window.dispatchEvent(new Event("1muslim:appearance-updated"));
+      window.dispatchEvent(new Event("1muslim:theme-changed"));
+      if(embeddedEditorTab)window.dispatchEvent(new Event("1muslim:close-settings"));
+      else setEditing(false);
     }finally{setSaving(false)}
   };
 

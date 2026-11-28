@@ -173,3 +173,19 @@ html[data-one-chrome="night"] .smhExplore .dsFeatureCopy strong{color:#e6ece8}
 .smhPage.smhNight .smhExplore .dsFeatureCopy strong{color:#e6ece8}
 
 @media(prefers-reduced-motion:reduce){.smhVoiceToggle .smhVoiceDot{transition:none!important}.smhError{animation:none!important}}
+
+/* One speaker in the upper left replaces all secondary voice toggles. */
+.smhHeaderLeft{display:flex;align-items:center;gap:9px;min-width:0}
+.smhHeaderSpeaker{display:grid;place-items:center;flex:0 0 39px;width:39px;height:39px;min-height:39px;border:0;border-radius:50%;background:transparent;color:#394c4a;cursor:pointer;transition:background .15s}
+.smhHeaderSpeaker:hover{background:#eef4f1}
+.smhHeaderSpeaker svg{width:21px;height:21px}
+.smhHeaderSpeaker[aria-pressed="true"]:after{content:"";position:absolute;margin-left:27px;margin-top:24px;width:6px;height:6px;border-radius:50%;background:#14a86e}
+.smhHeaderSpeaker[aria-pressed="false"]{color:#a15e61}
+.smhErrorAction{display:block;max-width:min(96%,430px);border:0;border-radius:10px;background:#fdf0ee;padding:8px 13px;cursor:pointer}
+.smhPage.smhNight .smhHeaderSpeaker,html[data-one-chrome="night"] .smhHeaderSpeaker{color:#e4efec}
+.smhPage.smhNight .smhHeaderSpeaker[aria-pressed="false"],html[data-one-chrome="night"] .smhHeaderSpeaker[aria-pressed="false"]{color:#fa9b9b}
+.smhPage.smhNight .smhErrorAction,html[data-one-chrome="night"] .smhErrorAction{background:#3b1c21;color:#ffd7d7}
+@media(max-width:650px){.smhHeaderLeft{gap:4px}.smhHeaderSpeaker{width:34px;height:34px;flex-basis:34px;min-height:34px}.smhHeaderSpeaker svg{width:19px;height:19px}}
+@media(prefers-reduced-motion:reduce){.smhHeaderSpeaker{transition:none}}
+
+.smhErrorAction.smhErrorNeutral{background:#eef3f3;color:#52636a}.smhPage.smhNight .smhErrorAction.smhErrorNeutral{background:#202b2c;color:#cbd8d6}

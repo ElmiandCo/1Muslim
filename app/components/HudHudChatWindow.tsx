@@ -5,6 +5,7 @@ import {useEffect, useRef, useState} from "react";
 import type {ChangeEvent, FormEvent, KeyboardEvent, ReactNode} from "react";
 import styles from "./HudHudChatWindow.module.css";
 import {createHudHudAiVoicePlayer} from "../lib/hudhud-ai-voice-player";
+import {hudHudVoiceEnabled} from "../lib/hudhud-voice-preference";
 
 export type HudHudMessage = {
  id:number; role:"user"|"hudhud"; text:string; image?:string; avatar?:boolean;
@@ -56,6 +57,15 @@ export default function HudHudChatWindow({
  const [menuOpen,setMenuOpen]=useState(false);
  const [listening,setListening]=useState(false);
  const [voiceError,setVoiceError]=useState("");
+ const [voiceAllowed,setVoiceAllowed]=useState(true);
+ const lastSeenMessage=useRef<number|null>(null);
+ useEffect(()=>{
+  const sync=()=>{const on=hudHudVoiceEnabled();setVoiceAllowed(on);if(!on){voiceEpoch.current++;voicePlayer.current?.stop();voiceBusy.current=false}};
+  sync();window.addEventListener("1muslim:hudhud-voice-preference",sync);window.addEventListener("storage",sync);
+  return()=>{window.removeEventListener("1muslim:hudhud-voice-preference",sync);window.removeEventListener("storage",sync)};
+ },[]);
+ useEffect(()=>{if(!voiceError)return;const t=window.setTimeout(()=>setVoiceError(""),2000);return()=>window.clearTimeout(t)},[voiceError]);
+
  const [copiedId,setCopiedId]=useState<number|null>(null);
  const endDictation=()=>{
   const rec=recognizer.current;
@@ -104,6 +114,16 @@ export default function HudHudChatWindow({
    if(!played)setVoiceError("HudHud's AI voice is temporarily unavailable. Please read the answer.");
   });
  };
+ // Read new assistant messages automatically, but never replay existing history
+ // when the chat panel opens or when message content is refreshed.
+ useEffect(()=>{
+  const latest=messages[messages.length-1];
+  if(!latest)return;
+  if(lastSeenMessage.current===null){lastSeenMessage.current=latest.id;return}
+  if(latest.id===lastSeenMessage.current)return;
+  lastSeenMessage.current=latest.id;
+  if(latest.role==="hudhud"&&voiceAllowed&&document.visibilityState==="visible"&&latest.text.trim())readAloud(latest.text);
+ },[messages,voiceAllowed]);
  const copy=(message:HudHudMessage)=>{
   if(!navigator.clipboard?.writeText)return;
   void navigator.clipboard.writeText(message.text).then(()=>{
@@ -185,7 +205,7 @@ export default function HudHudChatWindow({
          {message.image&&<img className={styles.messageImage} src={message.image} alt="Image attached for local preview"/>}
          {message.avatar&&<Link href="/profile" onClick={onClose} className={styles.resultLink}>Open your profile →</Link>}
          {message.links&&message.links.length>0&&<div className={styles.linkList}>{message.links.map(link=><Link key={link.href} href={link.href} onClick={onClose} className={styles.resultLink}>{link.title} ↗</Link>)}</div>}
-         {message.role==="hudhud"&&<div className={styles.messageActions}><button type="button" aria-label="Copy HudHud response" onClick={()=>copy(message)}>{copiedId===message.id?"✓ Copied":"▢ Copy"}</button><button type="button" aria-label="Play HudHud AI-generated voice" onClick={()=>readAloud(message.text)}>◖ Listen</button></div>}
+         {message.role==="hudhud"&&<div className={styles.messageActions}><button type="button" aria-label="Copy HudHud response" onClick={()=>copy(message)}>{copiedId===message.id?"✓ Copied":"▢ Copy"}</button><button type="button" aria-label="Play HudHud AI-generated voice" disabled={!voiceAllowed} onClick={()=>{if(voiceAllowed)readAloud(message.text)}}>◖ Listen</button></div>}
         </div>
        </article>)}
        {sending&&<div className={styles.thinking} role="status"><img src="/assets/hudhud-logo.PNG" width={28} height={28} alt=""/><span>HudHud is thinking</span><i/><i/><i/></div>}

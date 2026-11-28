@@ -32,3 +32,28 @@
 @media(max-width:800px){.layout{grid-template-columns:1fr}.sidebar{position:absolute;top:0;left:0;bottom:0;z-index:4;width:min(82vw,290px);transform:translateX(-102%);transition:transform .2s ease;box-shadow:14px 0 38px #0005}.sidebarVisible{transform:translateX(0)}.menuBackdrop{display:block;position:fixed;inset:0;z-index:3;background:#0009;border:0}.menuButton{display:grid}.header{padding-left:14px;padding-right:12px}.conversation{padding:18px 19px 22px;gap:25px}.composerArea{padding:9px 12px calc(10px + env(safe-area-inset-bottom,0px))}.welcome{min-height:300px}.welcome p{font-size:13px}.settingsView{padding:18px}}
 @media(max-width:480px){.header{height:calc(61px + env(safe-area-inset-top,0px));min-height:calc(61px + env(safe-area-inset-top,0px))}.headerTitle strong{font-size:16px}.headerTitle span{font-size:10px}.headerActions{gap:0}.headerActions button{width:34px}.starters{gap:8px}.starters button{padding:12px;min-height:54px}.starters button strong{font-size:11px}.welcomeLogo{width:75px;height:75px;margin-bottom:11px}.welcomeLogo img{width:65px;height:65px}.welcome h1{font-size:24px}.welcome p{margin-bottom:21px}.messageText{font-size:14px}.fromUser .messageContent{max-width:88%}.conversation{padding:12px 13px 17px;gap:22px}.input{font-size:16px}.settingsHeader{align-items:flex-start;flex-direction:column}}
 @media(prefers-reduced-motion:reduce){.shell,.message,.thinking i,.composeLeft .recording{animation:none}.sidebar,.starters button{transition:none}}
+
+/* Match the rest of 1Muslim: night conversations really are black, day is white. */
+.shell{background:#070809;color:#eff4f2}
+.sidebar{background:#070809;border-right-color:#262a2b}
+.main{background:#070809}
+.header{background:#070809eb;border-color:#232627}
+.composerArea{background:linear-gradient(0deg,#070809 87%,#07080900)}
+.composer{background:#16191b;border-color:#343b3d}
+.fromUser .messageContent{background:#24292b;border-color:#394143}
+:global(html.light) .shell,:global(html[data-one-chrome="day"]) .shell{background:#fff;color:#27373c}
+:global(html.light) .sidebar,:global(html[data-one-chrome="day"]) .sidebar{background:#f8f9f9;border-color:#e7ecec}
+:global(html.light) .main,:global(html[data-one-chrome="day"]) .main{background:#fff}
+:global(html.light) .header,:global(html[data-one-chrome="day"]) .header{background:#fffffff0;border-color:#eef0f0}
+:global(html.light) .headerActions button,:global(html.light) .menuButton,:global(html[data-one-chrome="day"]) .headerActions button{color:#334149}
+:global(html.light) .headerTitle span,:global(html.light) .brand span,:global(html[data-one-chrome="day"]) .headerTitle span{color:#677b7b}
+:global(html.light) .welcome h1,:global(html[data-one-chrome="day"]) .welcome h1{color:#293a3e}
+:global(html.light) .welcome p,:global(html[data-one-chrome="day"]) .welcome p{color:#657579}
+:global(html.light) .starters button,:global(html[data-one-chrome="day"]) .starters button{color:#24353b;background:#f7f9f9;border-color:#e8eeee}
+:global(html.light) .fromUser .messageContent,:global(html[data-one-chrome="day"]) .fromUser .messageContent{color:#27373d;background:#f0f2f3;border-color:#e3e9e9}
+:global(html.light) .messageText,:global(html[data-one-chrome="day"]) .messageText{color:#27373d}
+:global(html.light) .composerArea,:global(html[data-one-chrome="day"]) .composerArea{background:linear-gradient(0deg,#fff 87%,#ffffff00)}
+:global(html.light) .composer,:global(html[data-one-chrome="day"]) .composer{background:#f7f8f8;border-color:#e5e9e9}
+:global(html.light) .input,:global(html[data-one-chrome="day"]) .input{color:#22353b}
+:global(html.light) .newChat,:global(html.light) .currentChat,:global(html[data-one-chrome="day"]) .newChat,:global(html[data-one-chrome="day"]) .currentChat{background:#fff;color:#283b3d;border-color:#e6ecea}
+:global(html.light) .topicList button,:global(html.light) .quickNav a,:global(html[data-one-chrome="day"]) .topicList button,:global(html[data-one-chrome="day"]) .quickNav a{color:#38524a;background:transparent}

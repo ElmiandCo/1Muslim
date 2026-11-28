@@ -160,7 +160,7 @@ export default function GlobalSettingsCanvas(){
  };
  const heading=panel==="home"?"Control Center":panel==="hudhud"?"HudHud AI":panel==="app"?"App preferences":editorLabels[panel as ProfileTab];
  return createPortal(<div className="gscBackdrop" role="presentation" onPointerDown={event=>{if(event.target===event.currentTarget)setOpen(false)}}>
-  <section className={"gscSheet"+(night?" gscNight":"")} ref={shell} role="dialog" aria-modal="true" aria-label="1Muslim account settings and AI control center">
+  <section className={"gscSheet"+(night?" gscNight":"")} data-panel={panel} ref={shell} role="dialog" aria-modal="true" aria-label="1Muslim account settings and AI control center">
    <div className="gscGrab" onTouchStart={(event:TouchEvent<HTMLDivElement>)=>{grab.current=event.touches[0]?.clientY||null}} onTouchEnd={(event:TouchEvent<HTMLDivElement>)=>{const begin=grab.current;grab.current=null;const endY=event.changedTouches[0]?.clientY;if(begin!==null&&typeof endY==="number"&&endY-begin>65)setOpen(false)}}><span aria-hidden="true"/></div>
    <header className="gscHeader">
     <button className="gscBack" type="button" aria-label={panel==="home"?"Close settings":"Return to settings sections"} onClick={()=>panel==="home"?setOpen(false):onOpenTab("home")}>{panel==="home"?"✦":"‹"}</button>

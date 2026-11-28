@@ -414,3 +414,6 @@
 @media(prefers-reduced-motion:reduce){
  .hudInputPill,.hudHeaderActions .hudCircle,.hudMic,.hudEnd{transition:none!important}
 }
+
+/* Mic/TTS interruptions are informational, not account or safety warnings. */
+.hudPage .hudError.hudErrorNeutral{background:#192425!important;color:#c6d9d5!important;border-color:transparent!important;box-shadow:none!important}

@@ -5,6 +5,7 @@ import "./search-magnetic.css";
 import "./search-feature-rails.css";
 import SearchFeatureRails from "./SearchFeatureRails";
 import SearchMemberHome from "./SearchMemberHome";
+import {hudHudVoiceEnabled,setHudHudVoiceEnabled,firstHudHudMuteNotice} from "../lib/hudhud-voice-preference";
 import AnimatedMuslimBrand from "../components/AnimatedMuslimBrand";
 import SearchAuthFlow,{type SearchAuthMode} from "../components/SearchAuthFlow";
 import dynamic from "next/dynamic";
@@ -71,6 +72,16 @@ export default function SearchHub() {
   const requestCount=useRef(0);
   const [compactHeader,setCompactHeader]=useState(false);
   const [hudhudDocked,setHudhudDocked]=useState(false);
+  const [guestVoice,setGuestVoice]=useState(true);
+  const [guestVoiceNotice,setGuestVoiceNotice]=useState("");
+  useEffect(()=>{
+   const sync=()=>setGuestVoice(hudHudVoiceEnabled());
+   sync();window.addEventListener("1muslim:hudhud-voice-preference",sync);window.addEventListener("storage",sync);
+   return()=>{window.removeEventListener("1muslim:hudhud-voice-preference",sync);window.removeEventListener("storage",sync)};
+  },[]);
+  useEffect(()=>{if(!guestVoiceNotice)return;const t=window.setTimeout(()=>setGuestVoiceNotice(""),2000);return()=>window.clearTimeout(t)},[guestVoiceNotice]);
+  const switchGuestVoice=()=>{const next=!guestVoice;setHudHudVoiceEnabled(next);setGuestVoice(next);setGuestVoiceNotice(!next&&firstHudHudMuteNotice()?"HudHud voice muted. Tap the speaker to turn it back on.":"")};
+
   const [signoutConfirm,setSignoutConfirm]=useState(false);
   const [signoutBusy,setSignoutBusy]=useState(false);
   const [authMode,setAuthMode]=useState<SearchAuthMode|null>(null);
@@ -251,6 +262,11 @@ export default function SearchHub() {
   if(account==="member"&&!showAuth&&!submitted.trim())return <SearchMemberHome onSignOut={signOut}/>;
   return <main ref={magneticRoot} className={"dsPage "+(homeMode?"dsHomeMode dsIntro"+(introStage==="pending"?"Pending":introStage==="playing"?"Playing":"Done"):"dsResultsMode "+(resultsNight?"dsResultsNight":"dsResultsDay"))+(showAuth?" dsInlineAuthOpen":"")+(authLeaving?" dsInlineAuthLeaving":"")}>
     <nav className="dsHomeUtilities" aria-label="Account shortcuts">
+      <button type="button" className="dsUtilityButton dsGuestVoice" aria-label={guestVoice?"Mute HudHud voice":"Enable HudHud voice"} title={guestVoice?"HudHud voice on":"HudHud voice off"} aria-pressed={guestVoice} onClick={switchGuestVoice}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4"/>{guestVoice?<><path d="M16 9a4 4 0 0 1 0 6"/><path d="M19 6a8 8 0 0 1 0 12"/></>:<path d="m17 9 5 6m0-6-5 6"/>}</svg>
+      </button>
+      {guestVoiceNotice&&<button type="button" className="dsGuestVoiceNotice" role="status" onClick={()=>{setGuestVoiceNotice("");switchGuestVoice()}}>{guestVoiceNotice}</button>}
+
       {!homeMode&&<Link href="/search" className="dsResultsBrand" aria-label="1Muslim.Live — return to search home" onClick={e=>{e.preventDefault();clear()}}><AnimatedMuslimBrand/><span className="dsHomeBrandLive" aria-hidden="true">.Live</span></Link>}
       {!homeMode&&<button type="button" className="dsUtilityButton dsResultsThemeToggle" onClick={toggleResultsTheme} aria-label={resultsNight?"Switch search results to light mode":"Switch search results to dark mode"} title={resultsNight?"Light appearance":"Dark appearance"} aria-pressed={resultsNight}><span aria-hidden="true">{resultsNight?"☼":"◐"}</span></button>}
       {account==="guest"?<div className="dsGuestAccount" aria-label="Account access">

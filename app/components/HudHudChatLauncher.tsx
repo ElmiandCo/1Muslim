@@ -69,7 +69,7 @@ export default function HudHudChatLauncher(){
  const holdTimer=useRef<ReturnType<typeof setTimeout>|null>(null),held=useRef(false),movedOnce=useRef(false);
  const endHold=()=>{if(holdTimer.current)clearTimeout(holdTimer.current);holdTimer.current=null};
  const openLanguage=()=>{setQuickOpen(false);router.push("/hudhud?settings=1")};
- const [voiceOn,setVoiceOn]=useState(false);
+
  const [sightOn,setSightOn]=useState(true);
  const [dayMode,setDayMode]=useState(false);
  const [widgetMotion,setWidgetMotion]=useState<"cinematic"|"balanced"|"minimal">("balanced");
@@ -80,8 +80,8 @@ export default function HudHudChatLauncher(){
  useEffect(()=>{try{setSightOn(localStorage.getItem("1muslim-hudhud-tactical-vision")!=="off");setDayMode(localStorage.getItem("1muslim-theme")==="light")}catch{}},[]);
  const toggleSight=()=>setSightOn(v=>{const next=!v;try{localStorage.setItem("1muslim-hudhud-tactical-vision",next?"on":"off")}catch{}window.dispatchEvent(new Event("1muslim:hudhud-vision-changed"));return next});
  const toggleDay=()=>setDayMode(v=>{const next=!v;document.documentElement.classList.toggle("light",next);try{localStorage.setItem("1muslim-theme",next?"light":"dark")}catch{}window.dispatchEvent(new Event("1muslim:theme-changed"));return next});
- useEffect(()=>{try{setVoiceOn(localStorage.getItem("1muslim-hudhud-voice")==="on")}catch{}},[]);
- const toggleVoice=()=>setVoiceOn(v=>{const next=!v;try{localStorage.setItem("1muslim-hudhud-voice",next?"on":"off")}catch{}window.dispatchEvent(new CustomEvent("1muslim:hudhud-voice",{detail:{enabled:next}}));if(!next&&typeof window!=="undefined")window.speechSynthesis?.cancel();return next});
+
+
  const [quickOpen,setQuickOpen]=useState(false),[open,setOpen]=useState(false),[settingsOpen,setSettingsOpen]=useState(false),[uid,setUid]=useState<string|null>(null),[profile,setProfile]=useState<Profile|null>(null);
  const [orbAvatar,setOrbAvatar]=useState<string|null>(null);
  const [orbAvatarReady,setOrbAvatarReady]=useState(false);
@@ -281,7 +281,7 @@ export default function HudHudChatLauncher(){
  <HudHudElasticOrbits position={position} open={quickOpen&&!open&&landingOrb} onClose={()=>setQuickOpen(false)}/>
  {quickOpen&&!open&&!landingOrb&&<div className="hh-quick-menu" style={{left:Math.min(position.x+4,Math.max(8,typeof window!=="undefined"?window.innerWidth-240:200)),top:Math.max(10,Math.min(position.y-190,typeof window!=="undefined"?window.innerHeight-195:300))}} role="group" aria-label="HudHud quick actions">
  <button type="button" onClick={()=>{setQuickOpen(false);router.push("/hudhud")}}><span>✦</span><strong>Chat with HudHud</strong><small>Ask about 1Muslim</small></button>
- <button type="button" aria-pressed={voiceOn} onClick={toggleVoice}><span>{voiceOn?"◉":"◎"}</span><strong>HudHud Voice: {voiceOn?"ON":"OFF"}</strong><small>Toggle spoken guidance</small></button>
+
  <button type="button" onClick={()=>{setQuickOpen(false);window.dispatchEvent(new Event("1muslim:hudhud-guidance"))}}><span>✧</span><strong>HudHud Guidance</strong><small>Light packets, Qur’an verse & guided destination</small></button>
  </div>}
  {false&&open&&<HudHudChatWindow

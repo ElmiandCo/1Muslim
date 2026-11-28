@@ -4,6 +4,7 @@ import AnimatedMuslimBrand from "../components/AnimatedMuslimBrand";
 import HudHudFocusStage,{type HudHudLine} from "./HudHudFocusStage";
 import {normalizeSpokenHudHudQuestion} from "../lib/hudhud-speech";
 import {createHudHudAiVoicePlayer} from "../lib/hudhud-ai-voice-player";
+import {hudHudVoiceEnabled,setHudHudVoiceEnabled,firstHudHudMuteNotice} from "../lib/hudhud-voice-preference";
 import {getHudHudTopWebResult} from "../lib/hudhud-top-web";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
@@ -42,6 +43,11 @@ export default function HudHudPage(){
  const [draft,setDraft]=useState("");
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState("");
+ useEffect(()=>{
+  if(!error.startsWith("HudHud voice muted.")&&!error.startsWith("Microphone interrupted.")&&!error.startsWith("HudHud audio unavailable."))return;
+  const timer=window.setTimeout(()=>setError(""),2000);
+  return()=>window.clearTimeout(timer);
+ },[error]);
  const [remaining,setRemaining]=useState<number|null>(null);
  const [unlocked,setUnlocked]=useState(false);
  const [listening,setListening]=useState(false);
@@ -49,7 +55,9 @@ export default function HudHudPage(){
  // It can be paused at any time; mic audio is never stored by this page.
  const [autoListening,setAutoListening]=useState(true);
  useEffect(()=>{
-  try{const on=localStorage.getItem("1muslim:hudhud:auto-listen")!=="off";setAutoListening(on);if(!on)setMicPaused(true)}catch{}
+  const read=()=>{try{const enabled=localStorage.getItem("1muslim:hudhud:auto-listen")!=="off";setAutoListening(enabled);if(!enabled)setMicPaused(true)}catch{}};
+  read();window.addEventListener("1muslim:hudhud-mic-preference",read);window.addEventListener("storage",read);
+  return()=>{window.removeEventListener("1muslim:hudhud-mic-preference",read);window.removeEventListener("storage",read)};
  },[]);
  const [micPaused,setMicPaused]=useState(false);
  const [speechPending,setSpeechPending]=useState(false);
@@ -64,13 +72,16 @@ export default function HudHudPage(){
  const voiceEpoch=useRef(0);
  const audioCooldownTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  useEffect(()=>{
-  const read=()=>{try{setReadAloud(localStorage.getItem("1muslim:hudhud:voice-read-aloud")!=="off")}catch{}};
+  const read=()=>setReadAloud(hudHudVoiceEnabled());
   read();window.addEventListener("1muslim:hudhud-voice-preference",read);
-  return()=>window.removeEventListener("1muslim:hudhud-voice-preference",read);
+  window.addEventListener("storage",read);
+  return()=>{window.removeEventListener("1muslim:hudhud-voice-preference",read);window.removeEventListener("storage",read)};
  },[]);
  const saveVoice= (next:boolean)=>{
   setReadAloud(next);
-  try{localStorage.setItem("1muslim:hudhud:voice-read-aloud",next?"on":"off")}catch{}
+  setHudHudVoiceEnabled(next);
+  if(!next&&firstHudHudMuteNotice())setError("HudHud voice muted. Tap the speaker to enable.");
+  if(next)setError("");
   if(!next){voiceEpoch.current++;voicePlayer.current?.stop();setSpeaking(false);setSpeakingAt(null);setSpeechPending(false)}
  };
  const [memoryEnabled,setMemoryEnabled]=useState(false);
@@ -171,7 +182,7 @@ export default function HudHudPage(){
   }
  },[]);
  useEffect(()=>{
-  void requestMicrophonePermission();
+  if(localStorage.getItem("1muslim:hudhud:auto-listen")!=="off")void requestMicrophonePermission();
   return()=>{micPermissionRequest.current+=1};
  },[requestMicrophonePermission]);
  const stopVoice=useCallback((abort=false)=>{
@@ -275,7 +286,7 @@ export default function HudHudPage(){
      setAudioCooldown(true);
      if(audioCooldownTimer.current)clearTimeout(audioCooldownTimer.current);
      audioCooldownTimer.current=setTimeout(()=>setAudioCooldown(false),1400);
-     if(!played)setError("HudHud's AI voice is temporarily unavailable. You can still read the answer.");
+     if(!played)setError("HudHud audio unavailable. Tap the speaker to try again.");
     });
    }
   }catch(caught){
@@ -333,7 +344,7 @@ export default function HudHudPage(){
      setError("The microphone is unavailable. Check browser settings or type your question.");
     }else{
      setMicPaused(true);
-     setError("Voice recognition stopped. Tap the mic or type your question.");
+     setError("Microphone interrupted. Tap to try again.");
     }
    };
    rec.onend=()=>{
@@ -390,7 +401,7 @@ export default function HudHudPage(){
    <HudHudFocusStage lines={lines} sessionId={activeId} busy={busy} speakingAt={speakingAt} speechChar={speechChar}/>
   </section>
 
-  {error&&<p className="hudError" role="alert">{error}</p>}
+  {error&&<p className={"hudError"+(!error.startsWith("HudHud voice muted.")?" hudErrorNeutral":"")} role="status">{error}</p>}
   {exhausted&&<aside className="hudUpgrade"><strong>Your HudHud exploration is complete for now.</strong><Link href="/search">Explore 1Muslim Search ↗</Link></aside>}
   <div className="hudComposerArea">
    {listening&&<span className="hudListeningStatus" role="status"><i aria-hidden="true"/>Listening…</span>}
@@ -414,8 +425,7 @@ export default function HudHudPage(){
    </div>}
   {settingsOpen&&<div className="hudSettings" role="dialog" aria-label="HudHud settings">
     <h2>HudHud settings</h2>
-    <label><span>Read replies aloud<small>Uses your browser's voice</small></span><input type="checkbox" checked={readAloud} onChange={e=>saveVoice(e.target.checked)}/></label>
-    <label><span>Auto-listen<small>Start after permission; pauses while HudHud speaks or you type. Browser recognition may process audio; HudHud does not store raw audio.</small></span><input type="checkbox" checked={autoListening} onChange={e=>{setAutoListening(e.target.checked);setMicPaused(!e.target.checked);try{localStorage.setItem("1muslim:hudhud:auto-listen",e.target.checked?"on":"off")}catch{}if(!e.target.checked)stopVoice(true)}}/></label>
+
     <div className="hudMicSettings"><span>Microphone access<small>{micAccess==="granted"?(autoListening&&!micPaused?"Allowed · auto-listening is on":"Allowed · tap microphone to speak"):micAccess==="checking"?"Checking browser permission…":"Not enabled · you can still type"}</small></span><button type="button" onClick={()=>void requestMicrophonePermission()}>Enable mic</button></div>
     {memorySignedIn?<><label><span>Remember conversations<small>Private to your account. Off by default.</small></span><input type="checkbox" checked={memoryEnabled} disabled={memoryPending} onChange={e=>void updateMemory(e.target.checked)}/></label>
       <button type="button" disabled={memoryPending} onClick={()=>void clearMemory()}>Clear saved conversations</button></>

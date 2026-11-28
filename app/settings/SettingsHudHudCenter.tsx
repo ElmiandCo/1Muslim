@@ -7,8 +7,6 @@ type ChatLine={role:"assistant"|"user";content:string};
 type SavedSession={id:string;title:string;lines:ChatLine[]};
 type MemoryState={signedIn:boolean;enabled:boolean;sessions:SavedSession[]};
 
-const VOICE_KEY="1muslim:hudhud:voice-read-aloud";
-const AUTO_KEY="1muslim:hudhud:auto-listen";
 export default function SettingsHudHudCenter(){
  const [memory,setMemory]=useState<MemoryState>({signedIn:false,enabled:false,sessions:[]});
  const [loading,setLoading]=useState(true);
@@ -16,11 +14,8 @@ export default function SettingsHudHudCenter(){
  const [error,setError]=useState("");
  const [status,setStatus]=useState("");
  const [search,setSearch]=useState("");
- const [voice,setVoice]=useState(true);
- const [autoListen,setAutoListen]=useState(true);
  useEffect(()=>{
   let active=true;
-  try{setVoice(localStorage.getItem(VOICE_KEY)!=="off");setAutoListen(localStorage.getItem(AUTO_KEY)!=="off")}catch{}
   void fetch("/api/hudhud/memory",{cache:"no-store"}).then(async response=>{
    const data=await response.json().catch(()=>({}));
    if(!response.ok)throw Error(typeof data.error==="string"?data.error:"Could not load your memory settings");
@@ -80,21 +75,10 @@ export default function SettingsHudHudCenter(){
   window.setTimeout(()=>URL.revokeObjectURL(url),1000);
   setStatus("Your saved conversation export was prepared on this device.");
  };
- const switchAutoListen=(value:boolean)=>{
-  setAutoListen(value);
-  try{localStorage.setItem(AUTO_KEY,value?"on":"off")}catch{}
-  setStatus(value?"Auto-listen will be on when you next open HudHud.":"Auto-listen disabled for HudHud. You can still tap the microphone to speak.");
- };
- const switchVoice=(value:boolean)=>{
-  setVoice(value);
-  try{localStorage.setItem(VOICE_KEY,value?"on":"off")}catch{}
-  window.dispatchEvent(new Event("1muslim:hudhud-voice-preference"));
-  setStatus(value?"HudHud voice replies enabled on this device.":"HudHud voice replies muted on this device.");
- };
  const matches=memory.sessions.filter(item=>(item.title+" "+item.lines.slice(-12).map(line=>line.content).join(" ")).toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
  return <section id="hudhud-ai" className="scAiShell" aria-label="HudHud AI Control Center">
   <div className="scAiHeader"><div><span className="scAiEyebrow">HUDHUD · AI CONTROL CENTER</span><h2>Your HudHud, your control.</h2>
-   <p>Find previous conversations, control what HudHud remembers, and adjust your voice experience without leaving Settings.</p></div>
+   <p>Find previous conversations, control what HudHud remembers, and review your memory preferences without leaving Settings.</p></div>
    <Link href="/hudhud?settings=1">Open HudHud ↗</Link>
   </div>
   <div className="scAiGrid">
@@ -122,15 +106,7 @@ export default function SettingsHudHudCenter(){
      </div>
      <div className="scAiNotice">History stores chat text and selected cards, not your raw microphone recordings. Turning memory off stops future saves; it does not erase earlier saved conversations.</div>
     </section>
-    <section className="scAiSection" aria-label="HudHud voice settings">
-     <span className="scAiEyebrow">03 · VOICE & ACCESS</span>
-     <div className="scAiControls"><div><h3>Read replies aloud</h3><p>HudHud speaks its answers using your browser.</p></div>
-      <button type="button" className="scAiSwitch" aria-label="HudHud spoken replies" aria-pressed={voice} onClick={()=>switchVoice(!voice)}>{voice?"ON":"OFF"}</button></div>
-     <div className="scAiControls"><div><h3>Auto-listen in HudHud</h3><p>Automatically start when HudHud opens and the browser grants permission. Pauses during speech and typing.</p></div>
-      <button type="button" className="scAiSwitch" aria-label="Automatically listen on HudHud page" aria-pressed={autoListen} onClick={()=>switchAutoListen(!autoListen)}>{autoListen?"ON":"OFF"}</button></div>
-     <div className="scAiNotice"><strong>Microphone access</strong><br/>Your browser controls permission and speech recognition. Auto-listening works on HudHud’s own page; continuous listening across other 1Muslim pages is not yet available.</div>
-     <div className="scAiActions"><Link href="/hudhud">Open microphone controls ↗</Link></div>
-    </section>
+
    </div>
   </div>
   <p className="scAiPrivacy">Privacy: Only your authenticated account can access its saved HudHud history. Shahada verification recordings live in a separate private vault and are never deleted by these chat controls. Speech recognition may use your browser's speech service; no claim of offline speech processing is made.</p>

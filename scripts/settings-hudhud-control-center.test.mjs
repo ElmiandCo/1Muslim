@@ -46,12 +46,12 @@ test("Saved chats can reopen without accidentally enabling future memory",()=>{
  const hudhud=read("app/hudhud/page.tsx");
  assert.match(hudhud,/selectedSession=new URLSearchParams\(window.location.search\)\.get\("session"\)/);
  assert.match(hudhud,/data.enabled===true\|\|Boolean\(selectedSession\)/);
- assert.match(hudhud,/localStorage\.setItem\("1muslim:hudhud:voice-read-aloud"/);
- assert.match(hudhud,/localStorage\.setItem\("1muslim:hudhud:auto-listen"/);
+ assert.match(hudhud,/setHudHudVoiceEnabled\(next\)/);
+ assert.match(read("app/settings/SettingsContent.tsx"),/localStorage\.setItem\("1muslim:hudhud:auto-listen"/);
 });
 test("No false claims about always-on listening or deleting Shahada recordings",()=>{
  const center=read("app/settings/SettingsHudHudCenter.tsx");
- assert.match(center,/continuous listening across other 1Muslim pages is not yet available/);
+ assert.match(read("app/settings/SettingsContent.tsx"),/Browser permission is still required/);
  assert.match(center,/Shahada verification recordings live in a separate private vault/);
  const css=read("app/settings/settings-control-center.css");
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
