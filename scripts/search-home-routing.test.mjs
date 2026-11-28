@@ -6,6 +6,7 @@ import {hasShahada,SHAHADA_ARABIC,SHAHADA_ENGLISH} from "../app/lib/shahada-reco
 import {signAdminGate,validAdminGate} from "../lib/admin-security-gate.ts";
 
 const read = path => readFileSync(new URL("../" + path, import.meta.url), "utf8");
+import {isHudHudLinkRequest} from "../app/lib/hudhud-top-web.ts";
 
 test("signed-in and anonymous visitors enter the same Search Home immediately",()=>{
   const root=read("app/page.tsx");
@@ -436,4 +437,30 @@ test("HudHud speech is AI-generated with a hard microphone playback barrier",()=
  assert.doesNotMatch(member,/speechSynthesis/);
  assert.doesNotMatch(hudhud,/speechSynthesis/);
  assert.doesNotMatch(window,/SpeechSynthesisUtterance/);
+});
+
+test("HudHud centers short answers, grows one-word text, but keeps long paragraphs compact",()=>{
+ const focus=read("app/hudhud/HudHudFocusStage.tsx");
+ const css=read("app/hudhud/hudhud-focus.css");
+ const page=read("app/hudhud/page.tsx");
+ assert.match(focus,/hudReplySolo/);
+ assert.match(focus,/hudReplyCentered/);
+ assert.match(focus,/accentSeed/);
+ assert.match(focus,/linkRequested&&line\.webResult/);
+ assert.match(css,/font-size:clamp\(92px,39vw,236px\)/);
+ assert.match(css,/hudReplyStandard/);
+ assert.match(css,/\.hudReplyCentered\{/);
+ assert.match(page,/focusAccent/);
+ assert.match(page,/1muslim:hudhud:focus-accent/);
+});
+
+test("HudHud web preview is shown only for explicit link or website inquiries",()=>{
+ assert.equal(isHudHudLinkRequest("I just invented something"),false);
+ assert.equal(isHudHudLinkRequest("are you listening?"),false);
+ assert.equal(isHudHudLinkRequest("What does Allah mean?"),false);
+ assert.equal(isHudHudLinkRequest("show me the link to a website about engineering"),true);
+ assert.equal(isHudHudLinkRequest("send me a website about the Qur'an"),true);
+ assert.equal(isHudHudLinkRequest("I want to talk about a website idea"),false);
+ const helper=read("app/lib/hudhud-top-web.ts");
+ assert.match(helper,/!isHudHudLinkRequest\(query\)/);
 });
