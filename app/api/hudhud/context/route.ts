@@ -37,11 +37,17 @@ export async function POST(req:NextRequest){
    const preferences=cleanHudHudPersonalText(body.answerPreferences,2000);
    if(about===null||preferences===null||typeof body.allowRememberRequests!=="boolean")
     return response({error:"Enter only personal details, not passwords, access keys, security codes, payment card details or other credentials."},400);
-   const {error:writeError}=await db.from("hudhud_personal_context").upsert({
-    user_id:user.id,about_me:about,answer_preferences:preferences,
-    allow_remember_requests:body.allowRememberRequests,updated_at:new Date().toISOString()
-   },{onConflict:"user_id"});
-   if(writeError)throw writeError;
+   // UPDATE must preserve existing learned notes; omitted upsert columns
+   // would reset them to SQL defaults on conflict.
+   const {data:present,error:lookupError}=await db.from("hudhud_personal_context")
+    .select("user_id").eq("user_id",user.id).maybeSingle();
+   if(lookupError)throw lookupError;
+   const edit={about_me:about,answer_preferences:preferences,
+    allow_remember_requests:body.allowRememberRequests,updated_at:new Date().toISOString()};
+   const result=present
+    ?await db.from("hudhud_personal_context").update(edit).eq("user_id",user.id)
+    :await db.from("hudhud_personal_context").insert({...edit,user_id:user.id});
+   if(result.error)throw result.error;
    return response({saved:true});
   }
   if(action==="remember"||action==="add-note"||action==="delete-note"){
@@ -67,10 +73,11 @@ export async function POST(req:NextRequest){
    if(notes.length>=50)return response({error:"HudHud has 50 private notes. Delete an older note before saving another."},409);
    const note:HudHudNote={id:randomUUID(),text,savedAt:new Date().toISOString(),source:action==="remember"?"hudhud":"user"};
    const next=[...notes,note];
-   const {error:writeError}=await db.from("hudhud_personal_context").upsert({
-    user_id:user.id,notes:next,updated_at:new Date().toISOString()
-   },{onConflict:"user_id"});
-   if(writeError)throw writeError;
+   // Never overwrite the member's self-description or memory permission.
+   const result=row
+    ?await db.from("hudhud_personal_context").update({notes:next,updated_at:new Date().toISOString()}).eq("user_id",user.id)
+    :await db.from("hudhud_personal_context").insert({user_id:user.id,notes:next,updated_at:new Date().toISOString()});
+   if(result.error)throw result.error;
    return response({saved:true,note,notes:next});
   }
   return response({error:"Unknown HudHud context action"},400);
