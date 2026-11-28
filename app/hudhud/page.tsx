@@ -6,6 +6,8 @@ import {normalizeSpokenHudHudQuestion} from "../lib/hudhud-speech";
 import {createHudHudAiVoicePlayer} from "../lib/hudhud-ai-voice-player";
 import {hudHudVoiceEnabled,setHudHudVoiceEnabled,firstHudHudMuteNotice} from "../lib/hudhud-voice-preference";
 import {getHudHudTopWebResult} from "../lib/hudhud-top-web";
+import {createClient} from "../../utils/supabase/client";
+import {readHudHudTabHistory,writeHudHudTabHistory,clearHudHudTabHistory,isHudHudOpenSelectedWebsiteCommand,isSafeHudHudWebsiteUrl} from "../lib/hudhud-tab-history";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {useCallback,useEffect,useRef,useState,type FormEvent} from "react";
@@ -108,6 +110,49 @@ export default function HudHudPage(){
  const current=sessions.find(x=>x.id===activeId)||sessions[0];
  const lines=current.lines;
  const exhausted=remaining===0;
+ const [tabHistoryReady,setTabHistoryReady]=useState(false);
+ const tabOwnerRef=useRef("");
+ // Per-tab return history is separate from opt-in, server-backed account memory.
+ // Wait for verified auth identity before reading/writing so another account
+ // (or a guest) cannot inherit somebody else's conversation.
+ useEffect(()=>{
+  let mounted=true;
+  const client=createClient();
+  const restore=(owner:string)=>{
+   if(!mounted)return;
+   tabOwnerRef.current=owner;
+   const saved=readHudHudTabHistory(window.sessionStorage,owner);
+   const explicitSession=new URLSearchParams(window.location.search).has("session");
+   if(saved&&!explicitSession){setSessions(saved.sessions);setActiveId(saved.activeId)}
+   setTabHistoryReady(true);
+  };
+  void client.auth.getUser().then(({data:{user}})=>restore(user?.id||"guest"))
+   .catch(()=>restore("guest"));
+  const {data:{subscription}}=client.auth.onAuthStateChange((event,session)=>{
+   if(!mounted||!tabOwnerRef.current)return;
+   if(event==="SIGNED_OUT"){
+    clearHudHudTabHistory(window.sessionStorage);
+    tabOwnerRef.current="guest";
+    setSessions([{id:"first",title:"New chat",lines:[]}]);setActiveId("first");
+   }else if(event==="SIGNED_IN"&&session?.user?.id!==tabOwnerRef.current){
+    clearHudHudTabHistory(window.sessionStorage);
+    tabOwnerRef.current=session.user.id;
+    setSessions([{id:"first",title:"New chat",lines:[]}]);setActiveId("first");
+   }
+  });
+  return()=>{mounted=false;subscription.unsubscribe()};
+ },[]);
+ const saveTabNow=()=>{
+  if(tabHistoryReady&&tabOwnerRef.current)
+   writeHudHudTabHistory(window.sessionStorage,tabOwnerRef.current,{sessions,activeId});
+ };
+ useEffect(()=>{
+  if(!tabHistoryReady)return;
+  const timer=window.setTimeout(()=>{
+   if(tabOwnerRef.current)writeHudHudTabHistory(window.sessionStorage,tabOwnerRef.current,{sessions,activeId});
+  },80);
+  return()=>window.clearTimeout(timer);
+ },[sessions,activeId,tabHistoryReady]);
 
  const memorySave=useCallback(async(session:Session)=>{
   const response=await fetch("/api/hudhud/memory",{method:"POST",headers:{"Content-Type":"application/json"},
@@ -160,6 +205,7 @@ export default function HudHudPage(){
    const response=await fetch("/api/hudhud/memory",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"clear"})});
    if(!response.ok)throw Error("Could not delete saved history");
    setMemoryEnabled(false);
+   clearHudHudTabHistory(window.sessionStorage);
    const id="chat-"+Date.now();setSessions([{id,title:"New chat",lines:[]}]);setActiveId(id);
    setMemoryNotice("Saved conversations deleted. Memory is off.");
   }catch{setMemoryNotice("Could not delete saved chats. Please try again.")}
@@ -238,6 +284,21 @@ export default function HudHudPage(){
  const ask=async(event?:FormEvent,spokenMessage?:string)=>{
   event?.preventDefault();
   const message=(spokenMessage||draft).trim();if(!message||busy||exhausted)return;
+  // A follow-up voice or typed command can open only the most recent real
+  // provider result, never a URL proposed by an AI response or old chat.
+  if(isHudHudOpenSelectedWebsiteCommand(message)){
+   const latestAnswer=[...lines].reverse().find(line=>line.role==="assistant");
+   const selected=latestAnswer?.webResult?.url;
+   if(!isSafeHudHudWebsiteUrl(selected)){
+    setError("Ask HudHud to find a website first, then say ‘open that website’.");
+    return;
+   }
+   setMicPaused(true);stopVoice(true);voiceEpoch.current++;voicePlayer.current?.stop();
+   setSpeaking(false);setSpeakingAt(null);setSpeechPending(false);
+   saveTabNow();
+   window.location.assign(selected);
+   return;
+  }
   stopVoice(true);voiceEpoch.current++;voicePlayer.current?.stop();setSpeaking(false);setSpeakingAt(null);setSpeechPending(false);
   const conversationId=activeId;
   const history=lines.slice(-6).map(x=>({role:x.role,content:x.content}));
@@ -373,6 +434,7 @@ export default function HudHudPage(){
  },[autoListening,micPaused,micAccess,audioCooldown,pageVisible,listening,busy,speaking,speechPending,
     exhausted,focused,exiting,menuOpen,settingsOpen,draft,startVoice]);
  const close=()=>{
+  saveTabNow();
   setMicPaused(true);stopVoice(true);voiceEpoch.current++;voicePlayer.current?.stop();setSpeaking(false);setSpeakingAt(null);setSpeechPending(false);setExiting(true);
   window.setTimeout(()=>router.push(safeReturn(originRef.current)),180);
  };
