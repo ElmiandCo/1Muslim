@@ -13,7 +13,7 @@ test("Search Home voice errors dismiss themselves after two seconds",()=>{
 });
 
 test("Search Home shows only an accessible circle for spoken replies",()=>{
- assert.doesNotMatch(memberHome,/Hear the greeting|AI spoken replies on|AI spoken replies off|greetingFailed/);
+ assert.doesNotMatch(memberHome,/Hear the greeting|AI spoken replies on|AI spoken replies off|greetingFailed|setGreetingFailed/);
  assert.match(memberHome,/className="smhVoiceToggle"/);
  assert.match(memberHome,/aria-label=\{voiceOn\?"Turn spoken replies off":"Turn spoken replies on"\}/);
  assert.match(memberHome,/aria-pressed=\{voiceOn\}/);
