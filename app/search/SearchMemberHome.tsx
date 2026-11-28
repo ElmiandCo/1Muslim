@@ -6,6 +6,7 @@ import {normalizeSpokenHudHudQuestion} from "../lib/hudhud-speech";
 import {createHudHudAiVoicePlayer} from "../lib/hudhud-ai-voice-player";
 import AnimatedMuslimBrand from "../components/AnimatedMuslimBrand";
 import SearchFeatureRails from "./SearchFeatureRails";
+import SearchDraggableDisplayName from "./SearchDraggableDisplayName";
 import ProfileImmersiveStage,{type ProfileSearchRequest} from "../profile/ProfileImmersiveStage";
 import "./search-member-home.css";
 
@@ -303,10 +304,13 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
    </nav>
   </header>
   <section className="smhWelcome">
-    <div className="smhIdentity">
-     <button type="button" aria-label="Edit your display name" title="Tap to change your name" onClick={()=>{stopRecognition();setNameDraft(displayName);setNameEditor(true);setNameError("")}} className="smhName">{displayedName||"\u00a0"}</button>
-     <span className={"smhWithHudHud"+(showHudLabel?" smhWithVisible":"")}>with HudHud</span>
-    </div>
+    <SearchDraggableDisplayName
+     memberId={member?.id||null}
+     displayName={displayName}
+     visibleName={displayedName}
+     showHudLabel={showHudLabel}
+     onEdit={()=>{stopRecognition();setNameDraft(displayName);setNameEditor(true);setNameError("")}}
+    />
     <form className="smhSearchForm" onSubmit={submit} role="search" aria-label="Search with HudHud">
       <span className="smhAvatar" aria-label="Your profile avatar"><img src={avatar(member)} alt=""/></span>
       <div className="smhInputWrap">

@@ -1,0 +1,47 @@
+/* Interactive identity belongs only to the safe band between the
+   account header and search bar. Neither element moves during gestures. */
+.zone{
+ position:relative;left:50%;transform:translateX(-50%);
+ width:calc(100vw - 24px);max-width:none;
+ height:clamp(116px,16dvh,166px);
+ margin:0 0 clamp(12px,2.2vh,22px);
+ overflow:hidden;
+ isolation:isolate;
+ touch-action:pan-y;
+ contain:layout paint;
+}
+.nameButton{
+ position:absolute;z-index:1;transform:translate(-50%,-50%);
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ gap:2px;
+ width:max-content;min-width:70px;max-width:calc(100% - 16px);
+ min-height:42px;max-height:calc(100% - 12px);
+ margin:0;padding:5px 9px;
+ border:0;background:transparent;
+ font:inherit;font-weight:740;letter-spacing:-.045em;line-height:1.08;
+ text-align:center;color:#283b35;
+ cursor:grab!important;touch-action:none;user-select:none;-webkit-user-select:none;
+ -webkit-touch-callout:none;
+ box-shadow:none;
+}
+.nameButton:active{cursor:grabbing!important}
+.nameButton:focus-visible{outline:2px solid currentColor;outline-offset:3px;border-radius:12px}
+.nameText{display:block;max-width:100%;overflow-wrap:anywhere;word-break:normal;text-wrap:balance}
+.hudLabel{
+ display:block;max-width:100%;font-size:clamp(10px,1.3vw,13px);font-weight:500;
+ letter-spacing:0;color:#9c8b6f;line-height:1.2;
+ white-space:nowrap;opacity:0;transform:translateY(5px);
+ transition:opacity .35s ease,transform .35s ease;
+ pointer-events:none;
+}
+.hudLabel.visible{opacity:1;transform:translateY(0)}
+:global(.smhNight) .nameButton,
+:global(html[data-one-chrome="night"]) .nameButton{color:#f0f4f2}
+:global(.smhNight) .hudLabel,
+:global(html[data-one-chrome="night"]) .hudLabel{color:#a99a80}
+@media(max-width:650px){
+ .zone{width:calc(100vw - 24px);height:clamp(114px,15dvh,152px);margin-bottom:clamp(13px,2vh,19px)}
+ .nameButton{min-height:44px;padding:6px 7px}
+}
+@media(max-height:650px){.zone{height:112px;margin-bottom:12px}}
+@media(prefers-reduced-motion:reduce){.hudLabel{transition:none}}
