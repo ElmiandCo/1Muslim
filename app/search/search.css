@@ -686,3 +686,13 @@
 .dsHomeMode .dsSearchForm,.dsHomeMode .dsSearchForm *{-webkit-tap-highlight-color:transparent}
 .dsHomeMode .dsSearchForm input:focus{outline:0!important;box-shadow:none!important}
 .dsHomeMode .dsSearchForm:focus-within{border-color:#e1e2df;box-shadow:0 10px 34px rgba(25,33,32,.08),0 1px 3px rgba(20,22,19,.02)}
+
+/* One persistent voice switch sits at upper left for guests and results. */
+.dsHomeUtilities .dsGuestVoice{margin-right:auto;border:0;box-shadow:none;background:transparent;position:relative}
+.dsGuestVoice[aria-pressed="true"]:after{content:"";position:absolute;width:6px;height:6px;border-radius:50%;background:#19a96f;left:30px;top:29px}
+.dsGuestVoice[aria-pressed="false"]{color:#b65b62!important}
+.dsResultsNight .dsGuestVoice{color:#eff6f3!important}
+.dsResultsNight .dsGuestVoice[aria-pressed="false"]{color:#ffb2b6!important}
+.dsGuestVoiceNotice{position:absolute;top:calc(63px + env(safe-area-inset-top,0px));left:16px;z-index:105;max-width:min(330px,88vw);border:0;border-radius:11px;background:#6a2329;color:#fff;padding:10px 12px;font-size:11px;box-shadow:0 8px 30px #0003;animation:dsVoiceFirstMute 2s ease-in-out both;cursor:pointer}
+@keyframes dsVoiceFirstMute{0%{opacity:0}12%,76%{opacity:1}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){.dsGuestVoiceNotice{animation:none!important}}
