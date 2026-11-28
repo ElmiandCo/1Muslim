@@ -72,6 +72,14 @@ export default function SearchHub() {
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState("");
   const searchField=useRef<HTMLInputElement>(null);
+  const [voiceEdited,setVoiceEdited]=useState(false);
+  const voiceEditTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+  useEffect(()=>()=>{if(voiceEditTimer.current)clearTimeout(voiceEditTimer.current)},[]);
+  const editFromVoice=(text:string)=>{
+    setQuery(text);setVoiceEdited(true);
+    if(voiceEditTimer.current)clearTimeout(voiceEditTimer.current);
+    voiceEditTimer.current=setTimeout(()=>setVoiceEdited(false),950);
+  };
   const requestCount=useRef(0);
   const [compactHeader,setCompactHeader]=useState(false);
   const [hudhudDocked,setHudhudDocked]=useState(false);
@@ -178,6 +186,7 @@ export default function SearchHub() {
     catch{}
     const initial=new URLSearchParams(window.location.search).get("q")||"";
     if(initial){setResultsOpened(true);setQuery(initial.slice(0,90));setSubmitted(initial.slice(0,90));}
+    else if(new URLSearchParams(window.location.search).get("results")==="1")setResultsOpened(true);
   },[]);
   useEffect(()=>{
     const onScroll=()=>setCompactHeader(window.scrollY>140);
@@ -211,7 +220,7 @@ export default function SearchHub() {
     setRecent(next);try{localStorage.setItem(historyKey,JSON.stringify(next));window.history.replaceState({}, "", "/search?q="+encodeURIComponent(clean));}catch{}
     searchField.current?.blur();
   };
-  const clear=()=>{setResultsOpened(true);setQuery("");setSubmitted("");setResult(null);setTab("All");try{window.history.replaceState({}, "", "/search");}catch{};searchField.current?.focus();};
+  const clear=()=>{setResultsOpened(true);setQuery("");setSubmitted("");setResult(null);setTab("All");try{window.history.replaceState({}, "", "/search?results=1");}catch{};searchField.current?.focus();};
   const returnHome=()=>{setResultsOpened(false);setQuery("");setSubmitted("");setResult(null);setTab("All");try{window.history.replaceState({}, "", "/search");}catch{}};
   const openResults=(value:string)=>{
    const idea=value.trim().slice(0,90);
@@ -301,7 +310,7 @@ export default function SearchHub() {
       <h1 className="dsHomeBrand" aria-hidden={!homeMode}><AnimatedMuslimBrand/><span className="dsHomeBrandLive" aria-hidden="true">.Live</span></h1>
       <div className="dsHeaderRow">
         <Link href="/search" className="dsBack" aria-label="Back to search home" onClick={e=>{e.preventDefault();showAuth?closeAuth():returnHome()}}>‹</Link>
-        <form className="dsSearchForm" role="search" aria-hidden={showAuth} onSubmit={e=>{e.preventDefault();if(!showAuth)commit(query);}}>
+        <form className={"dsSearchForm"+(voiceEdited?" isVoiceEdited":"")} role="search" aria-hidden={showAuth} onSubmit={e=>{e.preventDefault();if(!showAuth)commit(query);}}>
           <span aria-hidden="true">⌕</span>
           <input ref={searchField} type="search" autoComplete="off" aria-label="Search all of 1Muslim" placeholder="Search 1Muslim with HudHud" value={query}
             onChange={e=>setQuery(e.target.value)} />
@@ -321,7 +330,7 @@ export default function SearchHub() {
           </button>)}
         </nav>
         {account==="member"&&!homeMode&&!showAuth
-          ?<SearchResultsHudHudVoice query={query} onEdit={setQuery} onSearch={commit} onOpenHudHud={openHudHud}/>
+          ?<SearchResultsHudHudVoice query={query} onEdit={editFromVoice} onSearch={commit} onOpenHudHud={openHudHud}/>
           :<button className="dsHudTab" type="button" title="Ask HudHud" aria-label="Ask HudHud AI search assistant" onClick={()=>void openHudHud()}>
             <img src="/assets/hudhud-logo.PNG" alt="" aria-hidden="true"/><span>HudHud</span>
            </button>}
