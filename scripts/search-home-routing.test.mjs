@@ -474,12 +474,13 @@ test("signed-in Search Home removes the microphone from the search pill but reta
  assert.match(home,/listening\?<div className="smhListeningControls"/);
  assert.match(home,/className="smhListening smhListenControl" type="button" onClick=\{toggleMic\}/);
  assert.match(home,/aria-label="Pause HudHud microphone listening"/);
- assert.match(home,/paused&&micPermission==="granted"/);
+ assert.match(home,/\(paused\|\|!autoMicEnabled\)&&micPermission==="granted"/);
  assert.match(home,/>Resume listening</);
  assert.match(home,/micPermission==="denied"\|\|micPermission==="needs-tap"/);
  assert.match(home,/Enable microphone to speak/);
- assert.match(home,/\(listening\|\|speaking\|\|thinking\|\|paused\|\|micPermission===/);
- assert.match(home,/onClick=\{\(\)=>\{setVoiceOn\(old=>!old\)/);
+ assert.match(home,/\(listening\|\|speaking\|\|thinking\|\|paused\|\|!autoMicEnabled\|\|micPermission===/);
+ assert.match(home,/className="smhHeaderSpeaker"/);
+ assert.match(home,/onClick=\{toggleVoice\}/);
  assert.match(css,/\.smhListeningControls\{/);
  assert.match(css,/\.smhVoiceLine \.smhListenControl\{/);
  assert.doesNotMatch(css,/\.smhMic/);
