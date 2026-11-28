@@ -4,26 +4,33 @@ import Link from "next/link";
 import HudHudVerseCard from "../components/HudHudVerseCard";
 import type {HudHudPresentation} from "../lib/hudhud-presentation";
 import "./hudhud-focus.css";
+import {isHudHudLinkRequest} from "../lib/hudhud-top-web";
 
 export type HudHudImage={title:string;imageUrl:string;thumbnailUrl:string;pageUrl:string;source:string;width?:number;height?:number};
 export type HudHudMatch={id:string;kind:string;title:string;href:string;image?:string;description?:string};
 export type HudHudWebResult={title:string;url:string;source:string;description?:string;thumbnailUrl?:string};
 export type HudHudLine={role:"user"|"assistant";content:string;matches?:HudHudMatch[];presentation?:HudHudPresentation;verses?:{key:string;arabic:string;english:string;translation:string;source?:string}[];images?:HudHudImage[];webResult?:HudHudWebResult};
-type Props={lines:HudHudLine[];sessionId:string;busy:boolean;speakingAt:{sessionId:string;index:number}|null;speechChar:number;persist?:boolean;idleAfterMs?:number};
+export type HudHudAccent="green"|"blue"|"gray"|"yellow"|"red";
+type Props={lines:HudHudLine[];sessionId:string;busy:boolean;speakingAt:{sessionId:string;index:number}|null;speechChar:number;accentColor?:HudHudAccent;persist?:boolean;idleAfterMs?:number};
 
-function Narration({text,spokenChars}:{text:string;spokenChars?:number}){
+function Narration({text,spokenChars,accentSeed}:{text:string;spokenChars?:number;accentSeed:string}){
  const clean=text.trim();
  const wordCount=clean.split(/\s+/).filter(Boolean).length;
- const scale=wordCount<=7?"hudReplyXL":wordCount<=18?"hudReplyL":wordCount<=38?"hudReplyM":"hudReplyStandard";
+ const scale=wordCount===1&&clean.length<=8?"hudReplySolo":wordCount<=4?"hudReplyXL":wordCount<=18?"hudReplyL":wordCount<=38?"hudReplyM":"hudReplyStandard";
+ // Stable per-message variation: the selected theme accent highlights
+ // some brief replies, never distracts from paragraphs or Qur'an cards.
+ const roll=Array.from(accentSeed).reduce((hash,char)=>(hash*31+char.charCodeAt(0))|0,7);
+ const accented=scale==="hudReplySolo"||wordCount<=7&&Math.abs(roll%3)===0;
+ const centered=wordCount<=38;
  const sentences=text.match(/[^.!?]+[.!?]*\s*/g)||[text];
  let offset=0;
- return <p className={"hudNarratedReply "+scale}>{sentences.map((part,index)=>{
+ return <p dir="auto" className={"hudNarratedReply "+scale+(centered?" hudReplyCentered":"")+(accented?" hudReplyAccent":"")}>{sentences.map((part,index)=>{
   const start=offset;offset+=part.length;
   const heard=spokenChars===undefined?"":spokenChars>=start?"hudNarratedHeard":"hudNarratedUpcoming";
   return <span key={index} className={heard+(index===0?" hudNarratedLead":"")}>{part}</span>;
  })}</p>;
 }
-function Answer({line,index,sessionId,speakingAt,speechChar,onImageOpen}:{line:HudHudLine;index:number;sessionId:string;speakingAt:Props["speakingAt"];speechChar:number;onImageOpen:()=>void}){
+function Answer({line,index,sessionId,speakingAt,speechChar,onImageOpen,linkRequested}:{line:HudHudLine;index:number;sessionId:string;speakingAt:Props["speakingAt"];speechChar:number;onImageOpen:()=>void;linkRequested:boolean}){
  const spoken=speakingAt?.sessionId===sessionId&&speakingAt.index===index?speechChar:undefined;
  const image=line.presentation?.kind==="image"?line.images?.[0]:undefined;
  if(image)return <button className="hudFocusImageButton" type="button" onClick={onImageOpen} aria-label={"More information about "+image.title}>
@@ -35,8 +42,8 @@ function Answer({line,index,sessionId,speakingAt,speechChar,onImageOpen}:{line:H
   return <div className="hudVersePresentation"><HudHudVerseCard featured verseKey={verse.key} verseData={verse} href={"/quran-library?verse="+encodeURIComponent(verse.key)} spokenChars={spoken===undefined?undefined:Math.max(0,spoken-line.content.indexOf(verse.english))}/></div>;
  }
  return <>
-  <Narration text={line.content} spokenChars={spoken}/>
-  {line.webResult&&<a className="hudTopWebsite" href={line.webResult.url} target="_blank" rel="noopener noreferrer" aria-label={"Open web result: "+line.webResult.title}>
+  <Narration text={line.content} spokenChars={spoken} accentSeed={sessionId+":"+index+":"+line.content}/>
+  {linkRequested&&line.webResult&&<a className="hudTopWebsite" href={line.webResult.url} target="_blank" rel="noopener noreferrer" aria-label={"Open web result: "+line.webResult.title}>
     {line.webResult.thumbnailUrl?.startsWith("https://")&&<img src={line.webResult.thumbnailUrl} alt="" loading="lazy" referrerPolicy="no-referrer"/>}
     <span className="hudTopWebsiteCopy"><small>TOP WEB RESULT · {line.webResult.source}</small><strong>{line.webResult.title}</strong>{line.webResult.description&&<span>{line.webResult.description.slice(0,195)}</span>}<em>Visit website ↗</em></span>
    </a>}
@@ -47,9 +54,11 @@ function Answer({line,index,sessionId,speakingAt,speechChar,onImageOpen}:{line:H
 }
 
 /** One visual response at a time; keep the complete chat in pull-down history. */
-export default function HudHudFocusStage({lines,sessionId,busy,speakingAt,speechChar,persist=false,idleAfterMs=20_000}:Props){
+export default function HudHudFocusStage({lines,sessionId,busy,speakingAt,speechChar,accentColor="green",persist=false,idleAfterMs=20_000}:Props){
  const latestIndex=lines.reduce((last,line,index)=>line.role==="assistant"?index:last,-1);
  const latest=latestIndex>=0?lines[latestIndex]:null;
+ const precedingQuestion=latestIndex>=0?lines.slice(0,latestIndex).reverse().find(line=>line.role==="user")?.content||"":"";
+ const linkRequested=isHudHudLinkRequest(precedingQuestion);
  const answerKey=sessionId+":"+(latestIndex<0?"none":latestIndex+":"+latest?.content.slice(0,80));
  const observed=useRef<string|null>(null);
  const asked=useRef(false);
@@ -107,9 +116,9 @@ export default function HudHudFocusStage({lines,sessionId,busy,speakingAt,speech
   if(dy<0&&historyOpen&&(event.target as HTMLElement).closest(".hudHistoryTop"))setHistoryOpen(false);
  };
  const image=latest?.presentation?.kind==="image"?latest.images?.[0]:undefined;
- return <div className={"hudFocusSurface"+(historyOpen?" hudHistoryIsOpen":"")} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}onClick={event=>{markActivity();if((idle||!visible)&&!busy&&event.target===event.currentTarget)reveal()}} aria-label="HudHud current answer. Swipe down to view previous answers.">
+ return <div data-accent={accentColor} className={"hudFocusSurface"+(historyOpen?" hudHistoryIsOpen":"")} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}onClick={event=>{markActivity();if((idle||!visible)&&!busy&&event.target===event.currentTarget)reveal()}} aria-label="HudHud current answer. Swipe down to view previous answers.">
   {latest&&visible&&<div key={answerKey+":"+revealCount} ref={cardRef} onScroll={markActivity} className={"hudFocusCard"+(busy?" hudFocusLeaving":"")+(idle?" hudFocusIdle":"")+(revealCount%2?" hudFrameFromCenter":" hudFrameFromLeft")} onClick={()=>{if(idle)reveal()}} aria-live="polite">
-   <div className="hudFocusContent"><Answer line={latest} index={latestIndex} sessionId={sessionId} speakingAt={speakingAt} speechChar={speechChar} onImageOpen={()=>{setImageInfoOpen(true);setIdle(false)}}/></div>
+   <div className="hudFocusContent"><Answer line={latest} index={latestIndex} sessionId={sessionId} speakingAt={speakingAt} speechChar={speechChar} linkRequested={linkRequested} onImageOpen={()=>{setImageInfoOpen(true);setIdle(false)}}/></div>
   </div>}
   {latest&&idle&&!busy&&!historyOpen&&<button type="button" className="hudFocusRestore" aria-label="Show the last HudHud answer again" onClick={reveal}/>}
   {busy&&<div className="hudFocusWorking" role="status"><span className="hudFocusLoadingLine"/><span className="hudSrOnly">HudHud is preparing the next answer.</span></div>}
