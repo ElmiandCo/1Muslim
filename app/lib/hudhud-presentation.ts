@@ -19,7 +19,8 @@ function verseReference(text:string):string|null{
 }
 /** Return only explicit image requests; don't treat any mention of a photo as a search. */
 export function imageQueryFromHudHud(text:string):string|null{
- const request=/(?:can (?:i|we) (?:see|view)|show (?:me|us)|find|display|pull up|look up|search for|i (?:want|would like) to see)\s+(?:an?\s+|some\s+)?(?:images?|pictures?|photos?|photographs?)\s+(?:of|showing|for|about)\s+(.+?)(?:[?.!]+)?$/i.exec(text.trim());
+ const clean=text.trim().replace(/^(?:hey|hi|okay|ok)?[\\s,.!]*(?:hudhud|hud-hud)[\\s,.!:]+/i,"");
+ const request=/(?:can (?:i|we) (?:see|view)|show (?:me|us)|let (?:me|us) see|find|display|pull up|look up|search for|i (?:want|would like) to see)\\s+(?:an?\\s+|some\\s+)?(?:images?|pictures?|photos?|photographs?)\\s+(?:of|showing|for|about)\\s+(.+?)(?:[?.!]+)?$/i.exec(clean);
  const subject=request?.[1]?.replace(/[?.!]+$/,"").trim().replace(/^(?:an?|the)\s+/i,"").slice(0,110);
  return subject&&subject.length>=2?subject:null;
 }
