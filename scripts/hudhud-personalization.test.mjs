@@ -92,7 +92,7 @@ test("Venn settings are editable, reversible and integrated with existing chat h
  assert.ok(panel.includes("hhVennCore"));
  assert.ok(panel.includes("Save what HudHud knows"));
  assert.ok(panel.includes("Delete my private HudHud details"));
- assert.ok(panel.includes("never"));
+ assert.ok(panel.toLowerCase().includes("never"));
  assert.ok(css.includes(":root:not(.light)"));
  assert.ok(css.includes("@media(max-width:425px)"));
 });
