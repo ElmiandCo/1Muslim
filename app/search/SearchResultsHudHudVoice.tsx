@@ -53,12 +53,14 @@ export default function SearchResultsHudHudVoice({query,onEdit,onSearch,onOpenHu
    rec.lang="en-US";rec.continuous=true;rec.interimResults=true;
    rec.onspeechstart=()=>{if(mounted.current)setHearing(true)};
    rec.onspeechend=()=>{if(mounted.current)setHearing(false)};
+   let processedFinal=0;
    rec.onresult=event=>{
     // Final speech segments are processed once. Interim/background noise
     // animates the visualizer but never edits or submits a query.
-    for(let i=event.resultIndex||0;i<event.results.length;i++){
+    for(let i=Math.max(processedFinal,event.resultIndex||0);i<event.results.length;i++){
      const item=event.results[i];
      if(!item?.isFinal)continue;
+     processedFinal=i+1;
      const text=(item[0]?.transcript||"").trim();
      if(!text||text.length<2)continue;
      const before=latest.current;
