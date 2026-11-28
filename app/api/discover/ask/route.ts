@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
       const {data:usage}=await dbAdmin.from("discover_hudhud_usage").select("turns_used").eq("usage_key",usageKey).maybeSingle();
       const remaining=Math.max(0,FREE_TURNS-(usage?.turns_used||FREE_TURNS));
       return asResponse({
-        reply:"Here’s "+(/^(?:an?|the)\s/i.test(presentation.query)?"":"a ")+presentation.query+".",,
+        reply:"Here’s "+(/^(?:an?|the)\s/i.test(presentation.query)?"":"a ")+presentation.query+".",
         presentation,images:[selected],matches:[],remaining,limitReached:remaining===0,unlocked:auth.premium
       },200,guestToken);
     }
