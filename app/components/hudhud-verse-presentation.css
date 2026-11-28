@@ -1,0 +1,58 @@
+/* Verse-only HudHud presentations: one clear Arabic row followed by English.
+   Keep evidence attribution available to screen readers and in the footer,
+   never mix chapter labels into the primary scripture display. */
+.hudVerseCard.hudVerseHero>.hudVerseAccessLabel{
+ position:absolute!important;
+ width:1px!important;
+ height:1px!important;
+ padding:0!important;
+ margin:-1px!important;
+ overflow:hidden!important;
+ clip:rect(0,0,0,0)!important;
+ white-space:nowrap!important;
+ border:0!important;
+}
+.hudVersePresentation .hudVerseCard.hudVerseHero{
+ align-items:center!important;
+ text-align:center!important;
+}
+.hudVersePresentation .hudVerseCard.hudVerseHero>.hudVerseArabic{
+ display:block!important;
+ width:100%;
+ text-align:center!important;
+ margin-inline:auto!important;
+ unicode-bidi:plaintext;
+}
+.hudVersePresentation .hudVerseCard.hudVerseHero>.hudVerseEnglish{
+ width:100%;
+ text-align:center!important;
+ margin-inline:auto!important;
+ line-height:1.65!important;
+}
+.hudVersePresentation .hudVerseCard.hudVerseHero>.hudVerseTranslationCredit{
+ display:block;
+ width:100%;
+ text-align:center!important;
+ font-size:11px!important;
+ line-height:1.45;
+ opacity:.84;
+}
+.hudVersePresentation .hudVerseCard.hudVerseHero>em{
+ text-align:center!important;
+}
+@media(max-width:520px){
+ .hudVersePresentation .hudVerseCard.hudVerseHero{
+  gap:clamp(10px,3vw,18px)!important;
+ }
+ .hudVersePresentation .hudVerseCard.hudVerseHero>.hudVerseArabic{
+  padding-inline:2px;
+  line-height:1.95!important;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ .hudVersePresentation .hudVerseCard.hudVerseHero>.hudVerseArabic,
+ .hudVersePresentation .hudVerseCard.hudVerseHero>.hudVerseEnglish{
+  animation:none!important;
+  transition:none!important;
+ }
+}
