@@ -1,5 +1,20 @@
 "use client";
 
+/** Keep spoken answers brief while the entire written reply remains available on screen. */
+export function shortHudHudSpeech(text:string):string{
+ const clean=text.replace(/https?:\/\/\S+/g,"").replace(/\[[^\]]+\]\([^\)]+\)/g,"").replace(/[*#_`]/g,"").replace(/\s+/g," ").trim();
+ if(clean.length<=300)return clean;
+ const sentences=clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[clean];
+ let spoken="";
+ for(const segment of sentences){
+  if(spoken.length&&spoken.length+segment.trim().length>285)break;
+  spoken+=(spoken?" ":"")+segment.trim();
+  if(spoken.length>=180)break;
+ }
+ if(spoken.length>300||spoken.length<25)spoken=clean.slice(0,280).replace(/\s+\S*$/,"").trim();
+ return spoken;
+}
+
 /** One output at a time. The microphone owner must suspend recognition while
  * audio is being requested or played; this player never opens a microphone. */
 export function createHudHudAiVoicePlayer(){
@@ -30,7 +45,7 @@ export function createHudHudAiVoicePlayer(){
    const res=await fetch("/api/hudhud/speech",{
     method:"POST",credentials:"same-origin",cache:"no-store",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({text:text.trim().slice(0,1800)}),signal:signal.signal
+    body:JSON.stringify({text:shortHudHudSpeech(text).slice(0,1800)}),signal:signal.signal
    });
    if(!res.ok||!res.headers.get("content-type")?.startsWith("audio/"))return false;
    const bytes=await res.blob();
