@@ -4,6 +4,7 @@ import test from "node:test";
 import "./hudhud-voice-and-flat-settings.test.mjs";
 import "./hudhud-stream-first-voice.test.mjs";
 import "./search-member-voice-ui.test.mjs";
+import "./hudhud-personalization.test.mjs";
 import {passwordWarning} from "../app/lib/auth-password-policy.ts";
 import {hasShahada,SHAHADA_ARABIC,SHAHADA_ENGLISH} from "../app/lib/shahada-recognition.ts";
 import {signAdminGate,validAdminGate} from "../lib/admin-security-gate.ts";
@@ -116,7 +117,8 @@ test("signed-in Search Home is the actual personalized experience, not the old P
  assert.match(member,/createHudHudAiVoicePlayer/);
  assert.match(member,/micCooldown/);
  assert.doesNotMatch(member,/speechSynthesis\\.speak/);
- assert.match(member,/Assalamu Alaikum Wa Rahmatullahi Wa Barakatuh/);
+ assert.match(member,/As-salamu alaykum/);
+  assert.match(member,/nameOf\(member\)/);
  assert.match(member,/insert\("Search 1Muslim"/);
  assert.match(member,/insert\(" witg"/);
  assert.match(member,/insert\("1Muslim.Live"/);
