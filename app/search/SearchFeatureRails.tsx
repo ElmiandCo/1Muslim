@@ -1,9 +1,9 @@
 "use client";
 import Link from "next/link";
-import {useRef,useState,type TouchEvent,type MouseEvent} from "react";
+import {useEffect,useRef,useState,type TouchEvent,type MouseEvent} from "react";
 
 type Destination={label:string;detail:string;href:string;image:string};
-const destinations:Destination[]=[
+const destinations: Destination[]=[
  {label:"DeepWatch",detail:"Films, shows & series",href:"/deepwatch",image:"/assets/deepwatch-icon.PNG"},
  {label:"Posts",detail:"What the Ummah is sharing",href:"/posts",image:"/assets/hudhud-messages.PNG"},
  {label:"LIVE",detail:"Join the conversation",href:"/streaming",image:"/assets/hudhud-live.PNG"},
@@ -18,6 +18,7 @@ export default function SearchFeatureRails(){
  const gesture=useRef<Start|null>(null);
  const suppressClick=useRef(false);
  const restoreTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+ useEffect(()=>()=>{if(restoreTimer.current)clearTimeout(restoreTimer.current)},[]);
  const dismiss=()=>{
   suppressClick.current=true;
   setHidden(true);setReturning(false);
@@ -46,7 +47,7 @@ export default function SearchFeatureRails(){
   if(suppressClick.current){e.preventDefault();e.stopPropagation();suppressClick.current=false}
  };
  return <section className={"dsExploreFeatureSection"+(hidden?" dsExploreHidden":"")+(returning?" dsExploreReturning":"")}
-  aria-labelledby="dsExploreFeatureTitle">
+  aria-label="Explore 1Muslim shortcuts">
   {hidden?
    <button type="button" className="dsExploreRestore" onTouchStart={begin} onTouchEnd={finish}
     onClick={restore} aria-label="Show Explore 1Muslim app shortcuts">
