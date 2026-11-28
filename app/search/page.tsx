@@ -5,6 +5,7 @@ import "./search-magnetic.css";
 import "./search-feature-rails.css";
 import SearchFeatureRails from "./SearchFeatureRails";
 import SearchMemberHome from "./SearchMemberHome";
+import SearchResultsHudHudVoice from "./SearchResultsHudHudVoice";
 import {hudHudVoiceEnabled,setHudHudVoiceEnabled,firstHudHudMuteNotice} from "../lib/hudhud-voice-preference";
 import AnimatedMuslimBrand from "../components/AnimatedMuslimBrand";
 import SearchAuthFlow,{type SearchAuthMode} from "../components/SearchAuthFlow";
@@ -63,6 +64,8 @@ export default function SearchHub() {
   useSearchMagneticMotion(magneticRoot);
   const [query,setQuery]=useState("");
   const [submitted,setSubmitted]=useState("");
+  // Results mode is an explicit destination, even while the query is edited/cleared.
+  const [resultsOpened,setResultsOpened]=useState(false);
   const [tab,setTab]=useState<Tab>("All");
   const [recent,setRecent]=useState<string[]>([]);
   const [result,setResult]=useState<DiscoverResponse|null>(null);
@@ -174,7 +177,7 @@ export default function SearchHub() {
       if(Array.isArray(saved))setRecent(saved.filter((x):x is string=>typeof x==="string").slice(0,10));}
     catch{}
     const initial=new URLSearchParams(window.location.search).get("q")||"";
-    if(initial){setQuery(initial.slice(0,90));setSubmitted(initial.slice(0,90));}
+    if(initial){setResultsOpened(true);setQuery(initial.slice(0,90));setSubmitted(initial.slice(0,90));}
   },[]);
   useEffect(()=>{
     const onScroll=()=>setCompactHeader(window.scrollY>140);
@@ -183,12 +186,12 @@ export default function SearchHub() {
   },[]);
   useEffect(()=>{
     const current=++requestCount.current;
-    if(query.trim().length===1){setLoading(false);return;}
+    if(submitted.trim().length<2){setLoading(false);setResult(null);return;}
     const controller=new AbortController();
     const timer=window.setTimeout(async()=>{
       setLoading(true);setError("");
       try{
-        const r=await fetch("/api/discover/search?q="+encodeURIComponent(query.trim()),{signal:controller.signal,cache:"no-store"});
+        const r=await fetch("/api/discover/search?q="+encodeURIComponent(submitted.trim()),{signal:controller.signal,cache:"no-store"});
         if(!r.ok)throw new Error("Could not search 1Muslim right now.");
         const data=await r.json() as DiscoverResponse;
         if(!controller.signal.aborted&&current===requestCount.current)setResult(data);
@@ -197,18 +200,25 @@ export default function SearchHub() {
       } finally {
         if(!controller.signal.aborted&&current===requestCount.current)setLoading(false);
       }
-    },query.trim()?320:25);
+    },submitted.trim()?250:25);
     return()=>{controller.abort();window.clearTimeout(timer);};
-  },[query]);
+  },[submitted]);
 
   const commit=(value:string)=>{
     const clean=value.trim().slice(0,90);if(!clean)return;
-    setQuery(clean);setSubmitted(clean);setTab("All");
+    setResultsOpened(true);setQuery(clean);setSubmitted(clean);setTab("All");
     const next=[clean,...recent.filter(x=>x.toLowerCase()!==clean.toLowerCase())].slice(0,10);
     setRecent(next);try{localStorage.setItem(historyKey,JSON.stringify(next));window.history.replaceState({}, "", "/search?q="+encodeURIComponent(clean));}catch{}
     searchField.current?.blur();
   };
-  const clear=()=>{setQuery("");setSubmitted("");setTab("All");try{window.history.replaceState({}, "", "/search");}catch{};searchField.current?.focus();};
+  const clear=()=>{setResultsOpened(true);setQuery("");setSubmitted("");setResult(null);setTab("All");try{window.history.replaceState({}, "", "/search");}catch{};searchField.current?.focus();};
+  const returnHome=()=>{setResultsOpened(false);setQuery("");setSubmitted("");setResult(null);setTab("All");try{window.history.replaceState({}, "", "/search");}catch{}};
+  const openResults=(value:string)=>{
+   const idea=value.trim().slice(0,90);
+   setResultsOpened(true);
+   if(idea)commit(idea);
+   else{setQuery("");setSubmitted("");setResult(null);setTab("All");try{window.history.replaceState({}, "", "/search?results=1");}catch{}}
+  };
   const remove=(term:string)=>{const next=recent.filter(s=>s!==term);setRecent(next);try{localStorage.setItem(historyKey,JSON.stringify(next))}catch{}};
   const showSuggestions=Boolean(query.trim().length>=2&&query.trim().toLowerCase()!==submitted.toLowerCase());
   const suggestions=useMemo(()=>[...new Set([
@@ -222,7 +232,10 @@ export default function SearchHub() {
 
   const openHudHud=()=>{
     const context=(submitted||query).trim().slice(0,90);
-    router.push("/hudhud"+(context?"?q="+encodeURIComponent(context):""));
+    const from="/search"+(context?"?q="+encodeURIComponent(context):"?results=1");
+    try{sessionStorage.setItem("1muslim:hudhud:return",from)}catch{}
+    const params=new URLSearchParams({from});if(context)params.set("q",context);
+    router.push("/hudhud?"+params.toString());
   };
   const completeShahada=()=>{
     setAccount("member");setAuthLeaving(true);
@@ -248,7 +261,7 @@ export default function SearchHub() {
       window.alert(e instanceof Error?e.message:"Could not sign out right now.");
     }finally{setSignoutBusy(false);}
   };
-  const homeMode=!query.trim();
+  const homeMode=!resultsOpened&&!submitted.trim();
   useEffect(()=>{
     // Keep the browser safe-area/toolbar color consistent with the visible
     // white Search Home or explicitly selected Results day/night appearance.
@@ -259,7 +272,7 @@ export default function SearchHub() {
   const showAuth=authMode!==null;
   // Sign-in keeps users on the actual Search Home, not a second Profile page.
   // Full directory results remain available on explicit /search?q= deep links.
-  if(account==="member"&&!showAuth&&!submitted.trim())return <SearchMemberHome onSignOut={signOut}/>;
+  if(account==="member"&&!showAuth&&homeMode)return <SearchMemberHome onSignOut={signOut} onOpenResults={openResults}/>;
   return <main ref={magneticRoot} className={"dsPage "+(homeMode?"dsHomeMode dsIntro"+(introStage==="pending"?"Pending":introStage==="playing"?"Playing":"Done"):"dsResultsMode "+(resultsNight?"dsResultsNight":"dsResultsDay"))+(showAuth?" dsInlineAuthOpen":"")+(authLeaving?" dsInlineAuthLeaving":"")}>
     <nav className="dsHomeUtilities" aria-label="Account shortcuts">
       <button type="button" className="dsUtilityButton dsGuestVoice" aria-label={guestVoice?"Mute HudHud voice":"Enable HudHud voice"} title={guestVoice?"HudHud voice on":"HudHud voice off"} aria-pressed={guestVoice} onClick={switchGuestVoice}>
@@ -267,7 +280,7 @@ export default function SearchHub() {
       </button>
       {guestVoiceNotice&&<button type="button" className="dsGuestVoiceNotice" role="status" onClick={()=>{setGuestVoiceNotice("");switchGuestVoice()}}>{guestVoiceNotice}</button>}
 
-      {!homeMode&&<Link href="/search" className="dsResultsBrand" aria-label="1Muslim.Live — return to search home" onClick={e=>{e.preventDefault();clear()}}><AnimatedMuslimBrand/><span className="dsHomeBrandLive" aria-hidden="true">.Live</span></Link>}
+      {!homeMode&&<Link href="/search" className="dsResultsBrand" aria-label="1Muslim.Live — return to search home" onClick={e=>{e.preventDefault();returnHome()}}><AnimatedMuslimBrand/><span className="dsHomeBrandLive" aria-hidden="true">.Live</span></Link>}
       {!homeMode&&<button type="button" className="dsUtilityButton dsResultsThemeToggle" onClick={toggleResultsTheme} aria-label={resultsNight?"Switch search results to light mode":"Switch search results to dark mode"} title={resultsNight?"Light appearance":"Dark appearance"} aria-pressed={resultsNight}><span aria-hidden="true">{resultsNight?"☼":"◐"}</span></button>}
       {account==="guest"?<div className="dsGuestAccount" aria-label="Account access">
         <Link href="/auth?next=%2Fsearch&login=1" onClick={e=>{e.preventDefault();openAuth("signin")}} className="dsGuestSignIn" aria-label="Sign in" title="Sign in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.4 20c.4-4 2.7-6 6.6-6s6.2 2 6.6 6"/></svg></Link>
@@ -287,7 +300,7 @@ export default function SearchHub() {
     <header className={"dsHeader"+(compactHeader?" dsHeaderCompact":"")}>
       <h1 className="dsHomeBrand" aria-hidden={!homeMode}><AnimatedMuslimBrand/><span className="dsHomeBrandLive" aria-hidden="true">.Live</span></h1>
       <div className="dsHeaderRow">
-        <Link href="/search" className="dsBack" aria-label="Back to search home" onClick={e=>{e.preventDefault();showAuth?closeAuth():clear()}}>‹</Link>
+        <Link href="/search" className="dsBack" aria-label="Back to search home" onClick={e=>{e.preventDefault();showAuth?closeAuth():returnHome()}}>‹</Link>
         <form className="dsSearchForm" role="search" aria-hidden={showAuth} onSubmit={e=>{e.preventDefault();if(!showAuth)commit(query);}}>
           <span aria-hidden="true">⌕</span>
           <input ref={searchField} type="search" autoComplete="off" aria-label="Search all of 1Muslim" placeholder="Search 1Muslim with HudHud" value={query}
@@ -307,9 +320,11 @@ export default function SearchHub() {
             {name}
           </button>)}
         </nav>
-        <button className="dsHudTab" type="button" title="Ask HudHud" aria-label="Ask HudHud AI search assistant" onClick={()=>void openHudHud()}>
-          <img src="/assets/hudhud-logo.PNG" alt="" aria-hidden="true"/><span>HudHud</span>
-        </button>
+        {account==="member"&&!homeMode&&!showAuth
+          ?<SearchResultsHudHudVoice query={query} onEdit={setQuery} onSearch={commit} onOpenHudHud={openHudHud}/>
+          :<button className="dsHudTab" type="button" title="Ask HudHud" aria-label="Ask HudHud AI search assistant" onClick={()=>void openHudHud()}>
+            <img src="/assets/hudhud-logo.PNG" alt="" aria-hidden="true"/><span>HudHud</span>
+           </button>}
       </div>
     </header>
 
