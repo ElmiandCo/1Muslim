@@ -83,7 +83,7 @@ export default function SearchResultsHudHudVoice({query,onEdit,onSearch,onOpenHu
     if(event.error==="not-allowed"||event.error==="service-not-allowed"||event.error==="audio-capture"){
      pausedRef.current=true;setPaused(true);
      setNotice("Tap the microphone to allow listening. You can still type.");
-    }else if(event.error!=="network"){setNotice("Voice editing paused. Tap the microphone to retry.");pausedRef.current=true;setPaused(true);}
+    }else{setNotice("Voice editing paused. Tap the microphone to retry.");pausedRef.current=true;setPaused(true);}
    };
    rec.onend=()=>{
     if(recognition.current!==rec)return;
