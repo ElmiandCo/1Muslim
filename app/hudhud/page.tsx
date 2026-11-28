@@ -134,7 +134,7 @@ export default function HudHudPage(){
     clearHudHudTabHistory(window.sessionStorage);
     tabOwnerRef.current="guest";
     setSessions([{id:"first",title:"New chat",lines:[]}]);setActiveId("first");
-   }else if(event==="SIGNED_IN"&&session?.user?.id!==tabOwnerRef.current){
+   }else if(event==="SIGNED_IN"&&session?.user?.id&&session.user.id!==tabOwnerRef.current){
     clearHudHudTabHistory(window.sessionStorage);
     tabOwnerRef.current=session.user.id;
     setSessions([{id:"first",title:"New chat",lines:[]}]);setActiveId("first");
