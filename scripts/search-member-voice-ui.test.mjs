@@ -12,17 +12,16 @@ test("Search Home voice errors dismiss themselves after two seconds",()=>{
  assert.match(styles,/smhBriefNotice 2s/);
 });
 
-test("Search Home shows only an accessible circle for spoken replies",()=>{
+test("One accessible header speaker controls spoken replies",()=>{
  assert.doesNotMatch(memberHome,/Hear the greeting|AI spoken replies on|AI spoken replies off|greetingFailed|setGreetingFailed/);
- assert.match(memberHome,/className="smhVoiceToggle"/);
- assert.match(memberHome,/aria-label=\{voiceOn\?"Turn spoken replies off":"Turn spoken replies on"\}/);
+ assert.match(memberHome,/className="smhHeaderSpeaker"/);
  assert.match(memberHome,/aria-pressed=\{voiceOn\}/);
- assert.match(memberHome,/className="smhVoiceDot"/);
- assert.match(styles,/\.smhVoiceToggle\[aria-pressed="true"\] \.smhVoiceDot\{background:#20af75/);
+ assert.match(memberHome,/onClick=\{toggleVoice\}/);
+ assert.match(memberHome,/setHudHudVoiceEnabled\(next\)/);
+ assert.match(styles,/\.smhHeaderSpeaker\[aria-pressed="true"\]:after/);
 });
-
 test("Microphone permission recovery and reduced-motion remain functional",()=>{
  assert.match(memberHome,/Enable microphone to speak/);
  assert.match(memberHome,/onClick=\{toggleMic\}/);
- assert.match(styles,/@media\(prefers-reduced-motion:reduce\)\{\.smhVoiceToggle/);
+ assert.match(styles,/@media\(prefers-reduced-motion:reduce\)\{\.smhHeaderSpeaker/);
 });
