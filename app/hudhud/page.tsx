@@ -1,7 +1,7 @@
 "use client";
 import "./hudhud.css";
 import AnimatedMuslimBrand from "../components/AnimatedMuslimBrand";
-import HudHudFocusStage,{type HudHudLine} from "./HudHudFocusStage";
+import HudHudFocusStage,{type HudHudLine,type HudHudAccent} from "./HudHudFocusStage";
 import {normalizeSpokenHudHudQuestion} from "../lib/hudhud-speech";
 import {createHudHudAiVoicePlayer} from "../lib/hudhud-ai-voice-player";
 import {getHudHudTopWebResult} from "../lib/hudhud-top-web";
@@ -60,6 +60,16 @@ export default function HudHudPage(){
  const [settingsOpen,setSettingsOpen]=useState(false);
  const [actionsOpen,setActionsOpen]=useState(false);
  const [readAloud,setReadAloud]=useState(true);
+ const [focusAccent,setFocusAccent]=useState<HudHudAccent>("green");
+ useEffect(()=>{
+  try{const saved=localStorage.getItem("1muslim:hudhud:focus-accent");
+   if(saved&&["green","blue","gray","yellow","red"].includes(saved))setFocusAccent(saved as HudHudAccent);
+  }catch{}
+ },[]);
+ const chooseFocusAccent=(color:HudHudAccent)=>{
+  setFocusAccent(color);
+  try{localStorage.setItem("1muslim:hudhud:focus-accent",color)}catch{}
+ };
  const voicePlayer=useRef<ReturnType<typeof createHudHudAiVoicePlayer>|null>(null);
  const voiceEpoch=useRef(0);
  const audioCooldownTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
@@ -387,7 +397,7 @@ export default function HudHudPage(){
   </header>
 
   <section className={"hudMain"+(lines.length?" hudHasChat":"")} aria-label="Conversation">
-   <HudHudFocusStage lines={lines} sessionId={activeId} busy={busy} speakingAt={speakingAt} speechChar={speechChar}/>
+   <HudHudFocusStage lines={lines} sessionId={activeId} busy={busy} speakingAt={speakingAt} speechChar={speechChar} accentColor={focusAccent}/>
   </section>
 
   {error&&<p className="hudError" role="alert">{error}</p>}
@@ -416,6 +426,12 @@ export default function HudHudPage(){
     <h2>HudHud settings</h2>
     <label><span>Read replies aloud<small>Uses your browser's voice</small></span><input type="checkbox" checked={readAloud} onChange={e=>saveVoice(e.target.checked)}/></label>
     <label><span>Auto-listen<small>Start after permission; pauses while HudHud speaks or you type. Browser recognition may process audio; HudHud does not store raw audio.</small></span><input type="checkbox" checked={autoListening} onChange={e=>{setAutoListening(e.target.checked);setMicPaused(!e.target.checked);try{localStorage.setItem("1muslim:hudhud:auto-listen",e.target.checked?"on":"off")}catch{}if(!e.target.checked)stopVoice(true)}}/></label>
+    <div role="group" aria-label="HudHud reply highlight color">
+      <small>Reply highlight color · short answers only</small>
+      <div className="hudAccentOptions">{(["green","blue","gray","yellow","red"] as const).map(color=>
+       <button type="button" key={color} data-accent={color} aria-pressed={focusAccent===color} onClick={()=>chooseFocusAccent(color)}>{color[0].toUpperCase()+color.slice(1)}</button>
+      )}</div>
+     </div>
     <div className="hudMicSettings"><span>Microphone access<small>{micAccess==="granted"?(autoListening&&!micPaused?"Allowed · auto-listening is on":"Allowed · tap microphone to speak"):micAccess==="checking"?"Checking browser permission…":"Not enabled · you can still type"}</small></span><button type="button" onClick={()=>void requestMicrophonePermission()}>Enable mic</button></div>
     {memorySignedIn?<><label><span>Remember conversations<small>Private to your account. Off by default.</small></span><input type="checkbox" checked={memoryEnabled} disabled={memoryPending} onChange={e=>void updateMemory(e.target.checked)}/></label>
       <button type="button" disabled={memoryPending} onClick={()=>void clearMemory()}>Clear saved conversations</button></>
