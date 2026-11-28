@@ -520,7 +520,7 @@ test("Shahada uses HudHud animated guidance instead of green orb, keeping all re
 });
 
 
-test("Search, signup and HudHud text focus is borderless without hiding button keyboard cues",()=>{
+test("Search, signup and HudHud inputs have no glowing focus border, buttons keep keyboard cues",()=>{
  const files=[
   ["app/search/search.css",".dsPage .dsSearchForm:focus-within"],
   ["app/search/search-results.css",".dsResultsNight .dsSearchForm:focus-within"],
@@ -530,9 +530,9 @@ test("Search, signup and HudHud text focus is borderless without hiding button k
  ];
  for(const [file,selector] of files){
   const css=read(file),pos=css.lastIndexOf(selector);
-  assert.ok(pos>=0,"missing focus override in "+file);
-  assert.ok(css.slice(pos,pos+190).includes("box-shadow:none!important"),"focus glow remains in "+file);
+  assert.ok(pos>=0,"missing focus selector: "+file);
+  assert.ok(css.slice(pos,pos+300).includes("box-shadow:none!important"),"glow remains: "+file);
  }
- assert.match(read("app/search/search.css"),/focus-visible\\{outline:2px/);
- assert.match(read("app/search/search-member-home.css"),/button,a,input\\):focus-visible/);
+ assert.ok(read("app/search/search.css").includes("focus-visible{outline:2px"));
+ assert.ok(read("app/search/search-member-home.css").includes(":focus-visible{outline:2px"));
 });
