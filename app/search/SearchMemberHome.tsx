@@ -183,26 +183,27 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  };
  // Listening requires browser permission and always has a visible pause control.
  const askMicPermission=async()=>{
-  if(!navigator.mediaDevices?.getUserMedia){setMicPermission("unsupported");setVoiceError("Voice is unavailable. You can still type.");return}
+  if(!navigator.mediaDevices?.getUserMedia){setMicPermission("unsupported");setVoiceError("Microphone unavailable. Tap to retry.");return false}
   try{
    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
    stream.getTracks().forEach(track=>track.stop());
-   setMicPermission("granted");setVoiceError("");
+   setMicPermission("granted");setVoiceError("");return true;
   }catch(err){
    const name=err instanceof Error?err.name:"";
    setMicPermission(name==="NotAllowedError"||name==="PermissionDeniedError"?"denied":"needs-tap");
+   return false;
   }
  };
  useEffect(()=>{
   if(!member)return;
-  void askMicPermission();
+  if(autoMicEnabled)void askMicPermission();
   const onHide=()=>{setPageVisible(!document.hidden);if(document.hidden){stopRecognition();stopAudio()}};
   document.addEventListener("visibilitychange",onHide);
   return()=>{
    document.removeEventListener("visibilitychange",onHide);
    stopRecognition();stopAudio();
   };
- },[member?.id]);
+ },[member?.id,autoMicEnabled]);
 
  const say=(text:string,onEnd?:()=>void)=>{
   if(!voiceOnRef.current){onEnd?.();return}
@@ -293,7 +294,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  };
  const toggleMic=()=>{
   if(listening){setPaused(true);stopRecognition();return}
-  setPaused(false);if(micPermission!=="granted"){void askMicPermission();return}
+  setPaused(false);if(micPermission!=="granted"){void askMicPermission().then(granted=>{if(granted)window.setTimeout(startRecognition,0)});return}
   // Voice needs a user gesture on some mobile browsers.
   window.setTimeout(startRecognition,0);
  };
