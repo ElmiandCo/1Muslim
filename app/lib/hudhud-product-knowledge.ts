@@ -28,7 +28,7 @@ const appKeywords:Record<string,RegExp>={
  notifications:/\bnotifications?|alerts?\b/i,
  settings:/\bsettings?|preferences?\b/i
 };
-const wantsApps=/\b(?:app|apps|feature|features|tool|tools|page|pages|service|services|navigate|open|take me|show me|where|find|available|can (?:i|you)|what (?:can|does)|how (?:do|can)|recommend|suggest|explore|visit)\b/i;
+const wantsApps=/\b(?:apps?|features?|tools?|pages?|navigate|open|take me|show me (?:the|your) (?:app|page)|where (?:is|can i find)|find (?:the|your|an? app)|what can (?:you|hudhud|i) do|how (?:do i (?:open|find|use)|can i (?:open|find|use))|recommend|suggest|explore|visit)\b/i;
 const future=/\b(?:coming soon|upcoming|future|planned|what(?:'s| is) next|working on|shop|business|halal market)\b/i;
 function unique<T extends {id:string}>(items:T[]):T[]{
  return items.filter((item,index)=>items.findIndex(other=>other.id===item.id)===index);
@@ -42,7 +42,7 @@ export function selectHudHudProductAnswer(message:string,history:Array<{content:
  if(/\b(?:am i signed in|am i logged in|do i have an account|is my account active)\b/i.test(query)){
   return {reply:signedIn?"You’re signed in. What would you like to explore?":"You’re browsing as a guest. You can explore 1Muslim, or sign in when you’re ready.",matches:signedIn?[]:[{id:"join",kind:"1Muslim App",title:"Sign in or join",href:"/auth",description:"Join 1Muslim when you're ready."}]};
  }
- if(future.test(query)){
+ if(future.test(query)&&(/\b(?:1muslim|one muslim|hudhud|shop|halal market|coming soon|upcoming|planned|what(?:\x27s| is) next|working on|your business|muslim business)\b/i.test(query))){
   // Share planned products only if asked, and disclose the combined idea only
   // after sustained relevant questions within this visible conversation.
   const asks=((history||[]).filter(x=>/shop|business|halal market/i.test(x.content)).length+1);
