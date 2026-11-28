@@ -96,3 +96,9 @@ test("Venn settings are editable, reversible and integrated with existing chat h
  assert.ok(css.includes(":root:not(.light)"));
  assert.ok(css.includes("@media(max-width:425px)"));
 });
+
+test("Opt-in saved HudHud chat history redacts apparent credentials",()=>{
+ const route=read("app/api/hudhud/memory/route.ts");
+ assert.ok(route.includes("containsRestrictedHudHudSecret(value.content)"));
+ assert.ok(route.includes("Private credentials excluded from saved HudHud history."));
+});
