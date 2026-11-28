@@ -50,7 +50,9 @@ export default function HudHudPage(){
  // It can be paused at any time; mic audio is never stored by this page.
  const [autoListening,setAutoListening]=useState(true);
  useEffect(()=>{
-  try{const on=localStorage.getItem("1muslim:hudhud:auto-listen")!=="off";setAutoListening(on);if(!on)setMicPaused(true)}catch{}
+  const read=()=>{try{const enabled=localStorage.getItem("1muslim:hudhud:auto-listen")!=="off";setAutoListening(enabled);if(!enabled)setMicPaused(true)}catch{}};
+  read();window.addEventListener("1muslim:hudhud-mic-preference",read);window.addEventListener("storage",read);
+  return()=>{window.removeEventListener("1muslim:hudhud-mic-preference",read);window.removeEventListener("storage",read)};
  },[]);
  const [micPaused,setMicPaused]=useState(false);
  const [speechPending,setSpeechPending]=useState(false);
@@ -419,7 +421,6 @@ export default function HudHudPage(){
   {settingsOpen&&<div className="hudSettings" role="dialog" aria-label="HudHud settings">
     <h2>HudHud settings</h2>
 
-    <label><span>Auto-listen<small>Start after permission; pauses while HudHud speaks or you type. Browser recognition may process audio; HudHud does not store raw audio.</small></span><input type="checkbox" checked={autoListening} onChange={e=>{setAutoListening(e.target.checked);setMicPaused(!e.target.checked);try{localStorage.setItem("1muslim:hudhud:auto-listen",e.target.checked?"on":"off")}catch{}if(!e.target.checked)stopVoice(true)}}/></label>
     <div className="hudMicSettings"><span>Microphone access<small>{micAccess==="granted"?(autoListening&&!micPaused?"Allowed · auto-listening is on":"Allowed · tap microphone to speak"):micAccess==="checking"?"Checking browser permission…":"Not enabled · you can still type"}</small></span><button type="button" onClick={()=>void requestMicrophonePermission()}>Enable mic</button></div>
     {memorySignedIn?<><label><span>Remember conversations<small>Private to your account. Off by default.</small></span><input type="checkbox" checked={memoryEnabled} disabled={memoryPending} onChange={e=>void updateMemory(e.target.checked)}/></label>
       <button type="button" disabled={memoryPending} onClick={()=>void clearMemory()}>Clear saved conversations</button></>
