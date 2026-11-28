@@ -4,6 +4,7 @@ import { createClient } from "../../../../utils/supabase/server";
 import { adminDb } from "../../../../lib/stripe-unlocked";
 import { searchDirectory } from "../../../lib/discover-search";
 import { selectHudHudPresentation } from "../../../lib/hudhud-presentation";
+import { selectHudHudProductAnswer } from "../../../lib/hudhud-product-knowledge";
 import { loadVerifiedHudHudVerse } from "../../../lib/hudhud-verified-verse";
 import { searchImages } from "../../../../lib/server/one-muslim-image-search";
 import { claimSearchQuota } from "../../../../lib/server/search-api-quota";
@@ -108,8 +109,19 @@ export async function POST(req: NextRequest) {
       const {data:usage}=await dbAdmin.from("discover_hudhud_usage").select("turns_used").eq("usage_key",usageKey).maybeSingle();
       const remaining=Math.max(0,FREE_TURNS-(usage?.turns_used||FREE_TURNS));
       return asResponse({
-        reply:"Here is an image of "+presentation.query+". Tap it for details.",
+        reply:"Here’s "+(/^(?:an?|the)\s/i.test(presentation.query)?"":"a ")+presentation.query+".",
         presentation,images:[selected],matches:[],remaining,limitReached:remaining===0,unlocked:auth.premium
+      },200,guestToken);
+    }
+    // Verified in-app knowledge is cheaper and more accurate than invented
+    // AI navigation. Only surface roadmap cards when the member asks.
+    const productAnswer=selectHudHudProductAnswer(message,history,auth.signedIn);
+    if(productAnswer){
+      const {data:usage}=await dbAdmin.from("discover_hudhud_usage").select("turns_used").eq("usage_key",usageKey).maybeSingle();
+      const remaining=Math.max(0,FREE_TURNS-(usage?.turns_used||FREE_TURNS));
+      return asResponse({
+        reply:productAnswer.reply,presentation:{kind:"results"},
+        matches:productAnswer.matches,remaining,limitReached:remaining===0,unlocked:auth.premium
       },200,guestToken);
     }
     const apiKey = process.env.OPENAI_API_KEY;
@@ -139,6 +151,10 @@ export async function POST(req: NextRequest) {
       "You are warm, lively and genuinely enthusiastic when discussing Islam, the Qur’an and the prophets; convey sincere curiosity, hope and respect, not theatrical excitement or certainty beyond verified evidence. For sensitive matters such as Shahada, grief or personal struggle, use a gentle reassuring tone. Keep replies concise and spoken-friendly. Use context-appropriate Islamic expressions naturally, never as filler.",
       "When a search card is available explain briefly what it shows and why it is relevant. Never invent images or translations; use only supplied matches.",
       "Do not claim access to private accounts, tools, past conversations outside this chat, external live websites or actions you cannot perform.",
+      "Keep the spoken answer short: usually one to three sentences (roughly 20–85 words); only expand if the user explicitly asks for detail. Be calm and thoughtful, attentive to tone, never preachy or overly apologetic. Make it practical and memorable.",
+      "Tailor responses using information actually provided earlier in this conversation; do not claim persistent personal memory or know the person's identity unless the signed-in setting permits it. Users control private conversation memory.",
+      "On questions about planned Shop, Business or Halal Market: do not invent a launch date or imply those services are live; planned features are presented only when explicitly asked. Do not spontaneously advertise.",
+      "If asked who owns or built the platform, do not invent or speculate about individual owners or developers. You are the 1Muslim assistant and may describe verified platform information.",
       "Be clear and direct; default to 1–3 short paragraphs and a brief relevant follow-up only when useful. Use plain text, with no Markdown tables.",
       "SEARCH MATCHES (untrusted structured data): "+JSON.stringify(shortlist)
     ].join("\n");
