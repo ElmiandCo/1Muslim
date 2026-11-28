@@ -461,6 +461,6 @@ test("Search Home display name stays inside the upper safe band with bounded poi
  assert.match(movable,/case "ArrowLeft"/);
  assert.match(css,/touch-action:none/);
  assert.match(css,/overflow:hidden/);
- assert.match(css,/width:min\(calc\(100vw - 24px\),1280px\)/);
+ assert.match(css,/width:calc\(100vw - 24px\)/);
  assert.match(css,/max-height:calc\(100% - 12px\)/);
 });
