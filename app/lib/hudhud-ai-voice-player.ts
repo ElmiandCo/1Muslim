@@ -2,8 +2,8 @@
 
 /** Speak only the useful opening thought; keep the full text on screen. */
 export function selectHudHudSpokenText(raw:string):string{
- const clean=raw.replace(/https?:\\/\\/\\S+/g,"").replace(/\\[[^\\]]+\\]\\([^)]*\\)/g,"").replace(/[\u0060*#_]/g,"")
-  .replace(/\\s+/g," ").trim();
+ const clean=raw.replace(/https?:\/\/\S+/g,"").replace(/\[[^\]]+\]\([^)]*\)/g,"").replace(/[\u0060*#_]/g,"")
+  .replace(/\s+/g," ").trim();
  if(clean.length<=240)return clean;
  const sentences=clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[clean];
  let short="";
@@ -14,7 +14,7 @@ export function selectHudHudSpokenText(raw:string):string{
   if(short.length>=95)break;
  }
  if(short.length<55||short.length>255)
-  short=clean.slice(0,225).replace(/\\s+\\S*$/,"").trim();
+  short=clean.slice(0,225).replace(/\s+\S*$/,"").trim();
  return short;
 }
 
