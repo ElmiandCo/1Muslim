@@ -56,25 +56,31 @@
  animation:smhCaretBlink .68s steps(1,end) infinite}
 .smhTypewriter i.smhCaretOff{animation:none;opacity:0}
 @keyframes smhCaretBlink{50%{opacity:0}}
-.smhMic,.smhSubmit{display:grid;place-items:center;flex:0 0 35px;width:35px;height:35px;
+.smhSubmit{display:grid;place-items:center;flex:0 0 35px;width:35px;height:35px;
  border-radius:50%;border:0;background:transparent;color:#697a7c;transition:background .2s ease,transform .2s ease}
-.smhMic svg{width:20px;height:20px}
-.smhMic.isListening{color:#248663;background:#e4f5ec}
-.smhMic.isListening:after{content:"";position:absolute;right:54px;width:6px;height:6px;
- border-radius:50%;background:#19ae73;box-shadow:0 0 0 3px #19ae7322}
-.smhMic:active,.smhSubmit:active{transform:scale(.91)}
+.smhSubmit:active{transform:scale(.91)}
 .smhSubmit{font-size:22px!important;color:#9f8a62}
 .smhSubmit:disabled{opacity:.3;cursor:default}
-.smhVoiceLine{position:relative;display:flex;justify-content:center;align-items:center;min-height:32px;gap:13px;
- font-size:11px;font-weight:620;color:#82928e;padding:6px 40px 0;flex-wrap:wrap}
-.smhVoiceLine button{padding:2px 4px;border:0;background:transparent;color:#5b7d6d;font-size:11px}
-/* Keep the actual toggle operable without showing a sentence below Search. */
-.smhVoiceLine .smhVoiceToggle{position:absolute;right:2px;top:2px;display:grid;place-items:center;
- width:34px;height:34px;padding:0;border:0;border-radius:50%;background:transparent;color:inherit}
+/* Status only appears while listening / speaking or when a permission action
+   is needed. Keep the search pill completely free of microphone controls. */
+.smhVoiceLine{display:flex;justify-content:center;align-items:center;min-height:32px;gap:8px;
+ font-size:11px;font-weight:620;color:#82928e;padding:6px 0 0;flex-wrap:wrap}
+.smhVoiceLine button{border:0;background:transparent;color:#5b7d6d;font-size:11px;font-weight:620}
+.smhListeningControls{display:flex;align-items:center;justify-content:center;gap:4px}
+.smhVoiceLine .smhListenControl{display:inline-flex;justify-content:center;align-items:center;
+ gap:7px;min-height:36px;border:0;border-radius:999px;padding:5px 8px;
+ color:#238260;cursor:pointer}
+.smhVoiceLine .smhListenControl:hover{background:#e7f5ed}
+.smhVoiceLine .smhVoiceToggle{display:grid;place-items:center;width:34px;height:34px;
+ min-width:34px;min-height:34px;padding:0;border:0;border-radius:50%;
+ background:transparent;color:inherit;cursor:pointer}
 .smhVoiceToggle .smhVoiceDot{display:block;width:9px;height:9px;border-radius:50%;
- background:#8c9795;box-shadow:0 0 0 1px #8c979547;transition:background-color .15s ease,box-shadow .15s ease}
+ background:#8c9795;box-shadow:0 0 0 1px #8c979547;
+ transition:background-color .15s ease,box-shadow .15s ease}
 .smhVoiceToggle[aria-pressed="true"] .smhVoiceDot{background:#20af75;box-shadow:0 0 0 3px #20af7526}
-.smhVoiceToggle:focus-visible{outline:2px solid #20af75!important;outline-offset:1px!important}
+.smhVoiceToggle:focus-visible,.smhListenControl:focus-visible{outline:2px solid #20af75!important;outline-offset:1px!important}
+.smhVoiceLine .smhResumeListening{padding:7px 11px;min-height:34px;
+ border:1px solid #dcebe2;border-radius:999px;background:transparent;color:#46735d}
 .smhListening{display:inline-flex;gap:7px;align-items:center;color:#32876c}
 .smhListening i{width:6px;height:6px;border-radius:50%;background:#16b478;animation:smhPulse 1.7s ease-in-out infinite}
 @keyframes smhPulse{50%{box-shadow:0 0 0 6px #16b47826}}
@@ -137,8 +143,7 @@
  .smhAvatar{width:34px;height:34px}
  .smhInputWrap input{min-height:37px;font-size:15px}
  .smhTypewriter{font-size:12px}
- .smhMic,.smhSubmit{flex-basis:30px;width:30px;height:33px}
- .smhMic svg{width:19px;height:19px}
+ .smhSubmit{flex-basis:33px;width:33px;height:33px}
  .smhVoiceLine{min-height:34px}
  .smhResponseSpace{min-height:38dvh;padding:0 9px}
  .smhResponseSpace .profileHudFocusRegion{min-height:35dvh}

@@ -323,25 +323,31 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
         onFocus={()=>{setFocused(true);stopRecognition()}} onBlur={()=>setFocused(false)} type="search" autoComplete="off" maxLength={900}/>
        {!search&&!focused&&<span aria-hidden="true" className="smhTypewriter"><span>{cursor.text.slice(0,cursor.caret)}</span><i className={cursor.visible?"":"smhCaretOff"}/><span>{cursor.text.slice(cursor.caret)}</span></span>}
       </div>
-      <button className={"smhMic"+(listening?" isListening":"")} type="button" onClick={toggleMic}
-       aria-label={listening?"Pause HudHud listening":paused?"Resume HudHud listening":"Enable HudHud voice listening"}
-       aria-pressed={listening} title={listening?"Pause listening":"Speak to HudHud"}>
-       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"/></svg>
-      </button>
       <button className="smhSubmit" type="submit" disabled={!search.trim()||thinking} aria-label="Ask HudHud">↗</button>
     </form>
-    <div className="smhVoiceLine" aria-live="polite">
-      {listening?<span className="smhListening"><i/>Listening…</span>:speaking?<span>HudHud is speaking…</span>:thinking?<span>HudHud is thinking…</span>:
-      micPermission==="denied"||micPermission==="needs-tap"?<button type="button" onClick={()=>{setPaused(false);void askMicPermission()}}>Enable microphone to speak</button>:
-      null}
-      <button type="button" className="smhVoiceToggle"
-       aria-label={voiceOn?"Turn spoken replies off":"Turn spoken replies on"}
-       title={voiceOn?"Spoken replies on":"Spoken replies off"}
-       aria-pressed={voiceOn}
-       onClick={()=>{setVoiceOn(old=>!old);setVoiceError("");if(voiceOn)stopAudio()}}>
-        <span className="smhVoiceDot" aria-hidden="true"/>
-      </button>
-    </div>
+    {(listening||speaking||thinking||paused||micPermission==="denied"||micPermission==="needs-tap"||micPermission==="unsupported")&&
+     <div className="smhVoiceLine" aria-live="polite">
+      {listening?<div className="smhListeningControls">
+        <button className="smhListening smhListenControl" type="button" onClick={toggleMic}
+         aria-label="Pause HudHud microphone listening" title="Tap to pause listening">
+         <i aria-hidden="true"/>Listening…
+        </button>
+        <button type="button" className="smhVoiceToggle"
+         aria-label={voiceOn?"Turn spoken replies off":"Turn spoken replies on"}
+         title={voiceOn?"Spoken replies on":"Spoken replies off"}
+         aria-pressed={voiceOn}
+         onClick={()=>{setVoiceOn(old=>!old);setVoiceError("");if(voiceOn)stopAudio()}}>
+         <span className="smhVoiceDot" aria-hidden="true"/>
+        </button>
+       </div>:
+       speaking?<span>HudHud is speaking…</span>:
+       thinking?<span>HudHud is thinking…</span>:
+       micPermission==="denied"||micPermission==="needs-tap"
+        ?<button className="smhResumeListening" type="button" onClick={toggleMic}>Enable microphone to speak</button>:
+       paused&&micPermission==="granted"
+        ?<button className="smhResumeListening" type="button" onClick={toggleMic}>Resume listening</button>:
+       micPermission==="unsupported"?<span>Type to search. Voice unavailable.</span>:null}
+     </div>}
     {voiceError&&<p className="smhError" role="status">{voiceError}</p>}
   </section>
   <div className="smhResponseSpace">

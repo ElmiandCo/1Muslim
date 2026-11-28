@@ -464,3 +464,24 @@ test("Search Home display name stays inside the upper safe band with bounded poi
  assert.match(css,/width:calc\(100vw - 24px\)/);
  assert.match(css,/max-height:calc\(100% - 12px\)/);
 });
+
+test("signed-in Search Home removes the microphone from the search pill but retains voice controls below",()=>{
+ const home=read("app/search/SearchMemberHome.tsx");
+ const css=read("app/search/search-member-home.css");
+ const form=home.slice(home.indexOf('<form className="smhSearchForm"'),home.indexOf('</form>',home.indexOf('<form className="smhSearchForm"')));
+ assert.doesNotMatch(form,/smhMic|toggleMic|<svg/);
+ assert.match(form,/className="smhSubmit"/);
+ assert.match(home,/listening\?<div className="smhListeningControls"/);
+ assert.match(home,/className="smhListening smhListenControl" type="button" onClick=\{toggleMic\}/);
+ assert.match(home,/aria-label="Pause HudHud microphone listening"/);
+ assert.match(home,/paused&&micPermission==="granted"/);
+ assert.match(home,/>Resume listening</);
+ assert.match(home,/micPermission==="denied"\|\|micPermission==="needs-tap"/);
+ assert.match(home,/Enable microphone to speak/);
+ assert.match(home,/\(listening\|\|speaking\|\|thinking\|\|paused\|\|micPermission===/);
+ assert.match(home,/onClick=\{\(\)=>\{setVoiceOn\(old=>!old\)/);
+ assert.match(css,/\.smhListeningControls\{/);
+ assert.match(css,/\.smhVoiceLine \.smhListenControl\{/);
+ assert.doesNotMatch(css,/\.smhMic/);
+ assert.match(css,/\.smhSubmit\{/);
+});
