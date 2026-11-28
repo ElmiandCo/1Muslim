@@ -115,7 +115,7 @@ test("signed-in Search Home is the actual personalized experience, not the old P
  assert.match(member,/createHudHudAiVoicePlayer/);
  assert.match(member,/micCooldown/);
  assert.doesNotMatch(member,/speechSynthesis\\.speak/);
- assert.match(member,/Assalamu Alaikum Wa Rahmatullahi Wa Barakatuh/);
+ assert.match(member,/As-salamu alaykum\. I\x27m HudHud\. Welcome back/);
  assert.match(member,/insert\("Search 1Muslim"/);
  assert.match(member,/insert\(" witg"/);
  assert.match(member,/insert\("1Muslim.Live"/);
