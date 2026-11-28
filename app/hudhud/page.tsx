@@ -43,6 +43,11 @@ export default function HudHudPage(){
  const [draft,setDraft]=useState("");
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState("");
+ useEffect(()=>{
+  if(!error.startsWith("HudHud voice muted.")&&!error.startsWith("Microphone interrupted.")&&!error.startsWith("HudHud audio unavailable."))return;
+  const timer=window.setTimeout(()=>setError(""),2000);
+  return()=>window.clearTimeout(timer);
+ },[error]);
  const [remaining,setRemaining]=useState<number|null>(null);
  const [unlocked,setUnlocked]=useState(false);
  const [listening,setListening]=useState(false);
@@ -177,7 +182,7 @@ export default function HudHudPage(){
   }
  },[]);
  useEffect(()=>{
-  void requestMicrophonePermission();
+  if(localStorage.getItem("1muslim:hudhud:auto-listen")!=="off")void requestMicrophonePermission();
   return()=>{micPermissionRequest.current+=1};
  },[requestMicrophonePermission]);
  const stopVoice=useCallback((abort=false)=>{
@@ -281,7 +286,7 @@ export default function HudHudPage(){
      setAudioCooldown(true);
      if(audioCooldownTimer.current)clearTimeout(audioCooldownTimer.current);
      audioCooldownTimer.current=setTimeout(()=>setAudioCooldown(false),1400);
-     if(!played)setError("HudHud's AI voice is temporarily unavailable. You can still read the answer.");
+     if(!played)setError("HudHud audio unavailable. Tap the speaker to try again.");
     });
    }
   }catch(caught){
@@ -339,7 +344,7 @@ export default function HudHudPage(){
      setError("The microphone is unavailable. Check browser settings or type your question.");
     }else{
      setMicPaused(true);
-     setError("Voice recognition stopped. Tap the mic or type your question.");
+     setError("Microphone interrupted. Tap to try again.");
     }
    };
    rec.onend=()=>{
@@ -396,7 +401,7 @@ export default function HudHudPage(){
    <HudHudFocusStage lines={lines} sessionId={activeId} busy={busy} speakingAt={speakingAt} speechChar={speechChar}/>
   </section>
 
-  {error&&<p className="hudError" role="alert">{error}</p>}
+  {error&&<p className={"hudError"+(!error.startsWith("HudHud voice muted.")?" hudErrorNeutral":"")} role="status">{error}</p>}
   {exhausted&&<aside className="hudUpgrade"><strong>Your HudHud exploration is complete for now.</strong><Link href="/search">Explore 1Muslim Search ↗</Link></aside>}
   <div className="hudComposerArea">
    {listening&&<span className="hudListeningStatus" role="status"><i aria-hidden="true"/>Listening…</span>}
