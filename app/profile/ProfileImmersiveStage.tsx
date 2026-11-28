@@ -42,7 +42,10 @@ export default function ProfileImmersiveStage({request,onReply,onSettled,persist
      presentation:ai.presentation,verses:ai.verses,images:ai.images,matches:ai.matches
     };
     const next=[...historyRef.current,{role:"user",content:q} as HudHudLine,assistant].slice(-36);
-    historyRef.current=next;setLines(next);setBusy(false);onReplyRef.current?.(assistant.content);onSettledRef.current?.();
+    historyRef.current=next;
+    // Start speech generation first, before React paints the result text.
+    onReplyRef.current?.(assistant.content);
+    setLines(next);setBusy(false);onSettledRef.current?.();
     // Do not make someone wait for external website retrieval to read or hear
     // the answer. Append the independent first hit when it is available.
     if(ai.presentation?.kind!=="verse"&&ai.presentation?.kind!=="image")
@@ -59,7 +62,9 @@ export default function ProfileImmersiveStage({request,onReply,onSettled,persist
    if(!webResult){setError(aiError||"Unable to search. Please try again.");setBusy(false);onSettledRef.current?.();return}
    const assistant:HudHudLine={role:"assistant",content:"Here is the top independent website result for your search.",webResult};
    const next=[...historyRef.current,{role:"user",content:q} as HudHudLine,assistant].slice(-36);
-   historyRef.current=next;setLines(next);setBusy(false);onReplyRef.current?.(assistant.content);onSettledRef.current?.();
+   historyRef.current=next;
+   onReplyRef.current?.(assistant.content);
+   setLines(next);setBusy(false);onSettledRef.current?.();
    setError("HudHud's answer is unavailable, but this web result is ready.");
   })();
   return()=>controller.abort();
