@@ -145,3 +145,58 @@
 .dsPage.dsHomeMode .dsContent{width:100%;max-width:none}
 .dsPage.dsHomeMode .dsExploreFeatureSection{width:100%;max-width:none}
 .dsPage.dsHomeMode .dsFeatureRail{max-width:100%}
+
+
+/* HudHud Search Home: actual photography/art-backed destination tiles.
+   Keep the existing horizontal scroll physics, no permanent chrome. */
+.dsPage.dsHomeMode .dsFeatureCard{
+ flex-basis:clamp(155px,18vw,206px);min-height:192px;
+ justify-content:flex-start;align-items:stretch;gap:10px;
+ padding:8px 8px 12px;border:0;border-radius:19px;
+ background:rgba(255,255,255,.98);overflow:hidden;
+ box-shadow:0 8px 24px #1e2d3412,0 2px 4px #13293208;
+}
+.dsPage.dsHomeMode .dsFeatureImage{
+ display:block;width:100%;height:clamp(98px,12vw,132px);
+ border-radius:14px;overflow:hidden;background:#e8eeec;
+}
+.dsPage.dsHomeMode .dsFeatureImage img{
+ display:block;width:100%;height:100%;object-fit:cover;object-position:center;
+ transition:transform .45s cubic-bezier(.22,.85,.28,1);
+}
+.dsPage.dsHomeMode .dsFeatureCard:hover .dsFeatureImage img{transform:scale(1.045)}
+.dsPage.dsHomeMode .dsFeatureCopy{text-align:left;gap:3px;padding:0 6px 2px}
+.dsPage.dsHomeMode .dsFeatureCopy strong{font-size:13px;letter-spacing:-.025em}
+.dsPage.dsHomeMode .dsFeatureCopy small{font-size:10px;line-height:1.35;opacity:.85}
+.dsPage.dsHomeMode .dsExploreFeatureSection{position:relative;min-height:210px}
+.dsPage.dsHomeMode .dsExploreDeparting .dsFeatureRail{
+ pointer-events:none;animation:dsExploreRailExit .42s cubic-bezier(.4,0,.8,.55) forwards;
+}
+.dsPage.dsHomeMode .dsExploreDeparting .dsSectionHead{opacity:0;transition:opacity .2s ease}
+.dsPage.dsHomeMode .dsExploreReturning .dsFeatureRail{animation:dsExploreRailReturn .55s cubic-bezier(.15,.85,.22,1) both}
+.dsPage.dsHomeMode .dsExploreHidden{min-height:210px}
+.dsPage.dsHomeMode .dsExploreRestore{
+ display:flex;align-items:center;justify-content:center;width:100%;min-height:190px;
+ padding:30px;border:0;background:transparent;color:#929e9a;cursor:pointer;
+ font:inherit;font-size:11px;font-weight:520;text-align:center;opacity:.27;
+ -webkit-tap-highlight-color:transparent;
+}
+.dsPage.dsHomeMode .dsExploreRestore:focus-visible{
+ opacity:1;outline:2px solid #427660;outline-offset:-5px;border-radius:15px;
+}
+@keyframes dsExploreRailExit{to{opacity:0;transform:translateX(-105vw) scale(.91)}}
+@keyframes dsExploreRailReturn{from{opacity:0;transform:translateX(20vw)}to{opacity:1;transform:translateX(0)}}
+html[data-one-chrome="night"] .dsPage.dsHomeMode .dsFeatureCard{background:#1d292b;color:#f0f4f1}
+html[data-one-chrome="night"] .dsPage.dsHomeMode .dsFeatureCopy strong{color:#ecf2ee}
+html[data-one-chrome="night"] .dsPage.dsHomeMode .dsFeatureCopy small{color:#b6c3bd}
+@media(max-width:767px){
+ .dsPage.dsHomeMode .dsFeatureCard{flex-basis:clamp(146px,42vw,182px);min-height:175px;padding:7px 7px 10px}
+ .dsPage.dsHomeMode .dsFeatureImage{height:100px}
+ .dsPage.dsHomeMode .dsExploreFeatureSection,.dsPage.dsHomeMode .dsExploreHidden{min-height:192px}
+ .dsPage.dsHomeMode .dsExploreRestore{min-height:174px}
+}
+@media(prefers-reduced-motion:reduce){
+ .dsPage.dsHomeMode .dsExploreDeparting .dsFeatureRail,
+ .dsPage.dsHomeMode .dsExploreReturning .dsFeatureRail{animation:none}
+ .dsPage.dsHomeMode .dsFeatureImage img{transition:none}
+}
