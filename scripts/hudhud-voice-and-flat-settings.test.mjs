@@ -42,7 +42,7 @@ test("speaker icon lives on top-left Search, status only once when muted",()=>{
 test("HudHud can recover from iOS autoplay-blocked AI speech without microphone access",()=>{
  assert.match(player,/\/api\/hudhud\/speech/);
  assert.match(player,/SpeechSynthesisUtterance/);
- assert.match(player,/nativeSpeak\(text,turn,onStart\)/);
+ assert.match(player,/nativeSpeak\(spoken,turn,onStart,mood\)/);
  assert.match(player,/signal.signal.aborted/);
  assert.match(player,/window.speechSynthesis.cancel\(\)/);
  assert.match(chat,/latest.role==="hudhud"&&voiceAllowed/);
@@ -65,4 +65,32 @@ test("HudHud chat follows black night and white daylight appearance",()=>{
  assert.match(chatCss,/\.shell\{background:#070809;color:#eff4f2\}/);
  assert.match(chatCss,/:global\(html.light\) \.shell/);
  assert.match(chatCss,/:global\(html\[data-one-chrome="day"\]\) \.shell/);
+});
+
+test("HudHud's AI voice reads a short highlight, not the full printed paragraph",async()=>{
+ const {selectHudHudSpokenText}=await import("../app/lib/hudhud-ai-voice-player.ts");
+ const paragraph="Welcome to 1Muslim! "+"We have many resources for people to explore and enjoy. ".repeat(12);
+ const spoken=selectHudHudSpokenText(paragraph);
+ assert.ok(spoken.length<250);
+ assert.ok(spoken.length<paragraph.length/2);
+ assert.equal(selectHudHudSpokenText("As-salamu alaykum. I'm HudHud."),"As-salamu alaykum. I'm HudHud.");
+ assert.ok(player.includes("body:JSON.stringify({text:spoken,mood})"));
+ const ttsRoute=read("app/api/hudhud/speech/route.ts");
+ assert.ok(ttsRoute.includes("voiceDirection(text,mood)"));
+ assert.ok(ttsRoute.includes('voice:"nova"'));
+});
+test("HudHud idle reflections are gentle, bounded, and never assert silent recordings were deleted",async()=>{
+ const {hudHudQuietReflection,HUDHUD_IDLE_DELAY_MS,HUDHUD_MAX_UNANSWERED_PROMPTS}=await import("../app/lib/use-hudhud-idle-companion.ts");
+ assert.equal(HUDHUD_IDLE_DELAY_MS,15000);
+ assert.equal(HUDHUD_MAX_UNANSWERED_PROMPTS,5);
+ const phrases=Array.from({length:5},(_,index)=>hudHudQuietReflection(index+1,false,true));
+ assert.equal(new Set(phrases).size,5);
+ assert.ok(phrases[1].toLowerCase().includes("sign in"));
+ assert.ok(phrases[2].includes("chapter twenty-nine"));
+ assert.ok(phrases[4].toLowerCase().includes("quiet now"));
+ assert.ok(phrases.every(x=>!/(?:deleted audio|silence is deleted|audio is discarded)/i.test(x)));
+ assert.ok(member.includes("useHudHudIdleCompanion"));
+ assert.ok(hudhud.includes("useHudHudIdleCompanion"));
+ assert.ok(member.includes("As-salamu alaykum. I'm HudHud."));
+ assert.ok(hudhud.includes("As-salamu alaykum. I'm HudHud."));
 });

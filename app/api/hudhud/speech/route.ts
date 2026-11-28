@@ -7,11 +7,18 @@ const headers={"Cache-Control":"private, no-store","X-Content-Type-Options":"nos
 const json=(body:unknown,status:number)=>NextResponse.json(body,{status,headers});
 // Use proven speech-style instructions rather than changing the model or
 // inserting words that are absent from the on-screen response.
-const voiceDirection=(spokenText:string)=>{
+const voiceDirection=(spokenText:string,mood:"calm"|"warm"|"engaged"|"reflective")=>{
  const islamicContext=/\b(?:allah|islam|islamic|muslim|qur['’]?an|quran|sura[h]?|ayah|verse|prophets?|messenger|muhammad|hadith|salah|shahada|ramadan|sunnah|du['’]?a|sahaba)\b/i.test(spokenText);
- return islamicContext
-  ?"Express genuine warmth, joy and engaged curiosity about Islam and the prophets. Sound alive, uplifting and conversational, with natural variation in emphasis; never shout, imitate a sermon, or exaggerate. Always maintain reverence when speaking of Allah, the Qur'an and Prophet Muhammad. Pronounce Islamic names and Arabic words carefully. Read exactly the supplied words, without adding commentary."
-  :"Warm, clear, natural North American feminine speech. Express lively, conversational interest and friendly confidence, with natural pauses and emphasis. Read exactly the supplied words, without adding commentary.";
+ const moodInstruction={
+  calm:"Calm, attentive and understated, with small natural pauses. Respect the user's time. Never sound pushy or preachy.",
+  warm:"Warm and genuinely welcoming, like a considerate conversational partner. Clear, natural and not theatrical.",
+  engaged:"More animated, confident and curious for helpful recommendations, a little quicker without sounding argumentative.",
+  reflective:"Quiet sincerity and measured reverence, with gentle pauses. Do not imitate Qur'an recitation or sermons."
+ }[mood];
+ const topic=islamicContext
+  ?"Express genuine curiosity and hope when discussing Islam and the prophets, with respectful and accurate pronunciation of Allah, Qur'an and Muhammad. Never sound like a sermon."
+  :"Sound perceptive, compassionate and friendly, with natural speech rhythm and no forced enthusiasm.";
+ return moodInstruction+" "+topic+" Use clear North American feminine speech. Read only the supplied words, without adding commentary.";
 };
 
 /** Public voice uses the same atomic, globally shared budget guard as search.
@@ -24,6 +31,7 @@ export async function POST(req:NextRequest){
  if(origin&&origin!==req.nextUrl.origin)return json({error:"Cross-origin request refused"},403);
  const data=await req.json().catch(()=>null);
  const text=typeof data?.text==="string"?data.text.trim():"";
+ const mood: "calm"|"warm"|"engaged"|"reflective" =["calm","warm","engaged","reflective"].includes(data?.mood)?data.mood:"warm";
  if(!text||text.length>1800||/[\u0000-\u0008\u000e-\u001f]/.test(text))return json({error:"Invalid spoken text"},400);
  const key=process.env.OPENAI_API_KEY;
  if(!key)return json({error:"AI voice is not configured"},503);
@@ -36,8 +44,8 @@ export async function POST(req:NextRequest){
    headers:{"Authorization":"Bearer "+key,"Content-Type":"application/json"},
    body:JSON.stringify({
     model:"gpt-4o-mini-tts",voice:"nova",input:text,
-    instructions:voiceDirection(text),
-    response_format:"mp3",speed:1.0
+    instructions:voiceDirection(text,mood),
+    response_format:"mp3",speed:mood==="calm"||mood==="reflective"?.95:mood==="engaged"?1.045:1.0
    }),
    signal:AbortSignal.timeout(20000),cache:"no-store"
   });

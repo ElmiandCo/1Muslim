@@ -4,6 +4,7 @@ import {useEffect,useRef,useState,type FormEvent} from "react";
 import {createClient} from "../../utils/supabase/client";
 import {normalizeSpokenHudHudQuestion} from "../lib/hudhud-speech";
 import {createHudHudAiVoicePlayer} from "../lib/hudhud-ai-voice-player";
+import {useHudHudIdleCompanion} from "../lib/use-hudhud-idle-companion";
 import {hudHudVoiceEnabled,setHudHudVoiceEnabled,firstHudHudMuteNotice} from "../lib/hudhud-voice-preference";
 import AnimatedMuslimBrand from "../components/AnimatedMuslimBrand";
 import SearchFeatureRails from "./SearchFeatureRails";
@@ -225,13 +226,21 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
    resumeTimer.current=setTimeout(()=>setMicCooldown(false),1400);
   });
  };
-  const greet=()=>{
-  say("Assalamu Alaikum Wa Rahmatullahi Wa Barakatuh");
+ const {noteActivity}=useHudHudIdleCompanion({
+  enabled:Boolean(member)&&voiceOn&&autoMicEnabled&&micPermission==="granted",
+  canPrompt:pageVisible&&!thinking&&!speaking&&!micCooldown&&!focused&&!paused&&!nameEditor&&!search.trim()&&!speechActive.current,
+  signedIn:true,listeningAvailable:autoMicEnabled&&!paused&&micPermission==="granted",
+  onPrompt:(text)=>say(text)
+ });
+ const greet=()=>{
+  if(!member)return;
+  const name=nameOf(member).split(/\s+/)[0].slice(0,26);
+  say("As-salamu alaykum. I'm HudHud. Welcome back"+(name?", "+name:"")+".");
  };
  useEffect(()=>{
   if(!member||!pendingGreeting.current)return;
   pendingGreeting.current=false;
-  const timer=setTimeout(greet,1650);
+  const timer=setTimeout(greet,220);
   return()=>clearTimeout(timer);
  },[member?.id]);
  const runQuestion=(text:string,mode:"search"|"hudhud")=>{
@@ -261,7 +270,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
      phrase+=(event.results[i][0]?.transcript||"")+" ";
      if(event.results[i].isFinal)final=true;
     }
-    spoken=normalizeSpokenHudHudQuestion(phrase.trim());setSearch(spoken);
+    spoken=normalizeSpokenHudHudQuestion(phrase.trim());if(spoken.trim())noteActivity();setSearch(spoken);
     if(final&&!completed&&spoken.length>2){completed=true;try{rec.stop()}catch{}}
    };
    rec.onerror=event=>{

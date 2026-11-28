@@ -4,6 +4,7 @@ import AnimatedMuslimBrand from "../components/AnimatedMuslimBrand";
 import HudHudFocusStage,{type HudHudLine} from "./HudHudFocusStage";
 import {normalizeSpokenHudHudQuestion} from "../lib/hudhud-speech";
 import {createHudHudAiVoicePlayer} from "../lib/hudhud-ai-voice-player";
+import {useHudHudIdleCompanion} from "../lib/use-hudhud-idle-companion";
 import {hudHudVoiceEnabled,setHudHudVoiceEnabled,firstHudHudMuteNotice} from "../lib/hudhud-voice-preference";
 import {getHudHudTopWebResult} from "../lib/hudhud-top-web";
 import Link from "next/link";
@@ -238,6 +239,7 @@ export default function HudHudPage(){
  const ask=async(event?:FormEvent,spokenMessage?:string)=>{
   event?.preventDefault();
   const message=(spokenMessage||draft).trim();if(!message||busy||exhausted)return;
+  noteActivity();setCompanionNotice("");
   stopVoice(true);voiceEpoch.current++;voicePlayer.current?.stop();setSpeaking(false);setSpeakingAt(null);setSpeechPending(false);
   const conversationId=activeId;
   const history=lines.slice(-6).map(x=>({role:x.role,content:x.content}));
@@ -297,6 +299,51 @@ export default function HudHudPage(){
   }finally{setBusy(false)}
  };
  askRef.current=(message:string)=>{void ask(undefined,message)};
+ // Small, nonintrusive welcome and quiet-time reflections. No new microphone
+ // capture occurs here; the existing voice player suspends recognition.
+ const [companionNotice,setCompanionNotice]=useState("");
+ const companionNoticeTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+ const welcomed=useRef(false);
+ const showCompanionNotice=(message:string)=>{
+  setCompanionNotice(message);
+  if(companionNoticeTimer.current)clearTimeout(companionNoticeTimer.current);
+  companionNoticeTimer.current=setTimeout(()=>setCompanionNotice(""),8500);
+ };
+ const speakCompanion=(message:string,mood:"calm"|"warm"="calm")=>{
+  if(!readAloud||document.hidden)return;
+  stopVoice(true);voiceEpoch.current++;voicePlayer.current?.stop();
+  const epoch=++voiceEpoch.current;
+  setSpeechPending(true);setSpeaking(false);setSpeakingAt(null);
+  showCompanionNotice(message);
+  const player=voicePlayer.current||(voicePlayer.current=createHudHudAiVoicePlayer());
+  void player.play(message,()=>{
+   if(epoch!==voiceEpoch.current)return;
+   setSpeechPending(false);setSpeaking(true);
+  },mood).then(()=>{
+   if(epoch!==voiceEpoch.current)return;
+   setSpeechPending(false);setSpeaking(false);
+   setAudioCooldown(true);
+   if(audioCooldownTimer.current)clearTimeout(audioCooldownTimer.current);
+   audioCooldownTimer.current=setTimeout(()=>setAudioCooldown(false),1400);
+  });
+ };
+ const {noteActivity}=useHudHudIdleCompanion({
+  enabled:readAloud&&autoListening&&micAccess==="granted",
+  canPrompt:pageVisible&&!busy&&!speaking&&!speechPending&&!audioCooldown&&!focused&&!micPaused&&!menuOpen&&!settingsOpen&&!actionsOpen&&!draft.trim()&&!exiting,
+  signedIn:memorySignedIn,listeningAvailable:autoListening&&micAccess==="granted"&&!micPaused,
+  onPrompt:(text)=>speakCompanion(text,"calm")
+ });
+ useEffect(()=>{
+  if(welcomed.current||!readAloud)return;
+  welcomed.current=true;
+  const t=setTimeout(()=>{
+   if(document.hidden||new URLSearchParams(location.search).get("q")||input.current===document.activeElement)return;
+   speakCompanion("As-salamu alaykum. I'm HudHud. How can I help?","warm");
+  },250);
+  return()=>clearTimeout(t);
+ },[readAloud]);
+ useEffect(()=>()=>{if(companionNoticeTimer.current)clearTimeout(companionNoticeTimer.current)},[]);
+
  const startVoice=useCallback((mode:"auto"|"manual"="manual")=>{
   // Manual mic button toggles a real pause. Automatic listening only starts
   // with permission, while the page is visible and no voice reply is active.
@@ -324,6 +371,7 @@ export default function HudHudPage(){
     }
     const normalized=normalizeSpokenHudHudQuestion((prefix?prefix+" ":"")+transcript.trim());
     voiceTranscript.current=normalized;
+    if(normalized.trim())noteActivity();
     setDraft(normalized);
     // A complete utterance should send once, without requiring the user to tap.
     if(hasFinal&&!completed&&normalized.length>2){
@@ -399,6 +447,7 @@ export default function HudHudPage(){
 
   <section className={"hudMain"+(lines.length?" hudHasChat":"")} aria-label="Conversation">
    <HudHudFocusStage lines={lines} sessionId={activeId} busy={busy} speakingAt={speakingAt} speechChar={speechChar}/>
+   {companionNotice&&!lines.length&&!busy&&<p className="hudCompanionNotice" role="status">{companionNotice}</p>}
   </section>
 
   {error&&<p className={"hudError"+(!error.startsWith("HudHud voice muted.")?" hudErrorNeutral":"")} role="status">{error}</p>}
