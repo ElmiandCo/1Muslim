@@ -1,5 +1,23 @@
 "use client";
 
+/** Speak only the useful opening thought; keep the full text on screen. */
+export function selectHudHudSpokenText(raw:string):string{
+ const clean=raw.replace(/https?:\\/\\/\\S+/g,"").replace(/\\[[^\\]]+\\]\\([^)]*\\)/g,"").replace(/[\u0060*#_]/g,"")
+  .replace(/\\s+/g," ").trim();
+ if(clean.length<=240)return clean;
+ const sentences=clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[clean];
+ let short="";
+ for(const sentence of sentences){
+  const next=sentence.trim();
+  if(short&&short.length+next.length+1>225)break;
+  short+=(short?" ":"")+next;
+  if(short.length>=95)break;
+ }
+ if(short.length<55||short.length>255)
+  short=clean.slice(0,225).replace(/\\s+\\S*$/,"").trim();
+ return short;
+}
+
 /** One output at a time. The microphone owner must suspend recognition while
  * audio is being requested or played; this player never opens a microphone. */
 export function createHudHudAiVoicePlayer(){
@@ -45,19 +63,20 @@ export function createHudHudAiVoicePlayer(){
  async function play(text:string,onStart?:()=>void):Promise<boolean>{
   stop();
   const turn=epoch;
-  if(!text.trim())return false;
+  const spoken=selectHudHudSpokenText(text);
+  if(!spoken)return false;
   const signal=new AbortController();
   request=signal;
   try{
    const res=await fetch("/api/hudhud/speech",{
     method:"POST",credentials:"same-origin",cache:"no-store",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({text:text.trim().slice(0,1800)}),signal:signal.signal
+    body:JSON.stringify({text:spoken}),signal:signal.signal
    });
-   if(!res.ok||!res.headers.get("content-type")?.startsWith("audio/"))return await nativeSpeak(text,turn,onStart);
+   if(!res.ok||!res.headers.get("content-type")?.startsWith("audio/"))return await nativeSpeak(spoken,turn,onStart);
    const bytes=await res.blob();
    if(signal.signal.aborted||epoch!==turn)return false;
-   if(bytes.size===0)return await nativeSpeak(text,turn,onStart);
+   if(bytes.size===0)return await nativeSpeak(spoken,turn,onStart);
    objectUrl=URL.createObjectURL(bytes);
    const player=new Audio(objectUrl);
    player.preload="auto";audio=player;
@@ -69,9 +88,9 @@ export function createHudHudAiVoicePlayer(){
     void player.play().catch(()=>resolve(false));
    });
    settle=null;
-   if(!played&&epoch===turn&&!signal.signal.aborted)return await nativeSpeak(text,turn,onStart);
+   if(!played&&epoch===turn&&!signal.signal.aborted)return await nativeSpeak(spoken,turn,onStart);
    return played;
-  }catch{return epoch===turn&&!signal.signal.aborted?await nativeSpeak(text,turn,onStart):false}
+  }catch{return epoch===turn&&!signal.signal.aborted?await nativeSpeak(spoken,turn,onStart):false}
   finally{if(epoch===turn)stop()}
  }
  return {play,stop};
