@@ -1,41 +1,67 @@
+"use client";
 import Link from "next/link";
+import {useRef,useState,type TouchEvent,type MouseEvent} from "react";
 
-type Destination = {
-  label: string;
-  detail: string;
-  href: string;
-  icon: "posts" | "watch" | "live" | "book" | "prayer" | "compass";
-};
-
-const destinations: Destination[] = [
-  {label:"Ummah Posts",detail:"What the Ummah is sharing",href:"/posts",icon:"posts"},
-  {label:"DeepWatch",detail:"Films, shows and series",href:"/deepwatch",icon:"watch"},
-  {label:"LIVE",detail:"Join live conversations",href:"/streaming",icon:"live"},
-  {label:"Qur’an",detail:"Read and explore",href:"/quran-library",icon:"book"},
-  {label:"Prayer Journey",detail:"Prayer times and learning",href:"/widget-tools/prayer",icon:"prayer"},
-  {label:"Qibla",detail:"Open your profile compass",href:"/profile?compass=1",icon:"compass"},
+type Destination={label:string;detail:string;href:string;image:string};
+const destinations:Destination[]=[
+ {label:"DeepWatch",detail:"Films, shows & series",href:"/deepwatch",image:"/assets/deepwatch-icon.PNG"},
+ {label:"Posts",detail:"What the Ummah is sharing",href:"/posts",image:"/assets/hudhud-messages.PNG"},
+ {label:"LIVE",detail:"Join the conversation",href:"/streaming",image:"/assets/hudhud-live.PNG"},
+ {label:"Muslims",detail:"Find your Ummah",href:"/profile?section=muslimeen",image:"/assets/avatars/cosmic-avatar-male.PNG"},
+ {label:"Notifications",detail:"Your latest updates",href:"/notifications",image:"/assets/hudhud-salam-welcome.PNG"},
+ {label:"Settings",detail:"Personalize 1Muslim",href:"/settings",image:"/assets/hudhud-security-guardian.webp"}
 ];
-
-function FeatureIcon({icon}:{icon:Destination["icon"]}) {
-  const common={viewBox:"0 0 24 24",width:24,height:24,fill:"none",stroke:"currentColor",strokeWidth:1.6,strokeLinecap:"round" as const,strokeLinejoin:"round" as const,"aria-hidden":true as const};
-  if(icon==="posts")return <svg {...common}><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>;
-  if(icon==="watch")return <svg {...common}><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z" fill="currentColor" stroke="none"/></svg>;
-  if(icon==="live")return <svg {...common}><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/><path d="M6.6 6.6a7.6 7.6 0 0 0 0 10.8M17.4 6.6a7.6 7.6 0 0 1 0 10.8M3.7 3.7a11.6 11.6 0 0 0 0 16.6M20.3 3.7a11.6 11.6 0 0 1 0 16.6"/></svg>;
-  if(icon==="book")return <svg {...common}><path d="M12 5c-3-2-6-2-9-1v14c3-1 6-1 9 1 3-2 6-2 9-1V4c-3-1-6-1-9 1ZM12 5v14"/></svg>;
-  if(icon==="prayer")return <svg {...common}><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.5 2M7 3.5 5 5M17 3.5 19 5"/></svg>;
-  return <svg {...common}><circle cx="12" cy="12" r="8.5"/><path d="m10 10 6-3-3 7-6 3 3-7z" fill="currentColor" fillOpacity=".13"/><path d="m11 11 3-2-2 4-3 2z"/></svg>;
-}
-
-export default function SearchFeatureRails() {
-  return <section className="dsExploreFeatureSection" aria-labelledby="dsExploreFeatureTitle">
+type Start={x:number;y:number;time:number};
+export default function SearchFeatureRails(){
+ const [hidden,setHidden]=useState(false);
+ const [returning,setReturning]=useState(false);
+ const gesture=useRef<Start|null>(null);
+ const suppressClick=useRef(false);
+ const restoreTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+ const dismiss=()=>{
+  suppressClick.current=true;
+  setHidden(true);setReturning(false);
+ };
+ const restore=()=>{
+  setReturning(true);setHidden(false);
+  if(restoreTimer.current)clearTimeout(restoreTimer.current);
+  restoreTimer.current=setTimeout(()=>setReturning(false),600);
+ };
+ const begin=(e:TouchEvent<HTMLElement>)=>{
+  const t=e.touches[0];if(!t)return;
+  gesture.current={x:t.clientX,y:t.clientY,time:performance.now()};
+ };
+ const finish=(e:TouchEvent<HTMLElement>)=>{
+  const start=gesture.current;gesture.current=null;
+  const t=e.changedTouches[0];if(!t||!start)return;
+  const dx=t.clientX-start.x,dy=t.clientY-start.y;
+  if(Math.abs(dx)<100||Math.abs(dx)<Math.abs(dy)*1.4)return;
+  if(hidden){if(dx>100)restore();return}
+  const speed=Math.abs(dx)/Math.max(30,performance.now()-start.time);
+  // A deliberate fast leftward fling removes the entire rail for this visit.
+  // Normal horizontal scrolling through the six genuine links keeps working.
+  if(dx< -145&&speed>1.25)dismiss();
+ };
+ const suppress=(e:MouseEvent<HTMLElement>)=>{
+  if(suppressClick.current){e.preventDefault();e.stopPropagation();suppressClick.current=false}
+ };
+ return <section className={"dsExploreFeatureSection"+(hidden?" dsExploreHidden":"")+(returning?" dsExploreReturning":"")}
+  aria-labelledby="dsExploreFeatureTitle">
+  {hidden?
+   <button type="button" className="dsExploreRestore" onTouchStart={begin} onTouchEnd={finish}
+    onClick={restore} aria-label="Show Explore 1Muslim app shortcuts">
+    <span>Tap or swipe right to bring Explore back</span>
+   </button>:
+   <>
     <div className="dsSectionHead"><h2 id="dsExploreFeatureTitle">Explore 1Muslim</h2></div>
-    <nav className="dsFeatureRail" aria-label="Explore 1Muslim. Swipe horizontally to access all six destinations." tabIndex={0}>
-      {destinations.map(item=><Link className="dsFeatureCard" href={item.href} key={item.href}
-          aria-label={`${item.label}: ${item.detail}`}>
-        <span className="dsFeatureIcon"><FeatureIcon icon={item.icon}/></span>
-        <span className="dsFeatureCopy"><strong>{item.label}</strong><small>{item.detail}</small></span>
-        {item.icon==="posts"&&<span className="dsFeaturePostPulse" aria-hidden="true"/>}
+    <nav className="dsFeatureRail" aria-label="Explore 1Muslim. Swipe horizontally to access all six destinations."
+     tabIndex={0} onTouchStart={begin} onTouchEnd={finish} onClickCapture={suppress}>
+     {destinations.map(item=><Link className="dsFeatureCard" href={item.href} key={item.href}
+       aria-label={item.label+": "+item.detail}>
+       <span className="dsFeatureImage"><img src={item.image} alt="" loading="lazy"/></span>
+       <span className="dsFeatureCopy"><strong>{item.label}</strong><small>{item.detail}</small></span>
       </Link>)}
     </nav>
-  </section>;
+   </>}
+ </section>;
 }
