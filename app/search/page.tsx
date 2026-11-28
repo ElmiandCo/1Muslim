@@ -243,8 +243,7 @@ export default function SearchHub() {
     const context=(submitted||query).trim().slice(0,90);
     const from="/search"+(context?"?q="+encodeURIComponent(context):"?results=1");
     try{sessionStorage.setItem("1muslim:hudhud:return",from)}catch{}
-    const params=new URLSearchParams({from});if(context)params.set("q",context);
-    router.push("/hudhud?"+params.toString());
+    router.push("/hudhud"+(context?"?q="+encodeURIComponent(context):""));
   };
   const completeShahada=()=>{
     setAccount("member");setAuthLeaving(true);
@@ -310,7 +309,7 @@ export default function SearchHub() {
       <h1 className="dsHomeBrand" aria-hidden={!homeMode}><AnimatedMuslimBrand/><span className="dsHomeBrandLive" aria-hidden="true">.Live</span></h1>
       <div className="dsHeaderRow">
         <Link href="/search" className="dsBack" aria-label="Back to search home" onClick={e=>{e.preventDefault();showAuth?closeAuth():returnHome()}}>‹</Link>
-        <form className={"dsSearchForm"+(voiceEdited?" isVoiceEdited":"")} role="search" aria-hidden={showAuth} onSubmit={e=>{e.preventDefault();if(!showAuth)commit(query);}}>
+        <form className="dsSearchForm" data-voice-edited={voiceEdited} role="search" aria-hidden={showAuth} onSubmit={e=>{e.preventDefault();if(!showAuth)commit(query);}}>
           <span aria-hidden="true">⌕</span>
           <input ref={searchField} type="search" autoComplete="off" aria-label="Search all of 1Muslim" placeholder="Search 1Muslim with HudHud" value={query}
             onChange={e=>setQuery(e.target.value)} />
