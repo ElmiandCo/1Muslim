@@ -8,7 +8,7 @@ const json=(body:unknown,status:number)=>NextResponse.json(body,{status,headers}
 // Use proven speech-style instructions rather than changing the model or
 // inserting words that are absent from the on-screen response.
 const voiceDirection=(spokenText:string,mood:"calm"|"warm"|"engaged"|"reflective")=>{
- const islamicContext=/\\b(?:allah|islam|islamic|muslim|qur['’]?an|quran|sura[h]?|ayah|verse|prophets?|messenger|muhammad|hadith|salah|shahada|ramadan|sunnah|du['’]?a|sahaba)\\b/i.test(spokenText);
+ const islamicContext=/\b(?:allah|islam|islamic|muslim|qur['’]?an|quran|sura[h]?|ayah|verse|prophets?|messenger|muhammad|hadith|salah|shahada|ramadan|sunnah|du['’]?a|sahaba)\b/i.test(spokenText);
  const moodInstruction={
   calm:"Calm, attentive and understated, with small natural pauses. Respect the user's time. Never sound pushy or preachy.",
   warm:"Warm and genuinely welcoming, like a considerate conversational partner. Clear, natural and not theatrical.",
