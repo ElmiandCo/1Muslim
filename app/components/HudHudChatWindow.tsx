@@ -58,6 +58,13 @@ export default function HudHudChatWindow({
  const [listening,setListening]=useState(false);
  const [voiceError,setVoiceError]=useState("");
  const [voiceAllowed,setVoiceAllowed]=useState(true);
+ const [voiceNeedsTap,setVoiceNeedsTap]=useState(false);
+ const lastFailedVoice=useRef("");
+ useEffect(()=>{
+  const prime=()=>{if(hudHudVoiceEnabled()){const player=voicePlayer.current||(voicePlayer.current=createHudHudAiVoicePlayer());player.prime()}};
+  document.addEventListener("pointerdown",prime,{capture:true,passive:true});document.addEventListener("keydown",prime,{capture:true});
+  return()=>{document.removeEventListener("pointerdown",prime,true);document.removeEventListener("keydown",prime,true);voicePlayer.current?.dispose();voicePlayer.current=null};
+ },[]);
  const lastSeenMessage=useRef<number|null>(null);
  useEffect(()=>{
   const sync=()=>{const on=hudHudVoiceEnabled();setVoiceAllowed(on);if(!on){voiceEpoch.current++;voicePlayer.current?.stop();voiceBusy.current=false}};
@@ -106,12 +113,12 @@ export default function HudHudChatWindow({
   // Only speak generated voice, and never run dictation at the same time.
   endDictation();
   const epoch=++voiceEpoch.current;
-  voiceBusy.current=true;
+  voiceBusy.current=true;setVoiceNeedsTap(false);
   const player=voicePlayer.current||(voicePlayer.current=createHudHudAiVoicePlayer());
   void player.play(text).then(played=>{
    if(epoch!==voiceEpoch.current)return;
    voiceBusy.current=false;
-   if(!played)setVoiceError("HudHud's AI voice is temporarily unavailable. Please read the answer.");
+   if(!played){lastFailedVoice.current=text;setVoiceNeedsTap(true);setVoiceError("Tap to hear HudHud. Check device media volume if silent.")}
   });
  };
  // Read new assistant messages automatically, but never replay existing history
@@ -205,7 +212,7 @@ export default function HudHudChatWindow({
          {message.image&&<img className={styles.messageImage} src={message.image} alt="Image attached for local preview"/>}
          {message.avatar&&<Link href="/profile" onClick={onClose} className={styles.resultLink}>Open your profile →</Link>}
          {message.links&&message.links.length>0&&<div className={styles.linkList}>{message.links.map(link=><Link key={link.href} href={link.href} onClick={onClose} className={styles.resultLink}>{link.title} ↗</Link>)}</div>}
-         {message.role==="hudhud"&&<div className={styles.messageActions}><button type="button" aria-label="Copy HudHud response" onClick={()=>copy(message)}>{copiedId===message.id?"✓ Copied":"▢ Copy"}</button><button type="button" aria-label="Play HudHud AI-generated voice" disabled={!voiceAllowed} onClick={()=>{if(voiceAllowed)readAloud(message.text)}}>◖ Listen</button></div>}
+         {message.role==="hudhud"&&<div className={styles.messageActions}><button type="button" aria-label="Copy HudHud response" onClick={()=>copy(message)}>{copiedId===message.id?"✓ Copied":"▢ Copy"}</button><button type="button" aria-label="Play HudHud AI-generated voice" disabled={!voiceAllowed} onClick={()=>{if(voiceAllowed){(voicePlayer.current||(voicePlayer.current=createHudHudAiVoicePlayer())).prime();readAloud(message.text)}}}>◖ Listen</button></div>}
         </div>
        </article>)}
        {sending&&<div className={styles.thinking} role="status"><img src="/assets/hudhud-logo.PNG" width={28} height={28} alt=""/><span>HudHud is thinking</span><i/><i/><i/></div>}
@@ -228,7 +235,8 @@ export default function HudHudChatWindow({
        <span>HudHud · 1Muslim voice and search</span>
        {remaining===0&&<Link href="/search" onClick={onClose}>Return to Search ↗</Link>}
       </div>
-      {(notice||voiceError)&&<div className={styles.notice} role="status">{voiceError||notice}</div>}
+      {voiceNeedsTap&&voiceAllowed&&<button type="button" className={styles.voiceReplay} onClick={()=>{const player=voicePlayer.current||(voicePlayer.current=createHudHudAiVoicePlayer());player.prime();readAloud(lastFailedVoice.current)}}>▶ Tap to hear HudHud</button>}
+      {(notice||voiceError&&!voiceNeedsTap)&&<div className={styles.notice} role="status">{voiceError||notice}</div>}
       <p className={styles.disclaimer}>AI can make mistakes. Verify important information. Images are preview-only, not analyzed.</p>
      </div>}
    </div>

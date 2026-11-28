@@ -189,3 +189,9 @@ html[data-one-chrome="night"] .smhExplore .dsFeatureCopy strong{color:#e6ece8}
 @media(prefers-reduced-motion:reduce){.smhHeaderSpeaker{transition:none}}
 
 .smhErrorAction.smhErrorNeutral{background:#eef3f3;color:#52636a}.smhPage.smhNight .smhErrorAction.smhErrorNeutral{background:#202b2c;color:#cbd8d6}
+
+/* Accessible no-gesture fallback: never label buffering as audible speech. */
+.smhVoiceReplay{display:block;margin:8px auto 0;padding:9px 15px;min-height:40px;border:0;border-radius:999px;color:#264a40;background:#edf5f1;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.smhVoiceReplay:hover,.smhVoiceReplay:focus-visible{background:#d8efe3;outline-offset:2px}
+.smhPage.smhNight .smhVoiceReplay{background:#1e3430;color:#d4efe1}
+@media(prefers-reduced-motion:reduce){.smhVoiceReplay{transition:none!important}}

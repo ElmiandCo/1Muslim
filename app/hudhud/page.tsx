@@ -71,6 +71,13 @@ export default function HudHudPage(){
  const [actionsOpen,setActionsOpen]=useState(false);
  const [readAloud,setReadAloud]=useState(true);
  const voicePlayer=useRef<ReturnType<typeof createHudHudAiVoicePlayer>|null>(null);
+ const lastVoiceReply=useRef<{text:string;sessionId:string;index:number}|null>(null);
+ const [voiceNeedsTap,setVoiceNeedsTap]=useState(false);
+ useEffect(()=>{
+  const prime=()=>{if(hudHudVoiceEnabled()){const player=voicePlayer.current||(voicePlayer.current=createHudHudAiVoicePlayer());player.prime()}};
+  document.addEventListener("pointerdown",prime,{capture:true,passive:true});document.addEventListener("keydown",prime,{capture:true});
+  return()=>{document.removeEventListener("pointerdown",prime,true);document.removeEventListener("keydown",prime,true);voicePlayer.current?.dispose();voicePlayer.current=null};
+ },[]);
  const voiceEpoch=useRef(0);
  const audioCooldownTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  useEffect(()=>{
@@ -84,7 +91,7 @@ export default function HudHudPage(){
   setHudHudVoiceEnabled(next);
   if(!next&&firstHudHudMuteNotice())setError("HudHud voice muted. Tap the speaker to enable.");
   if(next)setError("");
-  if(!next){voiceEpoch.current++;voicePlayer.current?.stop();setSpeaking(false);setSpeakingAt(null);setSpeechPending(false)}
+  if(!next){voiceEpoch.current++;voicePlayer.current?.stop();setSpeaking(false);setSpeakingAt(null);setSpeechPending(false);setVoiceNeedsTap(false)}
  };
  const [memoryEnabled,setMemoryEnabled]=useState(false);
  const [memorySignedIn,setMemorySignedIn]=useState(false);
@@ -336,6 +343,7 @@ export default function HudHudPage(){
     stopVoice(true);
     const epoch=++voiceEpoch.current;
     const target={sessionId:conversationId,index:lines.length+1};
+    lastVoiceReply.current={text:reply,...target};setVoiceNeedsTap(false);
     setSpeechPending(true);setSpeaking(false);setSpeakingAt(null);
     const player=voicePlayer.current||(voicePlayer.current=createHudHudAiVoicePlayer());
     void player.play(reply,()=>{
@@ -347,7 +355,7 @@ export default function HudHudPage(){
      setAudioCooldown(true);
      if(audioCooldownTimer.current)clearTimeout(audioCooldownTimer.current);
      audioCooldownTimer.current=setTimeout(()=>setAudioCooldown(false),1400);
-     if(!played)setError("HudHud audio unavailable. Tap the speaker to try again.");
+     if(!played){setVoiceNeedsTap(true);setError("HudHud audio needs a tap. Please check volume and Silent Mode.");}
     });
    }
   }catch(caught){
@@ -356,6 +364,19 @@ export default function HudHudPage(){
    setDraft(message);
    setError(caught instanceof Error?caught.message:"HudHud is unavailable. Please try again.");
   }finally{setBusy(false)}
+ };
+ const retryLastVoice=()=>{
+  if(!readAloud||!lastVoiceReply.current)return;
+  const saved=lastVoiceReply.current;
+  stopVoice(true);
+  const epoch=++voiceEpoch.current;
+  const player=voicePlayer.current||(voicePlayer.current=createHudHudAiVoicePlayer());player.prime();
+  setVoiceNeedsTap(false);setError("");setSpeechPending(true);setSpeaking(false);
+  void player.play(saved.text,()=>{if(epoch!==voiceEpoch.current)return;setSpeechPending(false);setSpeaking(true);setSpeakingAt({sessionId:saved.sessionId,index:saved.index})}).then(played=>{
+   if(epoch!==voiceEpoch.current)return;
+   setSpeechPending(false);setSpeaking(false);setSpeakingAt(null);
+   if(!played){setVoiceNeedsTap(true);setError("Tap to hear HudHud. Check iPhone media volume.");}
+  });
  };
  askRef.current=(message:string)=>{void ask(undefined,message)};
  const startVoice=useCallback((mode:"auto"|"manual"="manual")=>{
@@ -463,7 +484,8 @@ export default function HudHudPage(){
    <HudHudFocusStage lines={lines} sessionId={activeId} busy={busy} speakingAt={speakingAt} speechChar={speechChar}/>
   </section>
 
-  {error&&<p className={"hudError"+(!error.startsWith("HudHud voice muted.")?" hudErrorNeutral":"")} role="status">{error}</p>}
+  {voiceNeedsTap&&readAloud&&<button type="button" className="hudVoiceReplay" onClick={retryLastVoice}>▶ Tap to hear HudHud</button>}
+  {error&&!voiceNeedsTap&&<p className={"hudError"+(!error.startsWith("HudHud voice muted.")?" hudErrorNeutral":"")} role="status">{error}</p>}
   {exhausted&&<aside className="hudUpgrade"><strong>Your HudHud exploration is complete for now.</strong><Link href="/search">Explore 1Muslim Search ↗</Link></aside>}
   <div className="hudComposerArea">
    {listening&&<span className="hudListeningStatus" role="status"><i aria-hidden="true"/>Listening…</span>}
