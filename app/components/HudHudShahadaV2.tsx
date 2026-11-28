@@ -27,13 +27,12 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
  const [muted,setMuted]=useState(false);
  const mutedRef=useRef(false);
  const [spoken,setSpoken]=useState(false);
- const [level,setLevel]=useState(0);
  const [seconds,setSeconds]=useState(60);
  const [manual,setManual]=useState(false);
  const [terms,setTerms]=useState(false);
  const [heardError,setHeardError]=useState(false);
  const [speaking,setSpeaking]=useState(false);
- const session=useRef<{stream:MediaStream;recorder:MediaRecorder;recognition:WebRecognition|null;meter:AudioContext|null;frame:number;chunks:BlobPart[]}|null>(null);
+ const session=useRef<{stream:MediaStream;recorder:MediaRecorder;recognition:WebRecognition|null;chunks:BlobPart[]}|null>(null);
  const active=useRef(false),done=useRef(false),recognized=useRef(false),startedAt=useRef(0);
  const timer=useRef<ReturnType<typeof setInterval>|null>(null);
  const reminders=useRef<Array<ReturnType<typeof setTimeout>>>([]);
@@ -61,14 +60,11 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
   active.current=false;recognized.current=accept;
   resetTimers();
   const s=session.current;if(!s)return;
-  if(s.frame)cancelAnimationFrame(s.frame);
-  if(s.meter)void s.meter.close().catch(()=>{});
   try{s.recognition?.abort()}catch{}
   s.recognition=null;
   // Stop recorder first: onstop assembles the full, untrimmed recording.
   if(s.recorder.state!=="inactive"){try{s.recorder.stop()}catch{}}
   s.stream.getTracks().forEach(t=>t.stop());
-  setLevel(0);
  },[]);
  const finalize=useCallback(async(method:"speech-recognition-semantic-match"|"self-attested-checkbox",clip?:Blob)=>{
   if(saved.current)return;saved.current=true;setState("saving");setMessage("Saving your Shahada securely…");
@@ -154,7 +150,7 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
    if(!mounted.current){stream.getTracks().forEach(t=>t.stop());return}
    const mime=["audio/mp4","audio/webm;codecs=opus","audio/webm"].find(x=>MediaRecorder.isTypeSupported(x));
    const recorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);
-   const s={stream,recorder,recognition:null as WebRecognition|null,meter:null as AudioContext|null,frame:0,chunks:[] as BlobPart[]};
+   const s={stream,recorder,recognition:null as WebRecognition|null,chunks:[] as BlobPart[]};
    session.current=s;active.current=true;done.current=false;recognized.current=false;startedAt.current=Date.now();
    recorder.ondataavailable=e=>{if(e.data.size)s.chunks.push(e.data)};
    recorder.onstop=()=>{
@@ -167,22 +163,6 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
    };
    recorder.start(250);
    setState("listening");setMessage("");
-   try{
-    const AudioCtx=window.AudioContext;
-    if(AudioCtx){
-     const ctx=new AudioCtx(),source=ctx.createMediaStreamSource(stream),analyser=ctx.createAnalyser();
-     analyser.fftSize=512;analyser.smoothingTimeConstant=.85;source.connect(analyser);
-     s.meter=ctx;
-     const bytes=new Uint8Array(analyser.fftSize);
-     const frame=()=>{
-      if(!active.current||session.current!==s)return;
-      analyser.getByteTimeDomainData(bytes);
-      let sum=0;for(const x of bytes){const p=(x-128)/128;sum+=p*p}
-      const loudness=Math.min(1,Math.sqrt(sum/bytes.length)*5);
-      setLevel(loudness);s.frame=requestAnimationFrame(frame);
-     };s.frame=requestAnimationFrame(frame);
-    }
-   }catch{/* Voice recognition and recording are independent of the visual meter. */}
    const w=window as Window&{SpeechRecognition?:new()=>WebRecognition;webkitSpeechRecognition?:new()=>WebRecognition};
    const Voice=w.SpeechRecognition||w.webkitSpeechRecognition;
    if(Voice){
