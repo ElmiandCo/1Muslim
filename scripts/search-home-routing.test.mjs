@@ -4,6 +4,7 @@ import test from "node:test";
 import "./hudhud-voice-and-flat-settings.test.mjs";
 import "./hudhud-stream-first-voice.test.mjs";
 import "./search-member-voice-ui.test.mjs";
+import "./hudhud-personalization.test.mjs";
 import {passwordWarning} from "../app/lib/auth-password-policy.ts";
 import {hasShahada,SHAHADA_ARABIC,SHAHADA_ENGLISH} from "../app/lib/shahada-recognition.ts";
 import {signAdminGate,validAdminGate} from "../lib/admin-security-gate.ts";

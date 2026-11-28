@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import {useEffect,useState} from "react";
+import HudHudPersonalContextPanel from "./HudHudPersonalContextPanel";
 
 type ChatLine={role:"assistant"|"user";content:string};
 type SavedSession={id:string;title:string;lines:ChatLine[]};
@@ -106,6 +107,7 @@ export default function SettingsHudHudCenter(){
      </div>
      <div className="scAiNotice">History stores chat text and selected cards, not your raw microphone recordings. Turning memory off stops future saves; it does not erase earlier saved conversations.</div>
     </section>
+    <HudHudPersonalContextPanel/>
 
    </div>
   </div>
