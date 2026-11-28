@@ -36,6 +36,6 @@
 }
 
 /* Brief, theme-sensitive feedback when a spoken command edits the field. */
-.dsResultsMode .dsSearchForm.isVoiceEdited{box-shadow:0 0 0 2px color-mix(in srgb,#538eaf 65%,transparent),0 4px 22px #538eaf17!important;transition:box-shadow .35s ease-out}
-.dsResultsNight .dsSearchForm.isVoiceEdited{box-shadow:0 0 0 2px #71adc58c,0 4px 18px #71adc51c!important}
-@media(prefers-reduced-motion:reduce){.dsResultsMode .dsSearchForm.isVoiceEdited{transition:none!important}}
+.dsResultsMode .dsSearchForm[data-voice-edited="true"]{box-shadow:0 0 0 2px color-mix(in srgb,#538eaf 65%,transparent),0 4px 22px #538eaf17!important;transition:box-shadow .35s ease-out}
+.dsResultsNight .dsSearchForm[data-voice-edited="true"]{box-shadow:0 0 0 2px #71adc58c,0 4px 18px #71adc51c!important}
+@media(prefers-reduced-motion:reduce){.dsResultsMode .dsSearchForm[data-voice-edited="true"]{transition:none!important}}
