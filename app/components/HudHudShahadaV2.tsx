@@ -2,7 +2,7 @@
 import {useCallback,useEffect,useRef,useState} from "react";
 import {useRouter} from "next/navigation";
 import {createClient} from "../../utils/supabase/client";
-import HudHudOrb from "./HudHudOrb";
+import HudHudShahadaGuide from "./HudHudShahadaGuide";
 import {hasShahada,SHAHADA_ARABIC,SHAHADA_ENGLISH,type ShahadaLanguage} from "../lib/shahada-recognition";
 import "./hudhud-shahada-v2.css";
 
@@ -25,14 +25,14 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
  const [message,setMessage]=useState("");
  const [transcript,setTranscript]=useState("");
  const [muted,setMuted]=useState(false);
+ const mutedRef=useRef(false);
  const [spoken,setSpoken]=useState(false);
- const [level,setLevel]=useState(0);
  const [seconds,setSeconds]=useState(60);
  const [manual,setManual]=useState(false);
  const [terms,setTerms]=useState(false);
  const [heardError,setHeardError]=useState(false);
  const [speaking,setSpeaking]=useState(false);
- const session=useRef<{stream:MediaStream;recorder:MediaRecorder;recognition:WebRecognition|null;meter:AudioContext|null;frame:number;chunks:BlobPart[]}|null>(null);
+ const session=useRef<{stream:MediaStream;recorder:MediaRecorder;recognition:WebRecognition|null;chunks:BlobPart[]}|null>(null);
  const active=useRef(false),done=useRef(false),recognized=useRef(false),startedAt=useRef(0);
  const timer=useRef<ReturnType<typeof setInterval>|null>(null);
  const reminders=useRef<Array<ReturnType<typeof setTimeout>>>([]);
@@ -40,7 +40,7 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
  const saved=useRef(false),mounted=useRef(true),userId=useRef("");
  const stopGuidance=()=>{try{window.speechSynthesis?.cancel()}catch{};setSpeaking(false)};
  const guide=useCallback((sentence:string)=>{
-  if(muted||document.hidden||!("speechSynthesis" in window))return;
+  if(mutedRef.current||document.hidden||!("speechSynthesis" in window))return;
   try{
    window.speechSynthesis.cancel();
    const u=new SpeechSynthesisUtterance(sentence);
@@ -50,7 +50,7 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
    u.onerror=()=>{if(mounted.current)setSpeaking(false)};
    window.speechSynthesis.speak(u);
   }catch{setSpeaking(false)}
- },[muted]);
+ },[]);
  const resetTimers=()=>{
   if(timer.current){clearInterval(timer.current);timer.current=null}
   reminders.current.forEach(clearTimeout);reminders.current=[];
@@ -60,14 +60,11 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
   active.current=false;recognized.current=accept;
   resetTimers();
   const s=session.current;if(!s)return;
-  if(s.frame)cancelAnimationFrame(s.frame);
-  if(s.meter)void s.meter.close().catch(()=>{});
   try{s.recognition?.abort()}catch{}
   s.recognition=null;
   // Stop recorder first: onstop assembles the full, untrimmed recording.
   if(s.recorder.state!=="inactive"){try{s.recorder.stop()}catch{}}
   s.stream.getTracks().forEach(t=>t.stop());
-  setLevel(0);
  },[]);
  const finalize=useCallback(async(method:"speech-recognition-semantic-match"|"self-attested-checkbox",clip?:Blob)=>{
   if(saved.current)return;saved.current=true;setState("saving");setMessage("Saving your Shahada securely…");
@@ -128,7 +125,7 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
    }
    setState("ready");
    // Request automatically on arrival. iOS Safari may require a direct tap;
-   // the same orb then provides the gesture-gated retry without a popup.
+   // a clearly labeled Start/Retry control provides a gesture-gated fallback.
    const id=setTimeout(()=>{if(activeComponent)void voiceRef.current?.()},160);
    reminders.current.push(id);
   })().catch(()=>{if(activeComponent){setState("unavailable");setMessage("We couldn't prepare HudHud. Please refresh or retry.")}});
@@ -141,7 +138,7 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
  },[]);
  const begin=useCallback(async()=>{
   if(active.current||saved.current||!userId.current)return;
-  setHeardError(false);setTranscript("");setSeconds(60);setState("permission");setMessage("");
+  setHeardError(false);setSpoken(false);setTranscript("");setSeconds(60);setState("permission");setMessage("");
   const navigatorMedia=navigator.mediaDevices;
   if(!navigatorMedia?.getUserMedia||typeof MediaRecorder==="undefined"){
    setState("unavailable");setMessage("Microphone recording isn't available here. Tap Help for a written declaration.");return;
@@ -153,7 +150,7 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
    if(!mounted.current){stream.getTracks().forEach(t=>t.stop());return}
    const mime=["audio/mp4","audio/webm;codecs=opus","audio/webm"].find(x=>MediaRecorder.isTypeSupported(x));
    const recorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);
-   const s={stream,recorder,recognition:null as WebRecognition|null,meter:null as AudioContext|null,frame:0,chunks:[] as BlobPart[]};
+   const s={stream,recorder,recognition:null as WebRecognition|null,chunks:[] as BlobPart[]};
    session.current=s;active.current=true;done.current=false;recognized.current=false;startedAt.current=Date.now();
    recorder.ondataavailable=e=>{if(e.data.size)s.chunks.push(e.data)};
    recorder.onstop=()=>{
@@ -165,23 +162,7 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
     }
    };
    recorder.start(250);
-   setState("listening");setMessage("Say your Shahada whenever you're ready.");
-   try{
-    const AudioCtx=window.AudioContext;
-    if(AudioCtx){
-     const ctx=new AudioCtx(),source=ctx.createMediaStreamSource(stream),analyser=ctx.createAnalyser();
-     analyser.fftSize=512;analyser.smoothingTimeConstant=.85;source.connect(analyser);
-     s.meter=ctx;
-     const bytes=new Uint8Array(analyser.fftSize);
-     const frame=()=>{
-      if(!active.current||session.current!==s)return;
-      analyser.getByteTimeDomainData(bytes);
-      let sum=0;for(const x of bytes){const p=(x-128)/128;sum+=p*p}
-      const loudness=Math.min(1,Math.sqrt(sum/bytes.length)*5);
-      setLevel(loudness);s.frame=requestAnimationFrame(frame);
-     };s.frame=requestAnimationFrame(frame);
-    }
-   }catch{/* Voice recognition and recording are independent of the visual meter. */}
+   setState("listening");setMessage("");
    const w=window as Window&{SpeechRecognition?:new()=>WebRecognition;webkitSpeechRecognition?:new()=>WebRecognition};
    const Voice=w.SpeechRecognition||w.webkitSpeechRecognition;
    if(Voice){
@@ -226,20 +207,20 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
     const elapsed=Math.floor((Date.now()-startedAt.current)/1000);
     setSeconds(Math.max(0,60-elapsed));
     if(elapsed>=60&&!done.current){
-     done.current=true;stop(false);setState("ready");setMessage("We'll try again. Tap HudHud when you're ready.");
+     done.current=true;stop(false);setState("ready");setMessage("You can try again whenever you’re ready. Tap Start to begin again.");
     }
    },300);
    reminders.current.push(setTimeout(()=>{
-    if(active.current&&!done.current)guide("Assalamu alaikum. Welcome to 1Muslim. Say your Shahada whenever you're ready.");
+    if(active.current&&!done.current)guide("As-salamu alaykum. I’m HudHud. The microphone is recording. You may begin your Shahada.");
    },950));
    reminders.current.push(setTimeout(()=>{
-    if(active.current&&!done.current&&!spoken)guide("Take your time. I'm listening. Say your Shahada when you're ready.");
+    if(active.current&&!done.current&&!spoken){setMessage("Take your time. I’m listening. Say your Shahada whenever you’re ready.");guide("Take your time. I’m listening. Say your Shahada when you’re ready.");}
    },30000));
   }catch(e){
    granted?.getTracks().forEach(track=>track.stop());
    active.current=false;setState("unavailable");
    const permission=e instanceof DOMException&&["NotAllowedError","PermissionDeniedError"].includes(e.name);
-   setMessage(permission?"Allow microphone access in your browser, then tap the orb to try again. You can also use Help.":"The microphone isn't ready. Tap HudHud to retry or open Help.");
+   setMessage(permission?"Allow microphone access in your browser, then tap Start to try again. You can also use Help.":"The microphone isn’t ready. Tap Start to retry or open Help.");
   }
  },[guide,language,stop,spoken]);
  voiceRef.current=begin;
@@ -272,7 +253,7 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
  return <section className={"hudV2Shahada "+(embedded?"isEmbedded":"")} aria-label="HudHud Shahada">
   {!embedded&&<header className="hudV2Brand"><button type="button" onClick={exit} aria-label="Back to 1Muslim Search Home">1Muslim<span>.live</span></button></header>}
   <div className="hudV2ShahadaBody">
-   <h1 aria-live="polite">{state==="recognized"||state==="complete"?"Shahada recognized":state==="saving"?"1Muslim":state==="help"?"Shahada":"Shahada"}</h1>
+   <h1>Shahada</h1>
    {state==="help"?<div className="hudV2Help">
      <p>The Shahada is the declaration of belief in Allah and His Messenger. You can speak it in Arabic or English, or personally affirm it here if recording isn't possible.</p>
      <small className="hudV2PrivacyNote">Your browser may use its speech-recognition service to process voice. A recognized recording is stored only in our private Shahada vault. You can instead use the declaration below without recording.</small>
@@ -282,18 +263,17 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
      <label className="hudV2Check"><input type="checkbox" checked={terms} onChange={e=>setTerms(e.target.checked)}/> I agree to the <a href="/terms" target="_blank" rel="noopener noreferrer">community terms</a>.</label>
      <div className="hudV2HelpActions"><button onClick={back} type="button">← Back</button><button className="isPrimary" disabled={!manual||!terms||saved.current} onClick={completeManual} type="button">Continue →</button></div>
     </div>:<>
-    <div className="hudV2OrbZone">
-      <HudHudOrb compact listening={state==="listening"} thinking={state==="saving"||state==="permission"} speaking={speaking} level={level}
-       onClick={()=>{if(state==="ready"||state==="unavailable")void begin();else if(state==="listening"){stop(false);setState("ready");setMessage("Ready when you are.");}}} />
-      {state==="listening"&&<span className="hudV2ListeningPulse" aria-live="off">Listening · {seconds}s</span>}
-      {state==="permission"&&<span className="hudV2ListeningPulse">Allow microphone</span>}
-    </div>
-    <p className="hudV2ShahadaStatus" role="status" aria-live="polite">{state==="checking"?"Preparing HudHud…":message|| (state==="ready"?"Allow microphone to begin":state==="listening"?"I'm listening.":state==="complete"?"Welcome to 1Muslim.":"")}</p>
-    {heardError&&state==="listening"&&<small className="hudV2Gentle">Your browser can't automatically recognize speech right now. Try Help.</small>}
+    <HudHudShahadaGuide
+      state={state} seconds={seconds} heardSpeech={Boolean(transcript)}
+      message={state==="listening"&&!heardError&&!message?"":message}
+    />
+    {heardError&&state==="listening"&&<small className="hudV2Gentle">Your browser cannot recognize speech right now. Help offers another way.</small>}
     <div className="hudV2ShahadaActions">
-     {(state==="ready"||state==="unavailable")&&<button type="button" className="hudV2Primary" onClick={()=>void begin()}>Enable microphone</button>}
+     {(state==="ready"||state==="unavailable")&&<button type="button" className="hudV2Primary" onClick={()=>void begin()}>Start recording</button>}
+     {state==="listening"&&<button type="button" className="hudV2QuietButton" onClick={()=>{stop(false);setState("ready");setMessage("Recording paused. Tap Start when you're ready.");}}>Pause</button>}
      <button type="button" className="hudV2QuietButton" onClick={openHelp} disabled={state==="saving"||state==="recognized"||state==="complete"}>Help</button>
-     <button type="button" className="hudV2QuietButton" aria-label={muted?"Unmute HudHud guidance":"Mute HudHud guidance"} aria-pressed={muted} onClick={()=>{setMuted(x=>!x);stopGuidance()}}>{muted?"Unmute":"Mute"}</button>
+     <button type="button" className="hudV2QuietButton" aria-label={muted?"Unmute HudHud guidance":"Mute HudHud guidance"} aria-pressed={muted}
+       onClick={()=>{const next=!muted;mutedRef.current=next;setMuted(next);stopGuidance()}}>{muted?"Unmute":"Mute"}</button>
     </div>
     </>}
    {state!=="help"&&state!=="recognized"&&state!=="complete"&&state!=="saving"&&<div className="hudV2Language" aria-label="Language preference">
