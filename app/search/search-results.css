@@ -137,3 +137,7 @@
   .dsResultsMode .dsHomeUtilities .dsUtilityButton{width:35px;height:35px;flex-basis:35px}
   .dsResultsMode .dsHomeUtilities .dsResultsBrand{font-size:clamp(14px,4.3vw,17px)}
 }
+
+
+.dsResultsNight .dsSearchForm:focus-within{border-color:#44474f!important;box-shadow:none!important}
+.dsResultsNight .dsSearchForm input:focus-visible{outline:0!important;box-shadow:none!important}
