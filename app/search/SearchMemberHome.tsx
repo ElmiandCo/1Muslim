@@ -4,6 +4,7 @@ import {useEffect,useRef,useState,type FormEvent} from "react";
 import {createClient} from "../../utils/supabase/client";
 import {normalizeSpokenHudHudQuestion} from "../lib/hudhud-speech";
 import {createHudHudAiVoicePlayer} from "../lib/hudhud-ai-voice-player";
+import {hudHudVoiceEnabled,setHudHudVoiceEnabled,firstHudHudMuteNotice} from "../lib/hudhud-voice-preference";
 import AnimatedMuslimBrand from "../components/AnimatedMuslimBrand";
 import SearchFeatureRails from "./SearchFeatureRails";
 import SearchDraggableDisplayName from "./SearchDraggableDisplayName";
@@ -72,6 +73,8 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  const initialised=useRef(false);
  const speechActive=useRef(false);
  const voiceOnRef=useRef(voiceOn);voiceOnRef.current=voiceOn;
+ const lastSpokenText=useRef("");
+ useEffect(()=>{const sync=()=>setVoiceOn(hudHudVoiceEnabled());sync();window.addEventListener("1muslim:hudhud-voice-preference",sync);window.addEventListener("storage",sync);return()=>{window.removeEventListener("1muslim:hudhud-voice-preference",sync);window.removeEventListener("storage",sync)}},[]);
  // Brief status notices disappear even when voice hardware fails.
  // Cleanup also prevents stale timers from updating an unmounted page.
  useEffect(()=>{
@@ -201,6 +204,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
 
  const say=(text:string,onEnd?:()=>void)=>{
   if(!voiceOnRef.current){onEnd?.();return}
+  lastSpokenText.current=text;
   // Half duplex: the same microphone must NEVER recognize HudHud's own output.
   stopRecognition();stopAudio();
   const epoch=++audioEpoch.current;
@@ -263,7 +267,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
     if(event.error==="aborted"||event.error==="no-speech")return;
     setPaused(true);
     if(event.error==="not-allowed"||event.error==="service-not-allowed"){setMicPermission("needs-tap");setVoiceError("Tap the mic to allow listening.");}
-    else setVoiceError("Voice stopped. Tap the mic or type a question.");
+    else {setMicPermission("needs-tap");setVoiceError("Microphone interrupted. Tap to retry.");}
    };
    rec.onend=()=>{
     if(recognition.current!==rec)return;
@@ -279,6 +283,12 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
   const timer=setTimeout(startRecognition,550);
   return()=>clearTimeout(timer);
  },[member?.id,paused,nameEditor,pageVisible,micPermission,listening,thinking,speaking,micCooldown,focused,search]);
+ const toggleVoice=()=>{
+  const next=!voiceOnRef.current;
+  voiceOnRef.current=next;setHudHudVoiceEnabled(next);setVoiceOn(next);
+  if(!next){stopAudio();setVoiceError(firstHudHudMuteNotice()?"HudHud voice is off. Tap the speaker to enable.":"");}
+  else {setVoiceError("");if(lastSpokenText.current)window.setTimeout(()=>say(lastSpokenText.current),0)}
+ };
  const toggleMic=()=>{
   if(listening){setPaused(true);stopRecognition();return}
   setPaused(false);if(micPermission!=="granted"){void askMicPermission();return}
@@ -301,7 +311,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  const displayName=nameOf(member);
  return <main className={"smhPage dsPage dsHomeMode"+(night?" smhNight":"")+(arriving?" smhArriving":"")} aria-label="Your One Muslim Search Home">
   <header className="smhHeader">
-   <Link className="smhLogo" href="/search" aria-label="One Muslim.Live home"><AnimatedMuslimBrand/><span className="smhLogoLive">.Live</span></Link>
+   <div className="smhHeaderLeft"><button type="button" className="smhHeaderSpeaker" aria-label={voiceOn?"Mute HudHud voice":"Enable HudHud voice"} title={voiceOn?"HudHud voice on":"HudHud voice off"} aria-pressed={voiceOn} onClick={toggleVoice}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4"/>{voiceOn?<><path d="M16 9a4 4 0 0 1 0 6"/><path d="M19 6a8 8 0 0 1 0 12"/></>:<path d="m17 9 5 6m0-6-5 6"/>}</svg></button><Link className="smhLogo" href="/search" aria-label="One Muslim.Live home"><AnimatedMuslimBrand/><span className="smhLogoLive">.Live</span></Link></div>
    <nav aria-label="Account shortcuts" className="smhUtilities">
     <Link className="smhOrb smhPlus" href="/create" aria-label="Open Creator Studio to add a post" title="Create">+</Link>
     <button className="smhOrb" aria-label="Settings" title="Settings" type="button" onClick={()=>window.dispatchEvent(new CustomEvent("1muslim:open-settings",{detail:{section:"home"}}))}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M10 2h4l.6 2.4 1.6.9 2.4-.7 2 3.5-1.8 1.7v1.9l1.8 1.7-2 3.5-2.4-.7-1.6.9L14 20h-4l-.6-2.4-1.6-.9-2.4.7-2-3.5 1.8-1.7v-1.9L3.4 8.6l2-3.5 2.4.7 1.6-.9L10 2Z"/></svg></button>
@@ -332,13 +342,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
          aria-label="Pause HudHud microphone listening" title="Tap to pause listening">
          <i aria-hidden="true"/>Listening…
         </button>
-        <button type="button" className="smhVoiceToggle"
-         aria-label={voiceOn?"Turn spoken replies off":"Turn spoken replies on"}
-         title={voiceOn?"Spoken replies on":"Spoken replies off"}
-         aria-pressed={voiceOn}
-         onClick={()=>{setVoiceOn(old=>!old);setVoiceError("");if(voiceOn)stopAudio()}}>
-         <span className="smhVoiceDot" aria-hidden="true"/>
-        </button>
+
        </div>:
        speaking?<span>HudHud is speaking…</span>:
        thinking?<span>HudHud is thinking…</span>:
@@ -348,7 +352,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
         ?<button className="smhResumeListening" type="button" onClick={toggleMic}>Resume listening</button>:
        micPermission==="unsupported"?<span>Type to search. Voice unavailable.</span>:null}
      </div>}
-    {voiceError&&<p className="smhError" role="status">{voiceError}</p>}
+    {voiceError&&<button type="button" className="smhError smhErrorAction" role="status" onClick={()=>{setVoiceError("");if(!voiceOnRef.current)toggleVoice();else if(lastSpokenText.current)void say(lastSpokenText.current);else toggleMic()}}>{voiceError}</button>}
   </section>
   <div className="smhResponseSpace">
    <ProfileImmersiveStage request={request} onReply={onReply} onSettled={onSettled} persist={false} showEmpty={false} speaking={speaking} spokenChars={spokenChars}/>
