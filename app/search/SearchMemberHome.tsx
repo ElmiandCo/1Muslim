@@ -60,6 +60,8 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  const [paused,setPaused]=useState(false);
  const [speaking,setSpeaking]=useState(false);
  const [micCooldown,setMicCooldown]=useState(false);
+ const [autoMicEnabled,setAutoMicEnabled]=useState(true);
+ useEffect(()=>{const read=()=>{try{setAutoMicEnabled(localStorage.getItem("1muslim:hudhud:auto-listen")!=="off")}catch{}};read();window.addEventListener("1muslim:hudhud-mic-preference",read);window.addEventListener("storage",read);return()=>{window.removeEventListener("1muslim:hudhud-mic-preference",read);window.removeEventListener("storage",read)}},[]);
  const [spokenChars,setSpokenChars]=useState(0);
  const [voiceOn,setVoiceOn]=useState(true);
  const [voiceError,setVoiceError]=useState("");
@@ -279,10 +281,10 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
   }catch{setPaused(true);setMicPermission("needs-tap");setVoiceError("Tap the microphone to start listening.");}
  };
  useEffect(()=>{
-  if(!member||paused||nameEditor||!pageVisible||micPermission!=="granted"||listening||thinking||speaking||speechActive.current||micCooldown||focused||search.trim()||document.hidden)return;
+  if(!autoMicEnabled||!member||paused||nameEditor||!pageVisible||micPermission!=="granted"||listening||thinking||speaking||speechActive.current||micCooldown||focused||search.trim()||document.hidden)return;
   const timer=setTimeout(startRecognition,550);
   return()=>clearTimeout(timer);
- },[member?.id,paused,nameEditor,pageVisible,micPermission,listening,thinking,speaking,micCooldown,focused,search]);
+ },[autoMicEnabled,member?.id,paused,nameEditor,pageVisible,micPermission,listening,thinking,speaking,micCooldown,focused,search]);
  const toggleVoice=()=>{
   const next=!voiceOnRef.current;
   voiceOnRef.current=next;setHudHudVoiceEnabled(next);setVoiceOn(next);
@@ -335,7 +337,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
       </div>
       <button className="smhSubmit" type="submit" disabled={!search.trim()||thinking} aria-label="Ask HudHud">↗</button>
     </form>
-    {(listening||speaking||thinking||paused||micPermission==="denied"||micPermission==="needs-tap"||micPermission==="unsupported")&&
+    {(listening||speaking||thinking||paused||!autoMicEnabled||micPermission==="denied"||micPermission==="needs-tap"||micPermission==="unsupported")&&
      <div className="smhVoiceLine" aria-live="polite">
       {listening?<div className="smhListeningControls">
         <button className="smhListening smhListenControl" type="button" onClick={toggleMic}
@@ -348,7 +350,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
        thinking?<span>HudHud is thinking…</span>:
        micPermission==="denied"||micPermission==="needs-tap"
         ?<button className="smhResumeListening" type="button" onClick={toggleMic}>Enable microphone to speak</button>:
-       paused&&micPermission==="granted"
+       (paused||!autoMicEnabled)&&micPermission==="granted"
         ?<button className="smhResumeListening" type="button" onClick={toggleMic}>Resume listening</button>:
        micPermission==="unsupported"?<span>Type to search. Voice unavailable.</span>:null}
      </div>}
