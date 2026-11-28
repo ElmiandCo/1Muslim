@@ -6,9 +6,9 @@
 .hhVennCircle{position:absolute;top:13px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
  padding-top:24px;width:154px;height:154px;text-align:center;font-size:11px;line-height:1.5;color:#254439;letter-spacing:.015em}
 .hhVennCircle strong{font-size:12px;font-weight:750}
-.hhVennProfile{left:2%;background:#c7e6e18a;border:1px solid #7bbaad7a}
+.hhVennProfile{left:17%;background:#c7e6e18a;border:1px solid #7bbaad7a}
 .hhVennShare{left:calc(50% - 77px);background:#ddd5e9b8;border:1px solid #ab94c186}
-.hhVennMemory{right:2%;background:#f4e5c39c;border:1px solid #d7b982a1}
+.hhVennMemory{right:17%;background:#f4e5c39c;border:1px solid #d7b982a1}
 .hhVennCore{position:absolute;z-index:3;left:50%;top:96px;transform:translate(-50%,-50%);
  width:96px;min-height:53px;display:grid;place-items:center;border-radius:13px;
  background:#f9faf8e8;box-shadow:0 3px 14px #132b3010;color:#204c3c;font-size:11px;font-weight:750;line-height:1.25;text-align:center;pointer-events:none}
