@@ -57,3 +57,7 @@
 :global(html.light) .input,:global(html[data-one-chrome="day"]) .input{color:#22353b}
 :global(html.light) .newChat,:global(html.light) .currentChat,:global(html[data-one-chrome="day"]) .newChat,:global(html[data-one-chrome="day"]) .currentChat{background:#fff;color:#283b3d;border-color:#e6ecea}
 :global(html.light) .topicList button,:global(html.light) .quickNav a,:global(html[data-one-chrome="day"]) .topicList button,:global(html[data-one-chrome="day"]) .quickNav a{color:#38524a;background:transparent}
+
+.voiceReplay{display:block;margin:8px auto;padding:10px 16px;border:0;border-radius:999px;background:#214f40;color:#e4faee;font:inherit;font-size:12px;font-weight:750;cursor:pointer}
+.voiceReplay:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+:global(html.light) .voiceReplay,:global(html[data-one-chrome="day"]) .voiceReplay{background:#e2f2e8;color:#17503e}
