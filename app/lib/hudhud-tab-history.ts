@@ -18,7 +18,7 @@ export function isSafeHudHudWebsiteUrl(candidate:unknown):candidate is string{
 
 /** Follow-up only: never navigate to a guessed or model-generated website. */
 export function isHudHudOpenSelectedWebsiteCommand(input:string):boolean{
- return /^(?:please\s+)?(?:(?:open|visit|navigate\s+to|go\s+to|take\s+me\s+to)\s+(?:(?:that|this|the|first|top|selected)\s+)?(?:website|site|webpage|web\s+page|link|result)|(?:go\s+there|take\s+me\s+there))\s*[.!?]*$/i.test(input.trim());
+ return /^(?:please\s+)?(?:(?:open|visit|navigate\s+to|go\s+to|take\s+me\s+to)\s+(?:(?:that|this|the(?:\s+(?:first|top|selected))?|first|top|selected)\s+)?(?:website|site|webpage|web\s+page|link|result)|(?:go\s+there|take\s+me\s+there))\s*[.!?]*$/i.test(input.trim());
 }
 
 function validLine(value:unknown):HudHudLine|null{
