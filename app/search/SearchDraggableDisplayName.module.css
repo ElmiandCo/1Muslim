@@ -2,7 +2,7 @@
    account header and search bar. Neither element moves during gestures. */
 .zone{
  position:relative;left:50%;transform:translateX(-50%);
- width:min(calc(100vw - 24px),1280px);
+ width:calc(100vw - 24px);max-width:none;
  height:clamp(116px,16dvh,166px);
  margin:0 0 clamp(12px,2.2vh,22px);
  overflow:hidden;
