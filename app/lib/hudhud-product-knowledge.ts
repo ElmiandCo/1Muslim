@@ -28,7 +28,7 @@ const appKeywords:Record<string,RegExp>={
  notifications:/\bnotifications?|alerts?\b/i,
  settings:/\bsettings?|preferences?\b/i
 };
-const wantsApps=/\b(?:apps?|features?|tools?|pages?|navigate|open|take me|show me (?:the|your) (?:app|page)|where (?:is|can i find)|find (?:the|your|an? app)|what can (?:you|hudhud|i) do|how (?:do i (?:open|find|use)|can i (?:open|find|use))|recommend|suggest|explore|visit)\b/i;
+const wantsApps=/\b(?:apps?|features?|tools?|pages?|navigate|open|take me|show me|where (?:is|can i find)|find (?:the|your|an? app)|what can (?:you|hudhud|i) do|how (?:do i (?:open|find|use)|can i (?:open|find|use))|recommend|suggest|explore|visit)\b/i;
 const future=/\b(?:coming soon|upcoming|future|planned|what(?:'s| is) next|working on|shop|business|halal market)\b/i;
 function unique<T extends {id:string}>(items:T[]):T[]{
  return items.filter((item,index)=>items.findIndex(other=>other.id===item.id)===index);
