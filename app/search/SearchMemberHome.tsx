@@ -10,6 +10,7 @@ import SearchFeatureRails from "./SearchFeatureRails";
 import SearchDraggableDisplayName from "./SearchDraggableDisplayName";
 import ProfileImmersiveStage,{type ProfileSearchRequest} from "../profile/ProfileImmersiveStage";
 import "./search-member-home.css";
+import "./search-member-explore-link.css";
 
 type Member={
  id:string;display_name:string|null;first_name:string|null;last_name:string|null;
@@ -39,7 +40,7 @@ const nameOf=(member:Member|null)=>member?.display_name?.trim()||
  [member?.first_name,member?.last_name].filter(Boolean).join(" ").trim()||
  (member?.username&&!member.hide_1muslim_id?member.username:"Member");
 
-export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void>}){
+export default function SearchMemberHome({onSignOut,onOpenResults}:{onSignOut:()=>Promise<void>;onOpenResults:(query:string)=>void}){
  const [member,setMember]=useState<Member|null>(null);
  const [night,setNight]=useState(false);
  const [search,setSearch]=useState("");
@@ -376,9 +377,12 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
   </section>
   <div className="smhResponseSpace">
    <ProfileImmersiveStage request={request} onReply={onReply} onSettled={onSettled} persist={false} showEmpty={false} speaking={speaking} spokenChars={spokenChars}/>
-   {request&&<Link className="smhAllResults" href={"/search?q="+encodeURIComponent(request.query)}>All search results ↗</Link>}
+   {request&&<button type="button" className="smhAllResults" onClick={()=>{stopRecognition();onOpenResults(request.query)}}>Search All Results ↗</button>}
   </div>
-  <div className="smhExplore"><SearchFeatureRails/></div>
+  <div className="smhExplore">
+    <h2 className="smhExploreTitle"><button type="button" onClick={()=>{stopRecognition();onOpenResults(request?.query||search)}} aria-label="Explore 1Muslim search results">Explore 1Muslim <span aria-hidden="true">↗</span></button></h2>
+    <SearchFeatureRails/>
+   </div>
   {nameEditor&&<div className="smhDialogBackdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setNameEditor(false)}}>
    <form className="smhNameDialog" onSubmit={saveName} role="dialog" aria-modal="true" aria-label="Edit display name">
     <label htmlFor="smhNameInput">Your name</label>
