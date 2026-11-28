@@ -19,6 +19,17 @@ const welcome:Message={id:0,role:"hudhud",text:"Assalamu alaikum! I'm HudHud. As
 export default function HudHudChatLauncher(){
  const pathname=usePathname()||"/";
  const router=useRouter();
+ // Keep the source location when opening full-screen HudHud from ANY
+ // in-app entry (including plain Links and navigation shortcuts). SPA
+ // transitions do not update document.referrer, so store a same-origin path.
+ useEffect(()=>{
+  if(pathname==="/hudhud"||pathname.startsWith("/auth"))return;
+  try{
+   const origin=window.location.pathname+window.location.search;
+   if(origin.startsWith("/")&&!origin.startsWith("//")&&!origin.startsWith("/hudhud"))
+    sessionStorage.setItem("1muslim:hudhud:return",origin);
+  }catch{}
+ },[pathname]);
  const isProfileOrb=pathname==="/profile";
  const isQiblaRoute=pathname==="/qibla"||pathname.startsWith("/qibla/");
  const [qiblaDock,setQiblaDock]=useState<{x:number;y:number;visible:boolean}|null>(null);
