@@ -355,7 +355,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
         ?<button className="smhResumeListening" type="button" onClick={toggleMic}>Resume listening</button>:
        micPermission==="unsupported"?<span>Type to search. Voice unavailable.</span>:null}
      </div>}
-    {voiceError&&<button type="button" className="smhError smhErrorAction" role="status" onClick={()=>{setVoiceError("");if(!voiceOnRef.current)toggleVoice();else if(lastSpokenText.current)void say(lastSpokenText.current);else toggleMic()}}>{voiceError}</button>}
+    {voiceError&&<button type="button" className={"smhError smhErrorAction"+(voiceOn?" smhErrorNeutral":"")} role="status" onClick={()=>{setVoiceError("");if(!voiceOnRef.current)toggleVoice();else if(lastSpokenText.current)void say(lastSpokenText.current);else toggleMic()}}>{voiceError}</button>}
   </section>
   <div className="smhResponseSpace">
    <ProfileImmersiveStage request={request} onReply={onReply} onSettled={onSettled} persist={false} showEmpty={false} speaking={speaking} spokenChars={spokenChars}/>
