@@ -189,3 +189,12 @@ html[data-one-chrome="night"] .smhExplore .dsFeatureCopy strong{color:#e6ece8}
 @media(prefers-reduced-motion:reduce){.smhHeaderSpeaker{transition:none}}
 
 .smhErrorAction.smhErrorNeutral{background:#eef3f3;color:#52636a}.smhPage.smhNight .smhErrorAction.smhErrorNeutral{background:#202b2c;color:#cbd8d6}
+
+
+.smhPage .smhSearchForm:focus-within{border-color:#e5e8e6!important;box-shadow:none!important}
+.smhPage .smhInputWrap input:focus-visible,.smhPage .smhNameDialog input:focus-visible{
+ outline:0!important;box-shadow:none!important;
+}
+.smhPage .smhNameDialog input:focus{border-color:#dce2e2!important}
+.smhPage.smhNight .smhSearchForm:focus-within,
+html[data-one-chrome="night"] .smhSearchForm:focus-within{border-color:#3f4c4b!important}
