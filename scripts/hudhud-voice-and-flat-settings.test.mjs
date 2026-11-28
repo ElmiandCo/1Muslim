@@ -66,7 +66,8 @@ test("HudHud chat follows black night and white daylight appearance",()=>{
  assert.match(chatCss,/:global\(html.light\) \.shell/);
  assert.match(chatCss,/:global\(html\[data-one-chrome="day"\]\) \.shell/);
 });
-\ntest("HudHud's AI voice reads a short highlight, not the full printed paragraph",async()=>{
+
+test("HudHud's AI voice reads a short highlight, not the full printed paragraph",async()=>{
  const {selectHudHudSpokenText}=await import("../app/lib/hudhud-ai-voice-player.ts");
  const paragraph="Welcome to 1Muslim! "+"We have many resources for people to explore and enjoy. ".repeat(12);
  const spoken=selectHudHudSpokenText(paragraph);
