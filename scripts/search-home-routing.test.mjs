@@ -176,12 +176,12 @@ test("Search Home places every Explore destination in one bottom-anchored swipab
   assert.match(rail,/const destinations: Destination\[\]/);
   assert.match(rail,/destinations\.map\(item=>/);
   assert.doesNotMatch(rail,/rows\.map|const rows:/);
-  assert.match(rail,/href:"\\/deepwatch"/);
-  assert.match(rail,/href:"\\/posts"/);
-  assert.match(rail,/href:"\\/streaming"/);
-  assert.match(rail,/href:"\\/profile\\?section=muslimeen"/);
-  assert.match(rail,/href:"\\/notifications"/);
-  assert.match(rail,/href:"\\/settings"/);
+  assert.ok(rail.includes('href:"/deepwatch"'));
+  assert.ok(rail.includes('href:"/posts"'));
+  assert.ok(rail.includes('href:"/streaming"'));
+  assert.ok(rail.includes('href:"/profile?section=muslimeen"'));
+  assert.ok(rail.includes('href:"/notifications"'));
+  assert.ok(rail.includes('href:"/settings"'));
   assert.match(railCss,/scroll-snap-type:x mandatory/);
   assert.match(railCss,/overflow-x:auto/);
   assert.match(railCss,/border:0/);
