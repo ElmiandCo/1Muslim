@@ -20,8 +20,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-      - run: npm ci --no-audit --no-fund
+      - run: npm install --no-audit --no-fund
       - name: Verify voice command and route contract
         run: node --experimental-strip-types --test scripts/hudhud-search-results-voice.test.mjs
       - name: Type check
