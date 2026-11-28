@@ -234,7 +234,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  });
  const greet=()=>{
   if(!member)return;
-  const name=nameOf(member).split(/\\s+/)[0].slice(0,26);
+  const name=nameOf(member).split(/\s+/)[0].slice(0,26);
   say("As-salamu alaykum. I'm HudHud. Welcome back"+(name?", "+name:"")+".");
  };
  useEffect(()=>{
