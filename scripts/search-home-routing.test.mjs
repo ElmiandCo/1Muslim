@@ -518,3 +518,21 @@ test("Shahada uses HudHud animated guidance instead of green orb, keeping all re
  assert.match(css,/\.hudV2GuideTypewriter/);
  assert.doesNotMatch(css,/\.hudV2OrbZone|\.hudV2LockButton/);
 });
+
+
+test("Search, signup and HudHud text focus is borderless without hiding button keyboard cues",()=>{
+ const files=[
+  ["app/search/search.css",".dsPage .dsSearchForm:focus-within"],
+  ["app/search/search-results.css",".dsResultsNight .dsSearchForm:focus-within"],
+  ["app/search/search-member-home.css",".smhPage .smhSearchForm:focus-within"],
+  ["app/components/search-auth-flow.css",".dsInlineAuthPassword:focus-within"],
+  ["app/hudhud/hudhud.css",".hudPage .hudInputPill:focus-within"]
+ ];
+ for(const [file,selector] of files){
+  const css=read(file),pos=css.lastIndexOf(selector);
+  assert.ok(pos>=0,"missing focus override in "+file);
+  assert.ok(css.slice(pos,pos+190).includes("box-shadow:none!important"),"focus glow remains in "+file);
+ }
+ assert.match(read("app/search/search.css"),/focus-visible\\{outline:2px/);
+ assert.match(read("app/search/search-member-home.css"),/button,a,input\\):focus-visible/);
+});
