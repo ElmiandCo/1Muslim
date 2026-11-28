@@ -4,6 +4,7 @@ import AnimatedMuslimBrand from "../components/AnimatedMuslimBrand";
 import HudHudFocusStage,{type HudHudLine} from "./HudHudFocusStage";
 import {normalizeSpokenHudHudQuestion} from "../lib/hudhud-speech";
 import {createHudHudAiVoicePlayer} from "../lib/hudhud-ai-voice-player";
+import {hudHudVoiceEnabled,setHudHudVoiceEnabled,firstHudHudMuteNotice} from "../lib/hudhud-voice-preference";
 import {getHudHudTopWebResult} from "../lib/hudhud-top-web";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
@@ -64,13 +65,16 @@ export default function HudHudPage(){
  const voiceEpoch=useRef(0);
  const audioCooldownTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  useEffect(()=>{
-  const read=()=>{try{setReadAloud(localStorage.getItem("1muslim:hudhud:voice-read-aloud")!=="off")}catch{}};
+  const read=()=>setReadAloud(hudHudVoiceEnabled());
   read();window.addEventListener("1muslim:hudhud-voice-preference",read);
-  return()=>window.removeEventListener("1muslim:hudhud-voice-preference",read);
+  window.addEventListener("storage",read);
+  return()=>{window.removeEventListener("1muslim:hudhud-voice-preference",read);window.removeEventListener("storage",read)};
  },[]);
  const saveVoice= (next:boolean)=>{
   setReadAloud(next);
-  try{localStorage.setItem("1muslim:hudhud:voice-read-aloud",next?"on":"off")}catch{}
+  setHudHudVoiceEnabled(next);
+  if(!next&&firstHudHudMuteNotice())setError("HudHud voice muted. Tap the speaker to enable.");
+  if(next)setError("");
   if(!next){voiceEpoch.current++;voicePlayer.current?.stop();setSpeaking(false);setSpeakingAt(null);setSpeechPending(false)}
  };
  const [memoryEnabled,setMemoryEnabled]=useState(false);
@@ -414,7 +418,7 @@ export default function HudHudPage(){
    </div>}
   {settingsOpen&&<div className="hudSettings" role="dialog" aria-label="HudHud settings">
     <h2>HudHud settings</h2>
-    <label><span>Read replies aloud<small>Uses your browser's voice</small></span><input type="checkbox" checked={readAloud} onChange={e=>saveVoice(e.target.checked)}/></label>
+
     <label><span>Auto-listen<small>Start after permission; pauses while HudHud speaks or you type. Browser recognition may process audio; HudHud does not store raw audio.</small></span><input type="checkbox" checked={autoListening} onChange={e=>{setAutoListening(e.target.checked);setMicPaused(!e.target.checked);try{localStorage.setItem("1muslim:hudhud:auto-listen",e.target.checked?"on":"off")}catch{}if(!e.target.checked)stopVoice(true)}}/></label>
     <div className="hudMicSettings"><span>Microphone access<small>{micAccess==="granted"?(autoListening&&!micPaused?"Allowed · auto-listening is on":"Allowed · tap microphone to speak"):micAccess==="checking"?"Checking browser permission…":"Not enabled · you can still type"}</small></span><button type="button" onClick={()=>void requestMicrophonePermission()}>Enable mic</button></div>
     {memorySignedIn?<><label><span>Remember conversations<small>Private to your account. Off by default.</small></span><input type="checkbox" checked={memoryEnabled} disabled={memoryPending} onChange={e=>void updateMemory(e.target.checked)}/></label>
