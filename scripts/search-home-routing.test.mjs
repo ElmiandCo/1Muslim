@@ -167,7 +167,7 @@ test("Search Home places every Explore destination in one bottom-anchored swipab
   const profile=read("app/profile/page.tsx");
   assert.match(page,/const homeMode=!resultsOpened&&!submitted\.trim\(\)/);
   assert.match(page,/<h1 className="dsHomeBrand" aria-hidden=\{!homeMode\}/);
-  assert.match(page,/className="dsSearchForm" role="search"/);
+  assert.match(page,/className="dsSearchForm" data-voice-edited=\{voiceEdited\} role="search"/);
   assert.match(page,/<SearchFeatureRails\/>/);
   assert.match(page,/dsHomeFeatureBreathingSpace/);
   assert.doesNotMatch(page,/Discover your Ummah|People to explore|dsExploreGrid|\/api\/discover\/creators/);
