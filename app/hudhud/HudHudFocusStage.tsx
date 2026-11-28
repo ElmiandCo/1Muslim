@@ -42,7 +42,7 @@ function Answer({line,index,sessionId,speakingAt,speechChar,onImageOpen}:{line:H
    </a>}
   {line.presentation?.kind==="results"&&line.matches&&line.matches.length>0&&<div className="hudMatches" role="list" aria-label="Verified search matches">{line.matches.slice(0,3).map(match=><div className="hudMatchCard" role="listitem" key={match.href}>{match.kind==="Qur’an"&&/^\d{1,3}:\d{1,3}$/.test(match.id)
    ?<HudHudVerseCard verseKey={match.id} href={match.href}/>
-   :<Link href={match.href}>{match.image?.startsWith("https://")&&<img src={match.image} alt="" loading="lazy"/>}<span className="hudMatchKind">{match.kind}</span><strong>{match.title}</strong>{match.description&&<small>{match.description.slice(0,105)}</small>}<em>View source ↗</em></Link>}</div>)}</div>}
+   :<Link href={match.href}>{(match.image?.startsWith("https://")||match.image?.startsWith("/assets/"))&&<img src={match.image} alt="" loading="lazy"/>}<span className="hudMatchKind">{match.kind}</span><strong>{match.title}</strong>{match.description&&<small>{match.description.slice(0,105)}</small>}<em>View source ↗</em></Link>}</div>)}</div>}
  </>;
 }
 
