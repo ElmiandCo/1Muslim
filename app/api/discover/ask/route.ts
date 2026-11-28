@@ -7,6 +7,8 @@ import { selectHudHudPresentation } from "../../../lib/hudhud-presentation";
 import { loadVerifiedHudHudVerse } from "../../../lib/hudhud-verified-verse";
 import { searchImages } from "../../../../lib/server/one-muslim-image-search";
 import { claimSearchQuota } from "../../../../lib/server/search-api-quota";
+import {loadHudHudMemberSnapshot,hudHudPersonalPrompt,isHudHudIdentityQuestion,hudHudIdentityAnswer,parseHudHudRememberRequest,cleanHudHudPersonalText} from "../../../lib/hudhud-member-context";
+import {randomUUID as newNoteId} from "node:crypto";
 
 export const runtime = "nodejs";
 const COOKIE = "1muslim_discover_hudhud";
@@ -36,7 +38,7 @@ async function account(req: NextRequest) {
   const { data: { user } } = await db.auth.getUser();
   const premium = Boolean(user && (await db.rpc("has_1muslim_unlocked")).data === true);
   const guest = user ? null : guestKey(req);
-  return { db, premium, usageKey: user ? "user:" + user.id : guest!.key, cookie: guest?.token, signedIn: Boolean(user) };
+  return { db, premium, usageKey: user ? "user:" + user.id : guest!.key, cookie: guest?.token, signedIn: Boolean(user), userId: user?.id||null };
 }
 export async function GET(req: NextRequest) {
   try {
@@ -86,6 +88,35 @@ export async function POST(req: NextRequest) {
     // An exact verse is delivered from independently verified text, not AI-made
     // Arabic, unrelated matches or user-generated content.
     phase="answer";
+    // Profile identity and optional private notes are always looked up on the
+    // server for this authenticated session. Never accept client-supplied
+    // "profile", userId or remembered facts as trusted identity.
+    const memberContext=await loadHudHudMemberSnapshot(auth.db,auth.userId);
+    const personalReply=async(reply:string)=>{const {data:usage}=await dbAdmin!.from("discover_hudhud_usage")
+     .select("turns_used").eq("usage_key",usageKey).maybeSingle();
+     const remaining=Math.max(0,FREE_TURNS-(usage?.turns_used||FREE_TURNS));
+     return asResponse({reply,presentation:{kind:"text"},matches:[],remaining,limitReached:remaining===0,unlocked:auth.premium},200,guestToken);
+    };
+    const rememberText=parseHudHudRememberRequest(message);
+    if(rememberText!==null){
+     if(!auth.userId)return await personalReply("I can help you now, but to remember something between visits you'll need to sign in.");
+     if(!memberContext.storeReady)return await personalReply("Your private memory isn't ready yet. Please try again later.");
+     if(!memberContext.privateContext.allowRememberRequests)return await personalReply("I can remember that if you turn on 'Remember when I ask' in HudHud's private memory settings first.");
+     const noteText=cleanHudHudPersonalText(rememberText,400);
+     if(!noteText)return await personalReply("I couldn't save that. Keep notes under 400 characters and never include passwords, payment card details, access keys or security codes.");
+     const notes=memberContext.privateContext.notes;
+     if(notes.some(note=>note.text.toLocaleLowerCase()===noteText.toLocaleLowerCase()))
+      return await personalReply("I already have that saved in your private HudHud notes.");
+     if(notes.length>=50)return await personalReply("Your private HudHud notes are full. You can delete older notes in Settings.");
+     const next=[...notes,{id:newNoteId(),text:noteText,savedAt:new Date().toISOString(),source:"hudhud"}];
+     const write=await auth.db.from("hudhud_personal_context").update({
+      notes:next,updated_at:new Date().toISOString()
+     }).eq("user_id",auth.userId).select("user_id").maybeSingle();
+     if(write.error||!write.data)return await personalReply("I couldn't save that just now. Your notes haven't been updated.");
+     return await personalReply("Got it. I've saved that to your private HudHud notes. You can review or delete it in Settings.");
+    }
+    if(isHudHudIdentityQuestion(message))
+     return await personalReply(hudHudIdentityAnswer(memberContext));
     const presentation=selectHudHudPresentation(message);
     if(presentation.kind==="verse"){
       const verse=await loadVerifiedHudHudVerse(presentation.verseKey);
@@ -128,6 +159,10 @@ export async function POST(req: NextRequest) {
     }));
     const system = [
       "You are HudHud, the helpful, welcoming Muslim-inspired AI conversation companion inside 1Muslim.",
+      "Use only the server-verified signed-in identity and optional owner-controlled memory below to personalize replies. Never falsely say you don't know a signed-in member's displayed profile name.",
+      "If asked for personal recommendations, tailor them to explicitly recorded interests and public profile details. Never infer location, sensitive traits, or private events from a name.",
+      "Private memory is user-controlled, and only explicit 'remember that' requests with the member's permission may save new notes. Do not claim a memory is saved unless the server confirmed the write.",
+      hudHudPersonalPrompt(memberContext),
       "Respond naturally to greetings, follow-up questions and general educational or everyday topics, like a thoughtful chat assistant; do not force a site search into an unrelated conversation.",
       "For questions about 1Muslim pages, people, posts or content, ground concrete on-site claims and destination suggestions ONLY in the SEARCH MATCHES provided. Do not invent app features or links.",
       "If relevant site results exist, suggest up to 3 and cite their titles naturally. If a user asks for site content with no relevant matches, say you could not verify it.",
