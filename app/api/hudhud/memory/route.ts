@@ -1,5 +1,6 @@
 import {NextRequest,NextResponse} from "next/server";
 import {createClient} from "../../../../utils/supabase/server";
+import {containsRestrictedHudHudSecret} from "../../../lib/hudhud-member-context";
 
 export const runtime="nodejs";
 const headers={"Cache-Control":"private, no-store"};
@@ -68,7 +69,8 @@ export async function POST(req:NextRequest){
    const value=line as Record<string,unknown>;
    if(value.role!=="user"&&value.role!=="assistant")return null;
    if(typeof value.content!=="string"||value.content.length<1||value.content.length>3000)return null;
-   const safe:{role:string;content:string;presentation?:{kind:string;verseKey?:string;query?:string};verses?:unknown[];images?:unknown[]}={role:value.role,content:value.content};
+   const storedText=containsRestrictedHudHudSecret(value.content)?"[Private credentials excluded from saved HudHud history.]":value.content;
+   const safe:{role:string;content:string;presentation?:{kind:string;verseKey?:string;query?:string};verses?:unknown[];images?:unknown[]}={role:value.role,content:storedText};
    const p=value.presentation as Record<string,unknown>|undefined;
    if(p?.kind==="verse"&&typeof p.verseKey==="string"&&/^\d{1,3}:\d{1,3}$/.test(p.verseKey)){
     safe.presentation={kind:"verse",verseKey:p.verseKey};
