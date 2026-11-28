@@ -14,7 +14,7 @@ import LiveGuestStudio from "./LiveGuestStudio";
 import { cinemaAudioActive, type CinemaMode } from "../lib/live-cinema";
 import { playLiveCinemaMorphSound } from "../lib/live-cinema-sound";
 
-export default function LiveKitViewer({ roomName, streamId, embedded = false, onViewModeChange, initialViewMode = "phone", reconnectSignal = 0, smartMobileCrop = false }: { roomName: string; streamId?: string; embedded?: boolean; onViewModeChange?: (mode: CinemaMode) => void; initialViewMode?: CinemaMode; reconnectSignal?: number; smartMobileCrop?: boolean }) {
+export default function LiveKitViewer({ roomName, streamId, embedded = false, onViewModeChange, initialViewMode = "phone", reconnectSignal = 0, smartMobileCrop = false, previewMuted = false }: { roomName: string; streamId?: string; embedded?: boolean; onViewModeChange?: (mode: CinemaMode) => void; initialViewMode?: CinemaMode; reconnectSignal?: number; smartMobileCrop?: boolean; previewMuted?: boolean }) {
   const router=useRouter();
   const [hostEnded,setHostEnded]=useState(false);
   const endedOnce=useRef(false);
@@ -98,8 +98,8 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
   const [error, setError] = useState("");
   // Attempt audible playback immediately where browsers permit it.
   // If autoplay is blocked, expose a clear one-tap recovery control.
-  const [muted, setMuted] = useState(false);
-  const mutedRef = useRef(false);
+  const [muted, setMuted] = useState(previewMuted);
+  const mutedRef = useRef(previewMuted);
   const [audioNeedsGesture, setAudioNeedsGesture] = useState(false);
   const [showTapHint,setShowTapHint]=useState(false);
   useEffect(()=>{if(!audioNeedsGesture&&!muted){setShowTapHint(false);return}setShowTapHint(true);const timer=window.setTimeout(()=>setShowTapHint(false),2000);return()=>window.clearTimeout(timer)},[audioNeedsGesture,muted]);
@@ -136,6 +136,8 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
   const voiceAnalyzerCleanupRef=useRef<(()=>void)|null>(null);
   const voiceAudioContextRef=useRef<AudioContext|null>(null);
 
+  // Muted feed previews must never change a viewer’s saved audio preference.
+  // A tap opens the full Live viewer where sound can be enabled normally.
   // Remember explicit audio preference; autoplay permission remains browser-controlled.
   useEffect(() => {
     try {
