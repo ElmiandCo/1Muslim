@@ -24,6 +24,7 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
  const [message,setMessage]=useState("");
  const [transcript,setTranscript]=useState("");
  const [muted,setMuted]=useState(false);
+ const mutedRef=useRef(false);
  const [spoken,setSpoken]=useState(false);
  const [level,setLevel]=useState(0);
  const [seconds,setSeconds]=useState(60);
@@ -39,7 +40,7 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
  const saved=useRef(false),mounted=useRef(true),userId=useRef("");
  const stopGuidance=()=>{try{window.speechSynthesis?.cancel()}catch{};setSpeaking(false)};
  const guide=useCallback((sentence:string)=>{
-  if(muted||document.hidden||!("speechSynthesis" in window))return;
+  if(mutedRef.current||document.hidden||!("speechSynthesis" in window))return;
   try{
    window.speechSynthesis.cancel();
    const u=new SpeechSynthesisUtterance(sentence);
@@ -49,7 +50,7 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
    u.onerror=()=>{if(mounted.current)setSpeaking(false)};
    window.speechSynthesis.speak(u);
   }catch{setSpeaking(false)}
- },[muted]);
+ },[]);
  const resetTimers=()=>{
   if(timer.current){clearInterval(timer.current);timer.current=null}
   reminders.current.forEach(clearTimeout);reminders.current=[];
@@ -300,7 +301,7 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
     <div className="hudV2ShahadaActions">
      {(state==="ready"||state==="unavailable")&&<button type="button" className="hudV2CircleAction" onClick={()=>void begin()} aria-label="Start or restart microphone" title="Restart microphone">↻</button>}
      <button type="button" className="hudV2CircleAction" aria-label="Shahada help" title="Help" onClick={openHelp} disabled={state==="saving"||state==="recognized"||state==="complete"}>?</button>
-     <button type="button" className="hudV2CircleAction" aria-label={muted?"Unmute HudHud guidance":"Mute HudHud guidance"} title={muted?"Unmute":"Mute"} aria-pressed={muted} onClick={()=>{setMuted(x=>!x);stopGuidance()}}>{muted?"◌":"◖"}</button>
+     <button type="button" className="hudV2CircleAction" aria-label={muted?"Unmute HudHud guidance":"Mute HudHud guidance"} title={muted?"Unmute":"Mute"} aria-pressed={muted} onClick={()=>{const next=!muted;mutedRef.current=next;setMuted(next);stopGuidance()}}>{muted?"◌":"◖"}</button>
     </div>
     </>}
    {state!=="help"&&state!=="recognized"&&state!=="complete"&&state!=="saving"&&<div className="hudV2Language" aria-label="Language preference">
