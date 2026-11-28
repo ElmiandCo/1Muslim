@@ -1,0 +1,62 @@
+/* Video-first 1Muslim Lives. This surface sits ABOVE the Ummah Posts feed.
+   Use the existing verified Live 2 discovery and shared viewer, never fake streams. */
+.section{width:100%;max-width:760px;margin:0 auto 16px;position:relative;font-family:system-ui,-apple-system,sans-serif}
+.heading{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px clamp(13px,3vw,22px);color:var(--ig-ink,#222e2b)}
+.headingTitle{display:inline-flex;align-items:center;gap:8px;font-size:15px;font-weight:840;letter-spacing:.015em}
+.headingTitle i{width:8px;height:8px;display:block;border-radius:50%;background:#f03b55;box-shadow:0 0 0 4px #f03b5525;animation:liveForYouPulse 2.5s ease-in-out infinite}
+.headingTitle span{font-size:14px;font-weight:590;color:var(--ig-muted,#708078);margin-left:4px}
+.allStreams{color:var(--ig-ink,#26332e);font-size:12px;font-weight:710;text-decoration:none;min-height:42px;display:flex;align-items:center}
+.frame{isolation:isolate;position:relative;height:clamp(420px,64dvh,730px);border-radius:18px;overflow:hidden;background:#050808;color:#fff;box-shadow:0 6px 28px #111d1b24;touch-action:pan-y}
+.backdrop{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 36%,#315951,#111922 63%,#050908);background-size:cover;background-position:center;filter:brightness(.53) blur(4px);transform:scale(1.06);pointer-events:none}
+.player{position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none}
+.player :global(.omLiveEmbeddedPlayer){height:100%!important;min-height:100%!important;width:100%!important;aspect-ratio:auto!important;pointer-events:none!important;background:transparent!important}
+.player :global(.omLiveVideoStage){position:absolute!important;inset:0!important;width:100%!important;height:100%!important;background:transparent!important}
+.player :global(.omLiveVideoStage video){width:100%!important;height:100%!important;object-fit:cover!important;background:transparent!important}
+.player :global(.omLiveEmbeddedPlayer button),
+.player :global(.omLiveEmbeddedPlayer a),
+.player :global(.omViewerJoinOnly),
+.player :global(.omViewerReconnectStatus){display:none!important}
+.player :global(.omLiveEmbeddedPlayer>span){display:none!important}
+.audioPortrait{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:16px;pointer-events:none}
+.audioPortrait img{width:min(42vw,185px);aspect-ratio:1;object-fit:cover;border-radius:50%;border:3px solid #e2fff5ad;box-shadow:0 0 0 17px #68d7a418,0 0 45px #8fe7c24a}
+.audioPortrait span{font-size:12px;font-weight:780;letter-spacing:.16em;color:#e0f5ee}
+.gradient{position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(180deg,#0006 0%,transparent 28%,transparent 40%,#0005 70%,#000d 100%)}
+.topBar{position:absolute;z-index:5;top:15px;left:16px;right:15px;display:flex;align-items:center;justify-content:space-between;gap:10px;text-shadow:0 1px 8px #000a}
+.liveBadge{display:inline-flex;align-items:center;min-height:27px;padding:5px 10px;border-radius:6px;background:#de2444;font-size:12px;font-weight:880;letter-spacing:.07em}
+.viewers{background:#0006;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:630;backdrop-filter:blur(12px)}
+.rightActions{position:absolute;z-index:6;right:12px;bottom:calc(85px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:center;gap:17px}
+.hostAvatar{display:block;width:52px;height:52px;border-radius:50%;border:2px solid white;box-shadow:0 3px 16px #0009;overflow:hidden;background:#142b2d}
+.hostAvatar img{width:100%;height:100%;object-fit:cover;display:block}
+.roundAction{display:flex;flex-direction:column;align-items:center;gap:4px;justify-content:center;width:52px;min-height:54px;background:none;color:#fff;border:0;filter:drop-shadow(0 2px 4px #0009);text-decoration:none;cursor:pointer}
+.roundAction svg{width:29px;height:29px;display:block}
+.roundAction small{font-size:11px;font-weight:730;color:#fff}
+.caption{position:absolute;left:18px;bottom:24px;right:86px;z-index:6;display:flex;flex-direction:column;align-items:flex-start;gap:7px;text-shadow:0 2px 10px #000b}
+.caption>span{font-size:15px;font-weight:800;line-height:1.35;overflow-wrap:anywhere}
+.caption h3{font-size:clamp(18px,4vw,23px);font-weight:750;letter-spacing:-.025em;line-height:1.25;max-width:100%;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.caption p{font-size:12px;margin:0;font-weight:460;color:#e5e9e7}
+.watch{display:inline-flex;align-items:center;gap:14px;text-shadow:none;min-height:42px;padding:10px 18px;color:#fff;background:#d92a49;border-radius:999px;text-decoration:none;font-size:13px;font-weight:850;letter-spacing:.015em;margin-top:5px;box-shadow:0 4px 18px #0006}
+.watch span{font-size:17px}
+.carouselControls{position:absolute;top:52px;right:15px;z-index:7;display:flex;align-items:center;gap:5px;background:#0a0e11a8;backdrop-filter:blur(10px);padding:3px;border-radius:999px}
+.carouselControls button{width:35px;height:35px;border-radius:50%;background:none;border:0;color:#fff;font-size:26px;cursor:pointer}
+.carouselControls span{font-size:12px;color:#fff;font-weight:690;min-width:35px;text-align:center}
+.underneath{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:9px 16px 8px;font-size:11px;color:var(--ig-muted,#7c8a84)}
+.underneath span:first-child{font-weight:710;color:var(--ig-ink,#293731)}
+.section :is(button,a):focus-visible{outline:3px solid #7adcc0;outline-offset:3px}
+@keyframes liveForYouPulse{50%{box-shadow:0 0 0 7px #f03b550d}}
+@media(max-width:640px){
+ .section{max-width:none;margin:0 auto 13px}
+ .heading{padding:7px 13px}
+ .frame{width:100%;height:clamp(480px,70dvh,780px);border-radius:0;box-shadow:none}
+ .topBar{top:12px;left:12px;right:12px}
+ .rightActions{right:7px;bottom:calc(74px + env(safe-area-inset-bottom,0px));gap:13px}
+ .hostAvatar{width:46px;height:46px}
+ .roundAction{width:46px;min-height:51px}
+ .roundAction svg{width:27px;height:27px}
+ .caption{left:13px;bottom:24px;right:69px}
+ .caption>span{font-size:14px}
+ .caption h3{font-size:18px}
+ .watch{min-height:40px;padding:9px 15px}
+ .underneath{padding:9px 13px}
+ .underneath span:last-child{display:none}
+}
+@media(prefers-reduced-motion:reduce){.headingTitle i{animation:none}}

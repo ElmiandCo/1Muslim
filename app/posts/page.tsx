@@ -8,6 +8,7 @@ import UnifiedPostMedia from "../components/UnifiedPostMedia";
 import {youtubeIdFromPost,youtubeThumbnail} from "../lib/ummah-youtube";
 import OneMuslimVideo from "../components/OneMuslimVideo";
 import PostAuthorFollow from "../components/PostAuthorFollow";
+import UmmahLiveForYou from "./UmmahLiveForYou";
 import styles from "./posts-magazine.module.css";
 type PostMedia={url:string;type:string};
 type Post={id:string;body:string;author_name:string;author_handle:string;created_at:string;media_url:string|null;media_type:string|null;media_items?:PostMedia[];shahada_verified?:boolean;author_id:string;author_avatar_url?:string|null};
@@ -286,6 +287,8 @@ export default function PublicPostsSocial(){
   </nav>
  </header>
  {view==="feed"?<>
+ {/* Verified public Lives appear first, above member stories and post filters. */}
+ <UmmahLiveForYou/>
  <section className={styles.discoverPeople} aria-label="Discover community members"><div className={styles.feedStoryRail}><Link href="/create" className={styles.feedStoryPerson}><span className={styles.feedStoryRing}><span>＋</span></span><small>Your Story</small></Link>{stories.map(p=><Link href={`/profile?section=muslimeen&member=${encodeURIComponent(p.author_id)}`} className={styles.feedStoryPerson} key={p.id}><span className={styles.feedStoryRing}><span>{p.author_avatar_url?<img className={styles.authorAvatarImage} src={p.author_avatar_url} alt="" loading="lazy" referrerPolicy="no-referrer"/>:(p.author_name||"M").slice(0,1).toUpperCase()}</span></span><small>{p.author_handle||p.author_name}</small></Link>)}</div></section>
  <div className={styles.discoverFilters}><div className={styles.feedTabs} role="group" aria-label="Choose Discover feed">
  <button type="button" className={filter==="forYou"?styles.active:""} aria-pressed={filter==="forYou"} onClick={()=>setFilter("forYou")}>✧ For You</button>
