@@ -12,7 +12,8 @@ export function hudHudVoiceEnabled():boolean{
  try{
   const value=localStorage.getItem(HUDHUD_VOICE_KEY);
   if(value==="on"||value==="off")return value!=="off";
-  return localStorage.getItem(LEGACY_KEY)!=="off";
+  // Reset conflicting older switches to ON; only the new speaker may mute HudHud.
+  return true;
  }catch{return true}
 }
 
