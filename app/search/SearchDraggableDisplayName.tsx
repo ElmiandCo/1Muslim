@@ -153,7 +153,7 @@ export default function SearchDraggableDisplayName({
    ref={name}
    type="button"
    className={styles.nameButton}
-   style={{left:(layout.x*100)+"%",top:(layout.y*100)+"%",fontSize:layout.size+"px"}}
+   style={{left:(layout.x*100)+"%",top:(layout.y*100)+"%",fontSize:layout.size+"px",fontWeight:740,lineHeight:1.08}}
    aria-label={"Edit "+displayName+". Drag to move, pinch to resize between 16 and 40 pixels."}
    title="Drag to position · pinch to resize · tap to edit"
    onPointerDown={start} onPointerMove={move} onPointerUp={end} onPointerCancel={end}
