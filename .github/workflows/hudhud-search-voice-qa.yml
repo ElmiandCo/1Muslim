@@ -1,0 +1,27 @@
+name: HudHud Search Voice QA
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'app/search/SearchResultsHudHudVoice.tsx'
+      - 'app/search/SearchMemberHome.tsx'
+      - 'app/search/page.tsx'
+      - 'app/search/search-results-hudhud-voice.css'
+      - 'app/search/search-member-explore-link.css'
+      - 'app/lib/hudhud-search-voice-edit.ts'
+      - 'scripts/hudhud-search-results-voice.test.mjs'
+      - '.github/workflows/hudhud-search-voice-qa.yml'
+  workflow_dispatch:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - name: Verify voice command and route contract
+        run: node --experimental-strip-types --test scripts/hudhud-search-results-voice.test.mjs
+      - name: Type check
+        run: npx tsc --noEmit

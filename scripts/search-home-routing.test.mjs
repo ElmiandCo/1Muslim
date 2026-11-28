@@ -107,7 +107,8 @@ test("signed-in Search Home is the actual personalized experience, not the old P
  const stage=read("app/profile/ProfileImmersiveStage.tsx");
  const focus=read("app/hudhud/HudHudFocusStage.tsx");
  const auth=read("app/components/SearchAuthFlow.tsx");
- assert.match(page,/if\(account==="member"&&!showAuth&&!submitted\.trim\(\)\)return <SearchMemberHome/);
+ assert.match(page,/if\(account==="member"&&!showAuth&&homeMode\)return <SearchMemberHome/);
+  assert.match(page,/const homeMode=!resultsOpened&&!submitted\.trim\(\)/);
  assert.match(auth,/1muslim:member-home-arrival/);
  assert.match(member,/ProfileImmersiveStage request=\{request\}/);
  assert.match(member,/showEmpty=\{false\}/);
@@ -164,9 +165,9 @@ test("Search Home places every Explore destination in one bottom-anchored swipab
   const rail=read("app/search/SearchFeatureRails.tsx");
   const railCss=read("app/search/search-feature-rails.css");
   const profile=read("app/profile/page.tsx");
-  assert.match(page,/const homeMode=!query\.trim\(\)/);
+  assert.match(page,/const homeMode=!resultsOpened&&!submitted\.trim\(\)/);
   assert.match(page,/<h1 className="dsHomeBrand" aria-hidden=\{!homeMode\}/);
-  assert.match(page,/className="dsSearchForm" role="search"/);
+  assert.match(page,/className="dsSearchForm" data-voice-edited=\{voiceEdited\} role="search"/);
   assert.match(page,/<SearchFeatureRails\/>/);
   assert.match(page,/dsHomeFeatureBreathingSpace/);
   assert.doesNotMatch(page,/Discover your Ummah|People to explore|dsExploreGrid|\/api\/discover\/creators/);
