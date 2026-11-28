@@ -427,14 +427,14 @@ test("HudHud speech is AI-generated with a hard microphone playback barrier",()=
  const guard=read("lib/server/search-api-quota.ts");
  assert.match(member,/stopRecognition\(\);stopAudio\(\)/);
  assert.match(member,/micCooldown/);
- assert.match(member,/player\.play\(words\)/);
+ assert.match(member,/player\.play\(words,/);
  assert.match(hudhud,/setSpeechPending\(true\)/);
  assert.match(hudhud,/audioCooldown/);
  assert.match(window,/voiceBusy\.current/);
  assert.match(player,/audio\.pause\(\)/);
  assert.match(player,/\/api\/hudhud\/speech/);
  assert.match(route,/OPENAI_API_KEY/);
- assert.match(route,/voice:"nova"/);
+ assert.match(route,/voice:"marin"/);
  assert.match(route,/claimSearchQuota\(req,"voice"\)/);
  assert.match(guard,/globalDaily:900/);
  assert.doesNotMatch(member,/speechSynthesis/);
@@ -480,7 +480,7 @@ test("signed-in Search Home removes the microphone from the search pill but reta
  assert.match(home,/>Resume listening</);
  assert.match(home,/micPermission==="denied"\|\|micPermission==="needs-tap"/);
  assert.match(home,/Enable microphone to speak/);
- assert.match(home,/\(listening\|\|speaking\|\|thinking\|\|paused\|\|!autoMicEnabled\|\|micPermission===/);
+ assert.match(home,/\(listening\|\|speaking\|\|speechPending\|\|thinking\|\|paused\|\|!autoMicEnabled\|\|micPermission===/);
  assert.match(home,/className="smhHeaderSpeaker"/);
  assert.match(home,/onClick=\{toggleVoice\}/);
  assert.match(css,/\.smhListeningControls\{/);
