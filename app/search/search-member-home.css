@@ -187,3 +187,5 @@ html[data-one-chrome="night"] .smhExplore .dsFeatureCopy strong{color:#e6ece8}
 .smhPage.smhNight .smhErrorAction,html[data-one-chrome="night"] .smhErrorAction{background:#3b1c21;color:#ffd7d7}
 @media(max-width:650px){.smhHeaderLeft{gap:4px}.smhHeaderSpeaker{width:34px;height:34px;flex-basis:34px;min-height:34px}.smhHeaderSpeaker svg{width:19px;height:19px}}
 @media(prefers-reduced-motion:reduce){.smhHeaderSpeaker{transition:none}}
+
+.smhErrorAction.smhErrorNeutral{background:#eef3f3;color:#52636a}.smhPage.smhNight .smhErrorAction.smhErrorNeutral{background:#202b2c;color:#cbd8d6}
