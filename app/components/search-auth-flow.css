@@ -45,3 +45,15 @@
 
 .dsInlineAuthRecoveryCue{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 16px;border:1px solid #e7eee8;background:#f6faf7;border-radius:999px;color:#5b7263;font-size:11px;animation:dsAuthSlide .3s ease-out both}
 .dsInlineAuthRecoveryCue button{border:0;background:transparent;color:#286b4f;font-weight:750;font-size:11px;white-space:nowrap;text-decoration:underline;text-underline-offset:4px}
+
+
+/* Keep clear native caret and text, remove luminous gold signup focus rings.
+   Buttons/links retain keyboard-visible focus for accessibility. */
+.dsInlineAuthFields>input:focus,
+.dsInlineAuthPassword:focus-within,
+.dsInlineAuthAt:focus-within{
+ outline:0!important;border-color:#e1e6e4!important;box-shadow:none!important;
+}
+.dsInlineAuthFields>input:focus-visible,
+.dsInlineAuthPassword>input:focus-visible,
+.dsInlineAuthAt>input:focus-visible{outline:0!important;box-shadow:none!important}
