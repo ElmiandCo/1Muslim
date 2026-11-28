@@ -7,28 +7,47 @@
 .hudV2ShahadaBody{width:min(680px,calc(100% - 28px));margin:clamp(20px,5vh,60px) auto 0;display:flex;flex-direction:column;align-items:center;text-align:center;gap:11px}
 .isEmbedded .hudV2ShahadaBody{margin:0 auto}
 .hudV2Shahada h1{margin:0;font-size:clamp(26px,5vw,42px);font-weight:670;line-height:1.14;letter-spacing:-.045em;color:#283630;animation:hudV2Heading .45s ease-out both}
-.hudV2LockZone{display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:clamp(154px,27vh,215px);padding-top:10px;gap:0;position:relative}
-.hudV2LockButton{position:relative;display:grid;place-items:center;width:clamp(112px,26vw,152px);height:clamp(112px,26vw,152px);padding:0;isolation:isolate;border:0;border-radius:50%;background:transparent;color:#506078;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .35s ease,color .35s ease}
-.hudV2LockButton:not(:disabled):active{transform:scale(.94)}
-.hudV2LockButton:focus-visible{outline:3px solid #576b9d;outline-offset:5px}
-.hudV2LockButton:disabled{cursor:default}
-.hudV2LockGlow{position:absolute;inset:3px;z-index:-1;border-radius:50%;background:radial-gradient(circle at 40% 35%,#f7f9ff 10%,#d9e1f2 48%,#cad6ec00 72%);filter:blur(8px);box-shadow:0 0 24px #8096b525;transition:opacity .25s ease}
-.hudV2LockIcon{width:clamp(73px,18vw,99px);height:clamp(82px,21vw,110px);stroke:currentColor;filter:drop-shadow(0 5px 10px #1e2c441b);animation:hudV2LockIntro .7s cubic-bezier(.22,.8,.22,1) both}
-.hudV2LockButton.isListening .hudV2LockGlow{animation:hudV2LockBreath 2.8s ease-in-out infinite}
-.hudV2LockButton.isListening .hudV2LockIcon{animation:hudV2LockFloat 3.2s ease-in-out infinite}
-.hudV2LockButton.isUnlocked{color:#536a73}
-.hudV2LockButton.isSpeaking .hudV2LockGlow{box-shadow:0 0 26px #819dbb55}
-.hudV2ListeningPulse{color:#66748c;font-size:12px;font-weight:650;letter-spacing:.04em;margin-top:4px}
-@keyframes hudV2LockIntro{from{opacity:0;transform:translateY(14px) scale(.92)}to{opacity:1;transform:translateY(0) scale(1)}}
-@keyframes hudV2LockBreath{50%{opacity:.85;transform:scale(1.09)}}
-@keyframes hudV2LockFloat{50%{transform:translateY(-4px)}}
-.hudV2ShahadaStatus{min-height:58px;max-width:440px;margin:3px 0 0;padding:0 12px;font-size:clamp(15px,2.4vw,19px);font-weight:560;letter-spacing:-.02em;line-height:1.5;color:#465672;text-wrap:balance}
+/* Animated HudHud guidance replaces the orb/lock, borrowing the light Search
+   Home typewriter language without turning Shahada into a working search. */
+.hudV2GuideCard{
+ width:min(620px,100%);min-height:clamp(186px,26dvh,252px);
+ margin:10px auto 0;padding:clamp(18px,3.8vw,29px);
+ display:flex;flex-direction:column;justify-content:space-between;gap:16px;
+ border-radius:clamp(22px,4.8vw,32px);border:1px solid #e3eae7;
+ background:linear-gradient(155deg,#fff 5%,#fafcfb 100%);
+ box-shadow:0 15px 40px #1e332b0b,0 2px 9px #1e332b04;
+ text-align:left;overflow:hidden;cursor:default;
+}
+.hudV2GuideTop,.hudV2GuideFoot{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.hudV2GuideBrand{font-size:clamp(13px,2.5vw,17px);font-weight:750;letter-spacing:-.035em;color:#2a4a3b}
+.hudV2GuideMode{font-size:10px;letter-spacing:.14em;font-weight:750;color:#84978b}
+.hudV2GuideTypewriter{
+ display:flex;align-items:center;justify-content:center;min-height:78px;
+ width:100%;color:#253d31;line-height:1.26;letter-spacing:-.035em;
+ font-weight:650;overflow-wrap:anywhere;text-align:center;text-wrap:balance;
+}
+.hudV2GuideTypewriter.isShort{font-size:clamp(28px,6.8vw,47px)}
+.hudV2GuideTypewriter.isMedium{font-size:clamp(22px,5.2vw,33px)}
+.hudV2GuideTypewriter.isLong{font-size:clamp(19px,4vw,25px);font-weight:570;line-height:1.45}
+.hudV2TypeCaret{
+ display:inline-block;vertical-align:-.13em;width:2px;height:1em;
+ background:#77998a;margin-inline-start:3px;animation:hudV2Caret 0.77s steps(1,end) infinite
+}
+.hudV2TypeCaret.isDone{animation:none;opacity:0}
+@keyframes hudV2Caret{50%{opacity:0}}
+.hudV2GuideFoot{font-size:11px;font-weight:650;letter-spacing:.01em;color:#75867c;min-height:18px}
+.hudV2GuideRecording{display:inline-flex;align-items:center;gap:7px;color:#526f60}
+.hudV2LiveDot{width:7px;height:7px;border-radius:50%;background:#24a575;box-shadow:0 0 0 3px #24a5751e;animation:hudV2RecordPulse 1.6s ease-in-out infinite}
+@keyframes hudV2RecordPulse{50%{box-shadow:0 0 0 6px #24a57526}}
+.hudV2ScreenReaderOnly{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+ clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .hudV2Gentle{max-width:390px;color:#926e55;font-size:11px;line-height:1.5}
 .hudV2ShahadaActions{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;margin:5px auto}
 .hudV2ShahadaActions button,.hudV2HelpActions button{min-height:38px;padding:7px 15px;border:1px solid #e1e8e4;background:#fff;color:#4b6756;border-radius:999px;font-weight:660;font-size:12px;cursor:pointer}
-.hudV2ShahadaActions .hudV2CircleAction{width:44px;height:44px;min-height:44px;min-width:44px;display:grid;place-items:center;padding:0;font-size:20px;font-weight:600;border:1px solid #e0e5ec;background:#f8faff;color:#4b586f;box-shadow:0 4px 12px #26364b0d}
-.hudV2ShahadaActions .hudV2CircleAction:focus-visible{outline:3px solid #576b9d;outline-offset:3px}
-.hudV2ShahadaActions .hudV2CircleAction[aria-pressed=true]{background:#e9edf6;color:#2b3952}
+.hudV2ShahadaActions .hudV2QuietButton{min-height:44px;padding:8px 18px;background:#fff;color:#476454}
+.hudV2ShahadaActions .hudV2QuietButton[aria-pressed=true]{background:#f1f4f2}
+.hudV2ShahadaActions .hudV2Primary{min-height:44px;padding:9px 19px;border-color:#315a49;background:#315a49;color:#fff}
+.hudV2ShahadaActions :is(.hudV2Primary,.hudV2QuietButton):focus-visible{outline:3px solid #607e6d;outline-offset:2px}
 .hudV2HelpActions .isPrimary{border-color:#225546;background:#225546;color:#fff}
 .hudV2ShahadaActions button:disabled,.hudV2HelpActions button:disabled{opacity:.45;cursor:not-allowed}
 .hudV2Language{display:flex;gap:5px;border:1px solid #edf1ed;background:#f8faf9;border-radius:999px;padding:3px;margin:10px auto}
@@ -48,11 +67,12 @@
  .hudV2Shahada.isEmbedded{min-height:460px}
  .hudV2ShahadaBody{margin-top:8vh;gap:8px}
  .isEmbedded .hudV2ShahadaBody{margin-top:0}
- .hudV2LockZone{min-height:160px}
+ .hudV2GuideCard{min-height:192px;padding:18px;margin-top:7px}
+ .hudV2GuideTypewriter{min-height:90px}
  .hudV2ShahadaActions button{min-height:35px;padding:6px 12px}
  .hudV2Help{max-height:59dvh;overflow:auto;overscroll-behavior:contain;padding:3px 5px}
 }
-@media(prefers-reduced-motion:reduce){.hudV2Shahada h1,.hudV2LockIcon,.hudV2LockGlow{animation:none!important;transition:none!important}}
+@media(prefers-reduced-motion:reduce){.hudV2Shahada h1,.hudV2TypeCaret,.hudV2LiveDot{animation:none!important;transition:none!important}}
 
 .hudV2HelpListen{border:1px solid #e1e9e2;border-radius:999px;background:#fff;color:#365e4b;font-size:12px;font-weight:700;padding:10px 16px;cursor:pointer;box-shadow:0 3px 12px #1934230c}
 .hudV2PrivacyNote{display:block;max-width:520px;color:#8c9a8f;font-size:10px;line-height:1.65;text-align:center}
