@@ -14,17 +14,21 @@ const destinations: Destination[]=[
 type Start={x:number;y:number;time:number};
 export default function SearchFeatureRails(){
  const [hidden,setHidden]=useState(false);
+ const [departing,setDeparting]=useState(false);
  const [returning,setReturning]=useState(false);
  const gesture=useRef<Start|null>(null);
  const suppressClick=useRef(false);
  const restoreTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
- useEffect(()=>()=>{if(restoreTimer.current)clearTimeout(restoreTimer.current)},[]);
+ const dismissTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+ useEffect(()=>()=>{if(restoreTimer.current)clearTimeout(restoreTimer.current);if(dismissTimer.current)clearTimeout(dismissTimer.current)},[]);
  const dismiss=()=>{
   suppressClick.current=true;
-  setHidden(true);setReturning(false);
+  setDeparting(true);setReturning(false);
+  if(dismissTimer.current)clearTimeout(dismissTimer.current);
+  dismissTimer.current=setTimeout(()=>{setHidden(true);setDeparting(false)},420);
  };
  const restore=()=>{
-  setReturning(true);setHidden(false);
+  setDeparting(false);setReturning(true);setHidden(false);
   if(restoreTimer.current)clearTimeout(restoreTimer.current);
   restoreTimer.current=setTimeout(()=>setReturning(false),600);
  };
@@ -41,12 +45,12 @@ export default function SearchFeatureRails(){
   const speed=Math.abs(dx)/Math.max(30,performance.now()-start.time);
   // A deliberate fast leftward fling removes the entire rail for this visit.
   // Normal horizontal scrolling through the six genuine links keeps working.
-  if(dx< -145&&speed>1.25)dismiss();
+  if(!departing&&dx< -145&&speed>1.25)dismiss();
  };
  const suppress=(e:MouseEvent<HTMLElement>)=>{
   if(suppressClick.current){e.preventDefault();e.stopPropagation();suppressClick.current=false}
  };
- return <section className={"dsExploreFeatureSection"+(hidden?" dsExploreHidden":"")+(returning?" dsExploreReturning":"")}
+ return <section className={"dsExploreFeatureSection"+(hidden?" dsExploreHidden":"")+(departing?" dsExploreDeparting":"")+(returning?" dsExploreReturning":"")}
   aria-label="Explore 1Muslim shortcuts">
   {hidden?
    <button type="button" className="dsExploreRestore" onTouchStart={begin} onTouchEnd={finish}
