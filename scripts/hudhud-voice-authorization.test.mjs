@@ -101,7 +101,7 @@ test("HudHud automatically starts after permission, pauses while speaking, and r
  assert.match(page,/stopVoice\(true\)/);
  assert.match(page,/setMicPaused\(true\)/);
  assert.match(page,/onFocus=\{\(\)=>\{setFocused\(true\);stopVoice\(true\)\}\}/);
- assert.match(page,/Start after permission; pauses while HudHud speaks or you type/);
+ assert.match(readFileSync(new URL("../app/settings/SettingsContent.tsx",import.meta.url),"utf8"),/Allow HudHud to automatically listen when you open voice-enabled pages/);
  assert.doesNotMatch(page,/Allowed · only listens after you tap the mic/);
 });
 
